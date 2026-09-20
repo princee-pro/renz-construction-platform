@@ -1,0 +1,1464 @@
+-- RENZ Phase 1 / S4: publication and mutation kernel.
+-- Every public operation is bounded, caller-aware, optimistic-versioned, and
+-- returns machine-readable reasons. No operation uses dynamic SQL or a generic
+-- table/payload escape hatch.
+
+insert into public.permissions (key, display_name, description, is_system)
+values
+  ('content.read', 'Read content', 'Read bounded editorial content and publication state.', true),
+  ('content.write', 'Write content', 'Create and update bounded editorial content in draft state.', true),
+  ('content.publish', 'Publish content', 'Run evidence-gated publication and unpublication operations.', true),
+  ('content.archive', 'Archive content', 'Archive editorial records without deleting their history.', true),
+  ('media.read', 'Read media', 'Read controlled editorial media metadata and private objects.', true),
+  ('media.upload', 'Upload media', 'Register and upload controlled editorial media objects.', true),
+  ('media.manage', 'Manage media', 'Manage media metadata, derivatives, rights, and replacements.', true),
+  ('claims.verify', 'Verify claims', 'Verify or reject evidence, rights, and claim-bearing records.', true),
+  ('website.manage', 'Manage website settings', 'Manage allow-listed website settings and navigation.', true)
+on conflict (key) do update
+set display_name = excluded.display_name,
+    description = excluded.description,
+    is_system = true;
+
+insert into public.role_permissions (role_id, permission_id)
+select roles.id, permissions.id
+from public.roles
+join public.permissions on permissions.key in (
+  'content.read', 'content.write', 'media.read', 'media.upload', 'media.manage'
+)
+where roles.key = 'admin'
+on conflict do nothing;
+
+insert into public.role_permissions (role_id, permission_id)
+select roles.id, permissions.id
+from public.roles
+cross join public.permissions
+where roles.key = 'super_admin'
+  and permissions.key in (
+    'content.read', 'content.write', 'content.publish', 'content.archive',
+    'media.read', 'media.upload', 'media.manage', 'claims.verify', 'website.manage'
+  )
+on conflict do nothing;
+
+alter table public.posts
+  add column publication_date date;
+
+create or replace function private.json_is_safe(candidate jsonb)
+returns boolean
+language plpgsql
+immutable
+security invoker
+set search_path = ''
+as $$
+declare
+  pair record;
+  scalar text;
+begin
+  if candidate is null then
+    return true;
+  end if;
+
+  if jsonb_typeof(candidate) = 'object' then
+    for pair in select key, value from jsonb_each(candidate) loop
+      if lower(pair.key) ~ '^(html|raw_html|script|javascript|css|style)$'
+         or lower(pair.key) ~ '^on[a-z_]' then
+        return false;
+      end if;
+      if not private.json_is_safe(pair.value) then
+        return false;
+      end if;
+    end loop;
+  elsif jsonb_typeof(candidate) = 'array' then
+    for pair in select value from jsonb_array_elements(candidate) loop
+      if not private.json_is_safe(pair.value) then
+        return false;
+      end if;
+    end loop;
+  elsif jsonb_typeof(candidate) = 'string' then
+    scalar := candidate #>> '{}';
+    if scalar ~* '(javascript:|data:text/html|<script|</script|<style|</style|on[a-z]+[[:space:]]*=)' then
+      return false;
+    end if;
+  end if;
+
+  return true;
+end;
+$$;
+
+create or replace function private.json_array_strings_valid(candidate jsonb)
+returns boolean
+language plpgsql
+immutable
+security invoker
+set search_path = ''
+as $$
+declare
+  item jsonb;
+  value text;
+begin
+  if jsonb_typeof(candidate) <> 'array' then
+    return false;
+  end if;
+
+  for item in select value from jsonb_array_elements(candidate) loop
+    if jsonb_typeof(item) <> 'string' then
+      return false;
+    end if;
+    value := item #>> '{}';
+    if btrim(value) = '' or char_length(value) > 2000 then
+      return false;
+    end if;
+  end loop;
+
+  return true;
+end;
+$$;
+
+create or replace function private.evidence_is_current(target_evidence_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1
+    from public.evidence_records
+    where evidence_records.id = target_evidence_id
+      and evidence_records.verification_state = 'verified'
+      and evidence_records.verified_at is not null
+      and (evidence_records.review_due_at is null or evidence_records.review_due_at > statement_timestamp())
+      and (not evidence_records.consent_required or evidence_records.consent_state = 'granted')
+  );
+$$;
+
+create or replace function private.media_is_publicly_eligible(target_asset_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1
+    from public.media_assets
+    join public.media_rights on media_rights.media_asset_id = media_assets.id
+    where media_assets.id = target_asset_id
+      and media_assets.bucket_id = 'editorial-derivatives'
+      and media_assets.asset_state = 'public_eligible'
+      and media_assets.processing_status is distinct from 'failed'
+      and media_assets.provenance_class not in ('concept_demo', 'generated_reference', 'synthetic_test')
+      and media_assets.mime_type in ('image/jpeg', 'image/png', 'image/webp', 'image/avif', 'video/mp4', 'video/webm')
+      and media_rights.rights_status = 'verified'
+      and media_rights.public_use_permission
+      and (media_rights.review_due_at is null or media_rights.review_due_at > statement_timestamp())
+      and (not media_rights.consent_required or media_rights.consent_state = 'granted')
+  );
+$$;
+
+create or replace function private.navigation_item_is_public(target_item_id uuid)
+returns boolean
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  item public.navigation_items;
+  target_path text;
+  target_slug text;
+  target_locale text;
+begin
+  select navigation_items.* into item
+  from public.navigation_items
+  where navigation_items.id = target_item_id;
+
+  if not found or not item.enabled then
+    return false;
+  end if;
+
+  if item.link_type = 'external' then
+    return item.external_url ~* '^https://[^[:space:]<>"'']+$';
+  end if;
+
+  target_path := item.internal_path;
+  if target_path is null or target_path !~ '^/[^/]'
+     or target_path ~ '^/(admin|preview)(/|$)'
+     or target_path ~ '(^|/)\.\.?(/|$)'
+     or target_path ~ '[<>"''`\\\\]' then
+    return false;
+  end if;
+
+  if target_path = '/' then
+    return true;
+  end if;
+
+  if target_path ~ '^/expertise/[^/]+$' then
+    target_slug := regexp_replace(target_path, '^/expertise/', '');
+    return exists (
+      select 1
+      from public.services
+      join public.service_localizations on service_localizations.service_id = services.id
+      where service_localizations.slug = target_slug
+        and services.publication_status = 'published'
+        and services.published_at <= statement_timestamp()
+        and private.evidence_is_current(
+          (select content_evidence_links.evidence_id
+           from public.content_evidence_links
+           where content_evidence_links.service_id = services.id
+             and content_evidence_links.is_required
+           limit 1)
+        )
+    );
+  end if;
+
+  if target_path ~ '^/projects/[^/]+$' then
+    target_slug := regexp_replace(target_path, '^/projects/', '');
+    return exists (
+      select 1
+      from public.projects
+      join public.project_localizations on project_localizations.project_id = projects.id
+      where project_localizations.slug = target_slug
+        and projects.publication_status = 'published'
+        and projects.published_at <= statement_timestamp()
+        and private.evidence_is_current(
+          (select content_evidence_links.evidence_id
+           from public.content_evidence_links
+           where content_evidence_links.project_id = projects.id
+             and content_evidence_links.is_required
+           limit 1)
+        )
+    );
+  end if;
+
+  if target_path ~ '^/insights/[^/]+$' then
+    target_slug := regexp_replace(target_path, '^/insights/', '');
+    return exists (
+      select 1
+      from public.posts
+      join public.post_localizations on post_localizations.post_id = posts.id
+      where post_localizations.slug = target_slug
+        and posts.publication_status = 'published'
+        and posts.published_at <= statement_timestamp()
+        and private.evidence_is_current(
+          (select content_evidence_links.evidence_id
+           from public.content_evidence_links
+           where content_evidence_links.post_id = posts.id
+             and content_evidence_links.is_required
+           limit 1)
+        )
+    );
+  end if;
+
+  select page_localizations.locale
+    into target_locale
+  from public.page_localizations
+  join public.site_pages on site_pages.id = page_localizations.page_id
+  where page_localizations.path = target_path
+    and site_pages.publication_status = 'published'
+    and site_pages.published_at <= statement_timestamp()
+    and private.evidence_is_current(
+      (select content_evidence_links.evidence_id
+       from public.content_evidence_links
+       where content_evidence_links.page_id = site_pages.id
+         and content_evidence_links.is_required
+       limit 1)
+    )
+  limit 1;
+
+  return target_locale is not null;
+end;
+$$;
+
+create or replace function private.publication_reasons(
+  content_kind text,
+  content_id uuid,
+  locale_key text
+)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  reasons jsonb := '[]'::jsonb;
+  localized record;
+  content_row record;
+  evidence_id uuid;
+  media_row record;
+begin
+  if content_kind = 'service' then
+    select service_localizations.* into localized
+    from public.service_localizations
+    where service_localizations.service_id = content_id
+      and service_localizations.locale = locale_key;
+
+    if not found then
+      reasons := reasons || jsonb_build_array(jsonb_build_object('code', 'missing_required_field', 'field', 'localization'));
+    else
+      if btrim(coalesce(localized.name, '')) = '' then
+        reasons := reasons || jsonb_build_array(jsonb_build_object('code', 'missing_required_field', 'field', 'name'));
+      end if;
+      if btrim(coalesce(localized.slug, '')) = '' then
+        reasons := reasons || jsonb_build_array(jsonb_build_object('code', 'missing_required_field', 'field', 'slug'));
+      end if;
+      if btrim(coalesce(localized.summary, '')) = '' or btrim(coalesce(localized.scope, '')) = '' then
+        reasons := reasons || jsonb_build_array(jsonb_build_object('code', 'missing_required_field', 'field', 'overview_or_scope'));
+      end if;
+      if not private.json_array_strings_valid(localized.deliverables)
+         or not private.json_array_strings_valid(localized.exclusions)
+         or not private.json_array_strings_valid(localized.client_inputs)
+         or btrim(coalesce(localized.delivery_wording, '')) = '' then
+        reasons := reasons || jsonb_build_array(jsonb_build_object('code', 'missing_required_field', 'field', 'delivery_contract'));
+      end if;
+      if not private.json_array_strings_valid(localized.professional_terminology)
+         or not private.json_is_safe(localized.body_blocks) then
+        reasons := reasons || jsonb_build_array(jsonb_build_object('code', 'invalid_content_blocks', 'field', 'body_blocks'));
+      end if;
+      if btrim(coalesce(localized.seo_title, '')) = '' or btrim(coalesce(localized.seo_description, '')) = '' then
+        reasons := reasons || jsonb_build_array(jsonb_build_object('code', 'seo_incomplete', 'field', 'seo'));
+      end if;
+    end if;
+
+    if not exists (
+      select 1
+      from public.content_evidence_links
+      where content_evidence_links.service_id = content_id
+        and content_evidence_links.is_required
+    ) then
+      reasons := reasons || jsonb_build_array(jsonb_build_object('code', 'missing_verification', 'field', 'evidence'));
+    elsif exists (
+      select 1
+      from public.content_evidence_links
+      where content_evidence_links.service_id = content_id
+        and content_evidence_links.is_required
+        and not private.evidence_is_current(content_evidence_links.evidence_id)
+    ) then
+      reasons := reasons || jsonb_build_array(jsonb_build_object('code', 'missing_verification', 'field', 'evidence'));
+    end if;
+
+  elsif content_kind = 'project' then
+    select projects.* into content_row
+    from public.projects
+    where projects.id = content_id;
+
+    if not found then
+      return jsonb_build_array(jsonb_build_object('code', 'not_found', 'field', 'project'));
+    end if;
+
+    select project_localizations.* into localized
+    from public.project_localizations
+    where project_localizations.project_id = content_id
+      and project_localizations.locale = locale_key;
+
+    if not found then
+      reasons := reasons || jsonb_build_array(jsonb_build_object('code', 'missing_required_field', 'field', 'localization'));
+    else
+      if btrim(coalesce(localized.title, '')) = '' or btrim(coalesce(localized.summary, '')) = '' then
+        reasons := reasons || jsonb_build_array(jsonb_build_object('code', 'missing_required_field', 'field', 'title_or_summary'));
+      end if;
+      if btrim(coalesce(localized.seo_title, '')) = '' or btrim(coalesce(localized.seo_description, '')) = '' then
+        reasons := reasons || jsonb_build_array(jsonb_build_object('code', 'seo_incomplete', 'field', 'seo'));
+      end if;
+    end if;
+
+    if btrim(coalesce(content_row.public_location, '')) = ''
+       or btrim(coalesce(content_row.project_type, '')) = ''
+       or btrim(coalesce(content_row.renz_role, '')) = ''
+       or btrim(coalesce(content_row.scope, '')) = ''
+       or content_row.reviewed_by is null
+       or content_row.reviewed_at is null then
+      reasons := reasons || jsonb_build_array(jsonb_build_object('code', 'missing_required_field', 'field', 'project_review_fields'));
+    end if;
+
+    if not exists (select 1 from public.project_services where project_services.project_id = content_id) then
+      reasons := reasons || jsonb_build_array(jsonb_build_object('code', 'missing_related_service', 'field', 'project_services'));
+    end if;
+
+    if not exists (select 1 from public.project_media where project_media.project_id = content_id) then
+      reasons := reasons || jsonb_build_array(jsonb_build_object('code', 'missing_required_field', 'field', 'media'));
+    else
+      for media_row in
+        select project_media.id, project_media.media_asset_id
+        from public.project_media
+        where project_media.project_id = content_id
+      loop
+        if not private.media_is_publicly_eligible(media_row.media_asset_id) then
+          reasons := reasons || jsonb_build_array(jsonb_build_object('code', 'rights_unknown', 'field', 'project_media'));
+        end if;
+        if not exists (
+          select 1
+          from public.project_media_localizations
+          where project_media_localizations.project_media_id = media_row.id
+            and project_media_localizations.locale = locale_key
+            and (project_media_localizations.is_decorative or btrim(coalesce(project_media_localizations.alt_text, '')) <> '')
+        ) then
+          reasons := reasons || jsonb_build_array(jsonb_build_object('code', 'missing_alt_text', 'field', 'project_media'));
+        end if;
+      end loop;
+    end if;
+
+    if not exists (select 1 from public.content_evidence_links where project_id = content_id and is_required) then
+      reasons := reasons || jsonb_build_array(jsonb_build_object('code', 'missing_verification', 'field', 'evidence'));
+    elsif exists (
+      select 1 from public.content_evidence_links
+      where project_id = content_id and is_required and not private.evidence_is_current(evidence_id)
+    ) then
+      reasons := reasons || jsonb_build_array(jsonb_build_object('code', 'missing_verification', 'field', 'evidence'));
+    end if;
+
+  elsif content_kind = 'post' then
+    select post_localizations.* into localized
+    from public.post_localizations
+    where post_localizations.post_id = content_id
+      and post_localizations.locale = locale_key;
+
+    if not found then
+      reasons := reasons || jsonb_build_array(jsonb_build_object('code', 'missing_required_field', 'field', 'localization'));
+    else
+      if btrim(coalesce(localized.title, '')) = '' or btrim(coalesce(localized.excerpt, '')) = ''
+         or jsonb_array_length(localized.body_blocks) = 0 or not private.json_is_safe(localized.body_blocks) then
+        reasons := reasons || jsonb_build_array(jsonb_build_object('code', 'missing_required_field', 'field', 'body'));
+      end if;
+      if btrim(coalesce(localized.seo_title, '')) = '' or btrim(coalesce(localized.seo_description, '')) = '' then
+        reasons := reasons || jsonb_build_array(jsonb_build_object('code', 'seo_incomplete', 'field', 'seo'));
+      end if;
+    end if;
+    select posts.reviewed_by, posts.reviewed_at, posts.publication_date into content_row
+    from public.posts where posts.id = content_id;
+    if not found or content_row.reviewed_by is null or content_row.reviewed_at is null then
+      reasons := reasons || jsonb_build_array(jsonb_build_object('code', 'missing_verification', 'field', 'review'));
+    end if;
+    if not exists (select 1 from public.content_evidence_links where post_id = content_id and is_required) then
+      reasons := reasons || jsonb_build_array(jsonb_build_object('code', 'missing_verification', 'field', 'evidence'));
+    elsif exists (
+      select 1 from public.content_evidence_links
+      where post_id = content_id and is_required and not private.evidence_is_current(evidence_id)
+    ) then
+      reasons := reasons || jsonb_build_array(jsonb_build_object('code', 'missing_verification', 'field', 'evidence'));
+    end if;
+
+  elsif content_kind = 'page' then
+    select page_localizations.* into localized
+    from public.page_localizations
+    where page_localizations.page_id = content_id
+      and page_localizations.locale = locale_key;
+    if not found then
+      reasons := reasons || jsonb_build_array(jsonb_build_object('code', 'missing_required_field', 'field', 'localization'));
+    else
+      if btrim(coalesce(localized.title, '')) = '' or btrim(coalesce(localized.path, '')) = ''
+         or not private.json_is_safe(localized.body_blocks) then
+        reasons := reasons || jsonb_build_array(jsonb_build_object('code', 'missing_required_field', 'field', 'page_body'));
+      end if;
+      if btrim(coalesce(localized.seo_title, '')) = '' or btrim(coalesce(localized.seo_description, '')) = '' then
+        reasons := reasons || jsonb_build_array(jsonb_build_object('code', 'seo_incomplete', 'field', 'seo'));
+      end if;
+    end if;
+    if exists (
+      select 1
+      from public.page_sections
+      where page_sections.page_id = content_id
+        and page_sections.enabled
+        and (
+          not exists (
+            select 1 from public.content_section_types
+            where content_section_types.section_type = page_sections.section_type
+              and content_section_types.schema_version = page_sections.schema_version
+          )
+          or not private.json_is_safe(page_sections.config)
+        )
+    ) then
+      reasons := reasons || jsonb_build_array(jsonb_build_object('code', 'unsupported_block', 'field', 'page_sections'));
+    end if;
+    select site_pages.reviewed_by, site_pages.reviewed_at into content_row
+    from public.site_pages where site_pages.id = content_id;
+    if not found or content_row.reviewed_by is null or content_row.reviewed_at is null then
+      reasons := reasons || jsonb_build_array(jsonb_build_object('code', 'missing_verification', 'field', 'review'));
+    end if;
+    if not exists (select 1 from public.content_evidence_links where page_id = content_id and is_required) then
+      reasons := reasons || jsonb_build_array(jsonb_build_object('code', 'missing_verification', 'field', 'evidence'));
+    elsif exists (
+      select 1 from public.content_evidence_links
+      where page_id = content_id and is_required and not private.evidence_is_current(evidence_id)
+    ) then
+      reasons := reasons || jsonb_build_array(jsonb_build_object('code', 'missing_verification', 'field', 'evidence'));
+    end if;
+
+  elsif content_kind = 'team_member' then
+    select team_member_localizations.* into localized
+    from public.team_member_localizations
+    where team_member_localizations.team_member_id = content_id
+      and team_member_localizations.locale = locale_key;
+    if not found or btrim(coalesce(localized.name, '')) = '' or btrim(coalesce(localized.role_label, '')) = '' then
+      reasons := reasons || jsonb_build_array(jsonb_build_object('code', 'missing_required_field', 'field', 'identity'));
+    end if;
+    if not exists (
+      select 1 from public.team_member_consents
+      where team_member_consents.team_member_id = content_id
+        and team_member_consents.consent_state = 'granted'
+        and team_member_consents.reviewed_by is not null
+    ) then
+      reasons := reasons || jsonb_build_array(jsonb_build_object('code', 'consent_missing', 'field', 'publication_consent'));
+    end if;
+    if exists (
+      select 1 from public.team_members
+      where team_members.id = content_id
+        and team_members.portrait_asset_id is not null
+        and not private.media_is_publicly_eligible(team_members.portrait_asset_id)
+    ) then
+      reasons := reasons || jsonb_build_array(jsonb_build_object('code', 'rights_unknown', 'field', 'portrait'));
+    end if;
+    if not exists (select 1 from public.content_evidence_links where team_member_id = content_id and is_required) then
+      reasons := reasons || jsonb_build_array(jsonb_build_object('code', 'missing_verification', 'field', 'evidence'));
+    elsif exists (
+      select 1 from public.content_evidence_links
+      where team_member_id = content_id and is_required and not private.evidence_is_current(evidence_id)
+    ) then
+      reasons := reasons || jsonb_build_array(jsonb_build_object('code', 'missing_verification', 'field', 'evidence'));
+    end if;
+
+  elsif content_kind = 'testimonial' then
+    select testimonial_localizations.* into localized
+    from public.testimonial_localizations
+    where testimonial_localizations.testimonial_id = content_id
+      and testimonial_localizations.locale = locale_key;
+    if not found or btrim(coalesce(localized.quote, '')) = '' then
+      reasons := reasons || jsonb_build_array(jsonb_build_object('code', 'missing_required_field', 'field', 'quote'));
+    end if;
+    select testimonials.consent_state, testimonials.attribution_approved, testimonials.reviewed_by, testimonials.reviewed_at
+      into content_row
+    from public.testimonials where testimonials.id = content_id;
+    if not found or content_row.consent_state <> 'granted' or not content_row.attribution_approved then
+      reasons := reasons || jsonb_build_array(jsonb_build_object('code', 'consent_missing', 'field', 'attribution'));
+    end if;
+    if content_row.reviewed_by is null or content_row.reviewed_at is null then
+      reasons := reasons || jsonb_build_array(jsonb_build_object('code', 'missing_verification', 'field', 'review'));
+    end if;
+    if not exists (
+      select 1 from public.testimonial_verifications
+      where testimonial_id = content_id
+        and verification_state = 'verified'
+        and consent_state = 'granted'
+        and verified_at is not null
+    ) then
+      reasons := reasons || jsonb_build_array(jsonb_build_object('code', 'missing_verification', 'field', 'testimonial_verification'));
+    end if;
+    if not exists (select 1 from public.content_evidence_links where testimonial_id = content_id and is_required) then
+      reasons := reasons || jsonb_build_array(jsonb_build_object('code', 'missing_verification', 'field', 'evidence'));
+    elsif exists (
+      select 1 from public.content_evidence_links
+      where testimonial_id = content_id and is_required and not private.evidence_is_current(evidence_id)
+    ) then
+      reasons := reasons || jsonb_build_array(jsonb_build_object('code', 'missing_verification', 'field', 'evidence'));
+    end if;
+
+  elsif content_kind = 'credential' then
+    select credential_localizations.* into localized
+    from public.credential_localizations
+    where credential_localizations.credential_id = content_id
+      and credential_localizations.locale = locale_key;
+    if not found or btrim(coalesce(localized.name, '')) = '' then
+      reasons := reasons || jsonb_build_array(jsonb_build_object('code', 'missing_required_field', 'field', 'identity'));
+    end if;
+    select credentials.issuer, credentials.reference, credentials.valid_to, credentials.reviewed_by, credentials.reviewed_at
+      into content_row
+    from public.credentials where credentials.id = content_id;
+    if not found or btrim(coalesce(content_row.issuer, '')) = '' or btrim(coalesce(content_row.reference, '')) = '' then
+      reasons := reasons || jsonb_build_array(jsonb_build_object('code', 'missing_required_field', 'field', 'issuer_or_reference'));
+    end if;
+    if content_row.valid_to is not null and content_row.valid_to < current_date then
+      reasons := reasons || jsonb_build_array(jsonb_build_object('code', 'evidence_expired', 'field', 'valid_to'));
+    end if;
+    if content_row.reviewed_by is null or content_row.reviewed_at is null then
+      reasons := reasons || jsonb_build_array(jsonb_build_object('code', 'missing_verification', 'field', 'review'));
+    end if;
+    if not exists (select 1 from public.content_evidence_links where credential_id = content_id and is_required) then
+      reasons := reasons || jsonb_build_array(jsonb_build_object('code', 'missing_verification', 'field', 'evidence'));
+    elsif exists (
+      select 1 from public.content_evidence_links
+      where credential_id = content_id and is_required and not private.evidence_is_current(evidence_id)
+    ) then
+      reasons := reasons || jsonb_build_array(jsonb_build_object('code', 'missing_verification', 'field', 'evidence'));
+    end if;
+  else
+    reasons := reasons || jsonb_build_array(jsonb_build_object('code', 'unsupported_content_type', 'field', 'content_kind'));
+  end if;
+
+  return reasons;
+end;
+$$;
+
+create or replace function private.publication_result(
+  ok_value boolean,
+  content_kind text,
+  content_id uuid,
+  status_value text,
+  version_value integer,
+  reason_values jsonb
+)
+returns jsonb
+language sql
+immutable
+security invoker
+set search_path = ''
+as $$
+  jsonb_build_object(
+    'ok', ok_value,
+    'content_type', content_kind,
+    'content_id', content_id,
+    'status', status_value,
+    'version', version_value,
+    'reasons', coalesce(reason_values, '[]'::jsonb),
+    'cache_tags', jsonb_build_array(
+      'content:' || content_kind || 's',
+      'content:' || content_kind || ':' || content_id::text
+    )
+  );
+$$;
+
+create or replace function private.mutate_publication(
+  content_kind text,
+  content_id uuid,
+  expected_version integer,
+  target_status text,
+  locale_key text
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  current_version integer;
+  new_version integer;
+  reasons jsonb := '[]'::jsonb;
+  permission_key text;
+begin
+  if target_status not in ('published', 'draft', 'archived')
+     or content_kind not in ('service', 'project', 'post', 'page', 'team_member', 'testimonial', 'credential') then
+    return private.publication_result(false, content_kind, content_id, null, null,
+      jsonb_build_array(jsonb_build_object('code', 'unsupported_content_type', 'field', 'content_kind')));
+  end if;
+
+  permission_key := case when target_status = 'archived' then 'content.archive' else 'content.publish' end;
+  if auth.uid() is null or not private.has_aal2() or not private.has_permission(permission_key) then
+    return private.publication_result(false, content_kind, content_id, null, null,
+      jsonb_build_array(jsonb_build_object('code', 'not_authorized', 'field', permission_key)));
+  end if;
+
+  if content_kind = 'service' then
+    select services.version into current_version from public.services where services.id = content_id;
+  elsif content_kind = 'project' then
+    select projects.version into current_version from public.projects where projects.id = content_id;
+  elsif content_kind = 'post' then
+    select posts.version into current_version from public.posts where posts.id = content_id;
+  elsif content_kind = 'page' then
+    select site_pages.version into current_version from public.site_pages where site_pages.id = content_id;
+  elsif content_kind = 'team_member' then
+    select team_members.version into current_version from public.team_members where team_members.id = content_id;
+  elsif content_kind = 'testimonial' then
+    select testimonials.version into current_version from public.testimonials where testimonials.id = content_id;
+  elsif content_kind = 'credential' then
+    select credentials.version into current_version from public.credentials where credentials.id = content_id;
+  end if;
+
+  if current_version is null then
+    return private.publication_result(false, content_kind, content_id, null, null,
+      jsonb_build_array(jsonb_build_object('code', 'not_found', 'field', content_kind)));
+  end if;
+
+  if current_version <> expected_version then
+    return private.publication_result(false, content_kind, content_id, null, current_version,
+      jsonb_build_array(jsonb_build_object('code', 'version_conflict', 'field', 'version')));
+  end if;
+
+  if target_status = 'published' then
+    reasons := private.publication_reasons(content_kind, content_id, locale_key);
+    if jsonb_array_length(reasons) > 0 then
+      return private.publication_result(false, content_kind, content_id, null, current_version, reasons);
+    end if;
+  end if;
+
+  if content_kind = 'service' then
+    update public.services
+    set publication_status = target_status,
+        published_at = case when target_status = 'published' then coalesce(services.published_at, statement_timestamp()) else null end,
+        updated_by = auth.uid(),
+        version = services.version + 1
+    where services.id = content_id and services.version = expected_version;
+  elsif content_kind = 'project' then
+    update public.projects
+    set publication_status = target_status,
+        published_at = case when target_status = 'published' then coalesce(projects.published_at, statement_timestamp()) else null end,
+        updated_by = auth.uid(),
+        version = projects.version + 1
+    where projects.id = content_id and projects.version = expected_version;
+  elsif content_kind = 'post' then
+    update public.posts
+    set publication_status = target_status,
+        published_at = case when target_status = 'published' then coalesce(posts.published_at, statement_timestamp()) else null end,
+        publication_date = case when target_status = 'published' then coalesce(posts.publication_date, current_date) else posts.publication_date end,
+        updated_by = auth.uid(),
+        version = posts.version + 1
+    where posts.id = content_id and posts.version = expected_version;
+  elsif content_kind = 'page' then
+    update public.site_pages
+    set publication_status = target_status,
+        published_at = case when target_status = 'published' then coalesce(site_pages.published_at, statement_timestamp()) else null end,
+        updated_by = auth.uid(),
+        version = site_pages.version + 1
+    where site_pages.id = content_id and site_pages.version = expected_version;
+  elsif content_kind = 'team_member' then
+    update public.team_members
+    set publication_status = target_status,
+        published_at = case when target_status = 'published' then coalesce(team_members.published_at, statement_timestamp()) else null end,
+        updated_by = auth.uid(),
+        version = team_members.version + 1
+    where team_members.id = content_id and team_members.version = expected_version;
+  elsif content_kind = 'testimonial' then
+    update public.testimonials
+    set publication_status = target_status,
+        published_at = case when target_status = 'published' then coalesce(testimonials.published_at, statement_timestamp()) else null end,
+        updated_by = auth.uid(),
+        version = testimonials.version + 1
+    where testimonials.id = content_id and testimonials.version = expected_version;
+  elsif content_kind = 'credential' then
+    update public.credentials
+    set publication_status = target_status,
+        published_at = case when target_status = 'published' then coalesce(credentials.published_at, statement_timestamp()) else null end,
+        updated_by = auth.uid(),
+        version = credentials.version + 1
+    where credentials.id = content_id and credentials.version = expected_version;
+  end if;
+
+  if not found then
+    select case content_kind
+      when 'service' then (select version from public.services where id = content_id)
+      when 'project' then (select version from public.projects where id = content_id)
+      when 'post' then (select version from public.posts where id = content_id)
+      when 'page' then (select version from public.site_pages where id = content_id)
+      when 'team_member' then (select version from public.team_members where id = content_id)
+      when 'testimonial' then (select version from public.testimonials where id = content_id)
+      when 'credential' then (select version from public.credentials where id = content_id)
+    end into new_version;
+    return private.publication_result(false, content_kind, content_id, null, new_version,
+      jsonb_build_array(jsonb_build_object('code', 'version_conflict', 'field', 'version')));
+  end if;
+
+  new_version := expected_version + 1;
+  perform private.record_audit_event(
+    case when target_status = 'published' then 'content.publish'
+         when target_status = 'archived' then 'content.archive'
+         else 'content.unpublish' end,
+    content_kind,
+    content_id::text,
+    'success',
+    jsonb_build_object('locale', locale_key, 'status', target_status),
+    null
+  );
+
+  return private.publication_result(true, content_kind, content_id, target_status, new_version, '[]'::jsonb);
+end;
+$$;
+
+create or replace function public.publish_content(
+  content_kind text,
+  content_id uuid,
+  expected_version integer,
+  locale_key text
+)
+returns jsonb
+language sql
+security definer
+set search_path = ''
+as $$ select private.mutate_publication(content_kind, content_id, expected_version, 'published', locale_key); $$;
+
+create or replace function public.unpublish_content(
+  content_kind text,
+  content_id uuid,
+  expected_version integer,
+  locale_key text
+)
+returns jsonb
+language sql
+security definer
+set search_path = ''
+as $$ select private.mutate_publication(content_kind, content_id, expected_version, 'draft', locale_key); $$;
+
+create or replace function public.archive_content(
+  content_kind text,
+  content_id uuid,
+  expected_version integer,
+  locale_key text
+)
+returns jsonb
+language sql
+security definer
+set search_path = ''
+as $$ select private.mutate_publication(content_kind, content_id, expected_version, 'archived', locale_key); $$;
+
+create or replace function public.register_evidence(
+  source_type text,
+  source_reference text,
+  sensitivity text default 'private',
+  consent_required boolean default false,
+  consent_state text default 'not_required',
+  approved_public_wording text default null
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  created_id uuid;
+begin
+  if auth.uid() is null or not private.has_aal2() or not private.has_permission('content.write') then
+    raise insufficient_privilege using message = 'evidence registration is not authorized';
+  end if;
+
+  insert into public.evidence_records (
+    source_type, source_reference, sensitivity, consent_required, consent_state,
+    approved_public_wording, owner_id
+  )
+  values (
+    source_type, source_reference, sensitivity, consent_required, consent_state,
+    approved_public_wording, auth.uid()
+  )
+  returning id into created_id;
+
+  perform private.record_audit_event(
+    'evidence.create', 'evidence', created_id::text, 'success', '{}'::jsonb, null
+  );
+  return created_id;
+end;
+$$;
+
+create or replace function public.link_evidence(
+  evidence_id uuid,
+  subject_type text,
+  subject_id uuid,
+  relationship_key text default 'primary',
+  is_required boolean default true
+)
+returns boolean
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if auth.uid() is null or not private.has_aal2() or not private.has_permission('content.write') then
+    raise insufficient_privilege using message = 'evidence linking is not authorized';
+  end if;
+
+  if not exists (select 1 from public.evidence_records where id = evidence_id) then
+    raise foreign_key_violation using message = 'evidence record does not exist';
+  end if;
+
+  if subject_type = 'service' then
+    insert into public.content_evidence_links (evidence_id, service_id, relationship_key, is_required, created_by)
+    values (evidence_id, subject_id, relationship_key, is_required, auth.uid());
+  elsif subject_type = 'project' then
+    insert into public.content_evidence_links (evidence_id, project_id, relationship_key, is_required, created_by)
+    values (evidence_id, subject_id, relationship_key, is_required, auth.uid());
+  elsif subject_type = 'post' then
+    insert into public.content_evidence_links (evidence_id, post_id, relationship_key, is_required, created_by)
+    values (evidence_id, subject_id, relationship_key, is_required, auth.uid());
+  elsif subject_type = 'page' then
+    insert into public.content_evidence_links (evidence_id, page_id, relationship_key, is_required, created_by)
+    values (evidence_id, subject_id, relationship_key, is_required, auth.uid());
+  elsif subject_type = 'team_member' then
+    insert into public.content_evidence_links (evidence_id, team_member_id, relationship_key, is_required, created_by)
+    values (evidence_id, subject_id, relationship_key, is_required, auth.uid());
+  elsif subject_type = 'testimonial' then
+    insert into public.content_evidence_links (evidence_id, testimonial_id, relationship_key, is_required, created_by)
+    values (evidence_id, subject_id, relationship_key, is_required, auth.uid());
+  elsif subject_type = 'credential' then
+    insert into public.content_evidence_links (evidence_id, credential_id, relationship_key, is_required, created_by)
+    values (evidence_id, subject_id, relationship_key, is_required, auth.uid());
+  elsif subject_type = 'media_asset' then
+    insert into public.content_evidence_links (evidence_id, media_asset_id, relationship_key, is_required, created_by)
+    values (evidence_id, subject_id, relationship_key, is_required, auth.uid());
+  elsif subject_type = 'claim' then
+    insert into public.content_evidence_links (evidence_id, claim_id, relationship_key, is_required, created_by)
+    values (evidence_id, subject_id, relationship_key, is_required, auth.uid());
+  else
+    raise invalid_parameter_value using message = 'evidence subject type is not approved';
+  end if;
+
+  perform private.record_audit_event(
+    'evidence.link', subject_type, subject_id::text, 'success',
+    jsonb_build_object('relationship_key', relationship_key, 'required', is_required), null
+  );
+  return true;
+end;
+$$;
+
+create or replace function public.update_evidence_state(
+  evidence_id uuid,
+  expected_version integer,
+  next_state text,
+  approved_public_wording text default null,
+  next_consent_state text default null
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  current_version integer;
+  new_version integer;
+  current_consent text;
+begin
+  if next_state not in ('unverified', 'in_review', 'verified', 'expired', 'rejected') then
+    return jsonb_build_object('ok', false, 'reasons', jsonb_build_array(jsonb_build_object('code', 'invalid_state')));
+  end if;
+  if auth.uid() is null or not private.has_aal2()
+     or not private.has_permission(case when next_state in ('verified', 'expired', 'rejected') then 'claims.verify' else 'content.write' end) then
+    return jsonb_build_object('ok', false, 'reasons', jsonb_build_array(jsonb_build_object('code', 'not_authorized')));
+  end if;
+
+  select evidence_records.version, evidence_records.consent_state
+    into current_version, current_consent
+  from public.evidence_records
+  where evidence_records.id = evidence_id;
+  if current_version is null then
+    return jsonb_build_object('ok', false, 'reasons', jsonb_build_array(jsonb_build_object('code', 'not_found')));
+  end if;
+  if current_version <> expected_version then
+    return jsonb_build_object('ok', false, 'version', current_version,
+      'reasons', jsonb_build_array(jsonb_build_object('code', 'version_conflict')));
+  end if;
+
+  update public.evidence_records
+  set verification_state = next_state,
+      reviewer_id = case when next_state = 'verified' then auth.uid() else reviewer_id end,
+      verified_at = case when next_state = 'verified' then coalesce(verified_at, statement_timestamp()) else verified_at end,
+      approved_public_wording = coalesce(approved_public_wording, evidence_records.approved_public_wording),
+      consent_state = coalesce(next_consent_state, current_consent),
+      version = evidence_records.version + 1
+  where evidence_records.id = evidence_id and evidence_records.version = expected_version;
+
+  if not found then
+    select version into new_version from public.evidence_records where id = evidence_id;
+    return jsonb_build_object('ok', false, 'version', new_version,
+      'reasons', jsonb_build_array(jsonb_build_object('code', 'version_conflict')));
+  end if;
+
+  perform private.record_audit_event(
+    case when next_state = 'verified' then 'claim.verify'
+         when next_state in ('expired', 'rejected') then 'claim.reject'
+         else 'evidence.update' end,
+    'evidence', evidence_id::text, 'success',
+    jsonb_build_object('verification_state', next_state), null
+  );
+  return jsonb_build_object('ok', true, 'version', expected_version + 1, 'state', next_state, 'reasons', '[]'::jsonb);
+end;
+$$;
+
+create or replace function public.register_media_asset(
+  bucket_key text,
+  object_key text,
+  display_filename text,
+  media_mime_type text,
+  media_byte_size bigint,
+  media_checksum_sha256 text,
+  media_provenance_class text,
+  media_state text default 'registered'
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  asset_id uuid;
+begin
+  if auth.uid() is null or not private.has_aal2() or not private.has_permission('media.upload') then
+    return jsonb_build_object('ok', false, 'reasons', jsonb_build_array(jsonb_build_object('code', 'not_authorized')));
+  end if;
+  if media_byte_size <= 0 or media_byte_size > 26214400 then
+    return jsonb_build_object('ok', false, 'reasons', jsonb_build_array(jsonb_build_object('code', 'file_size_exceeded')));
+  end if;
+  if bucket_key not in ('editorial-originals', 'editorial-derivatives')
+     or object_key !~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/[A-Za-z0-9][A-Za-z0-9._-]{0,127}$'
+     or object_key ~ '(^|/)(\.\.?)(/|$)'
+     or object_key ~ '[\\\\]'
+     or media_mime_type not in ('image/jpeg', 'image/png', 'image/webp', 'image/avif', 'video/mp4', 'video/webm') then
+    return jsonb_build_object('ok', false, 'reasons', jsonb_build_array(jsonb_build_object('code', 'invalid_media_metadata')));
+  end if;
+  if media_provenance_class not in ('client_original', 'client_derivative', 'production_asset', 'concept_demo', 'generated_reference', 'synthetic_test')
+     or media_state not in ('registered', 'uploaded_private', 'ready_private') then
+    return jsonb_build_object('ok', false, 'reasons', jsonb_build_array(jsonb_build_object('code', 'invalid_media_metadata')));
+  end if;
+
+  insert into public.media_assets (
+    bucket_id, object_path, original_filename, mime_type, byte_size,
+    checksum_sha256, provenance_class, asset_state, processing_status,
+    created_by, updated_by
+  )
+  values (
+    bucket_key, object_key, nullif(btrim(display_filename), ''), media_mime_type,
+    media_byte_size, lower(media_checksum_sha256), media_provenance_class,
+    media_state, media_state, auth.uid(), auth.uid()
+  )
+  returning id into asset_id;
+
+  perform private.record_audit_event(
+    'media.register', 'media_asset', asset_id::text, 'success',
+    jsonb_build_object('bucket', bucket_key, 'provenance_class', media_provenance_class), null
+  );
+  return jsonb_build_object('ok', true, 'media_asset_id', asset_id, 'version', 1, 'reasons', '[]'::jsonb);
+exception
+  when unique_violation then
+    return jsonb_build_object('ok', false, 'reasons', jsonb_build_array(jsonb_build_object('code', 'object_already_registered')));
+end;
+$$;
+
+create or replace function public.register_media_derivative(
+  source_asset_id uuid,
+  derivative_asset_id uuid,
+  variant_key text,
+  derivative_width integer,
+  derivative_height integer,
+  derivative_format text,
+  derivative_byte_size bigint,
+  derivative_checksum_sha256 text,
+  quality_profile_key text default null
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  derivative_row_id uuid;
+begin
+  if auth.uid() is null or not private.has_aal2() or not private.has_permission('media.manage') then
+    return jsonb_build_object('ok', false, 'reasons', jsonb_build_array(jsonb_build_object('code', 'not_authorized')));
+  end if;
+  if not exists (
+    select 1 from public.media_assets
+    where id = source_asset_id
+  ) or not exists (
+    select 1 from public.media_assets
+    where id = derivative_asset_id
+      and bucket_id = 'editorial-derivatives'
+      and asset_state in ('registered', 'uploaded_private', 'ready_private')
+  ) then
+    return jsonb_build_object('ok', false, 'reasons', jsonb_build_array(jsonb_build_object('code', 'invalid_media_metadata')));
+  end if;
+
+  insert into public.media_derivatives (
+    source_asset_id, derivative_asset_id, variant, width, height, format,
+    byte_size, checksum_sha256, quality_profile, processing_state
+  )
+  values (
+    source_asset_id, derivative_asset_id, variant_key, derivative_width,
+    derivative_height, derivative_format, derivative_byte_size,
+    lower(derivative_checksum_sha256), quality_profile_key, 'ready_private'
+  )
+  returning id into derivative_row_id;
+
+  perform private.record_audit_event(
+    'media.register', 'media_derivative', derivative_row_id::text, 'success',
+    jsonb_build_object('variant', variant_key), null
+  );
+  return jsonb_build_object('ok', true, 'derivative_id', derivative_row_id, 'reasons', '[]'::jsonb);
+exception
+  when unique_violation then
+    return jsonb_build_object('ok', false, 'reasons', jsonb_build_array(jsonb_build_object('code', 'derivative_already_registered')));
+end;
+$$;
+
+create or replace function public.update_media_rights(
+  asset_id uuid,
+  expected_version integer,
+  next_rights_status text,
+  public_permission boolean,
+  rights_holder_value text default null,
+  credit_value text default null,
+  source_reference_value text default null,
+  consent_required_value boolean default false,
+  consent_state_value text default 'not_required',
+  review_due_value timestamptz default null
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  current_version integer;
+  new_version integer;
+begin
+  if auth.uid() is null or not private.has_aal2() or not private.has_permission('media.manage') then
+    return jsonb_build_object('ok', false, 'reasons', jsonb_build_array(jsonb_build_object('code', 'not_authorized')));
+  end if;
+  if next_rights_status not in ('unknown', 'in_review', 'verified', 'expired', 'rejected') then
+    return jsonb_build_object('ok', false, 'reasons', jsonb_build_array(jsonb_build_object('code', 'invalid_rights_state')));
+  end if;
+  if next_rights_status = 'verified' and not private.has_permission('claims.verify') then
+    return jsonb_build_object('ok', false, 'reasons', jsonb_build_array(jsonb_build_object('code', 'not_authorized')));
+  end if;
+
+  select version into current_version from public.media_rights where media_asset_id = asset_id;
+  if current_version is null then
+    if expected_version <> 0 then
+      return jsonb_build_object('ok', false, 'reasons', jsonb_build_array(jsonb_build_object('code', 'version_conflict')));
+    end if;
+    insert into public.media_rights (
+      media_asset_id, rights_status, public_use_permission, rights_holder,
+      credit, source_reference, consent_required, consent_state, reviewed_by,
+      verified_at, review_due_at, version
+    )
+    values (
+      asset_id, next_rights_status, public_permission, rights_holder_value,
+      credit_value, source_reference_value, consent_required_value,
+      consent_state_value, case when next_rights_status = 'verified' then auth.uid() else null end,
+      case when next_rights_status = 'verified' then statement_timestamp() else null end,
+      review_due_value, 1
+    );
+    new_version := 1;
+  else
+    if current_version <> expected_version then
+      return jsonb_build_object('ok', false, 'version', current_version,
+        'reasons', jsonb_build_array(jsonb_build_object('code', 'version_conflict')));
+    end if;
+    update public.media_rights
+    set rights_status = next_rights_status,
+        public_use_permission = public_permission,
+        rights_holder = rights_holder_value,
+        credit = credit_value,
+        source_reference = source_reference_value,
+        consent_required = consent_required_value,
+        consent_state = consent_state_value,
+        reviewed_by = case when next_rights_status = 'verified' then auth.uid() else reviewed_by end,
+        verified_at = case when next_rights_status = 'verified' then coalesce(verified_at, statement_timestamp()) else verified_at end,
+        review_due_at = review_due_value,
+        version = media_rights.version + 1
+    where media_asset_id = asset_id and version = expected_version;
+    new_version := expected_version + 1;
+  end if;
+
+  perform private.record_audit_event(
+    'media.rights.update', 'media_asset', asset_id::text, 'success',
+    jsonb_build_object('rights_status', next_rights_status, 'public_use_permission', public_permission), null
+  );
+  return jsonb_build_object('ok', true, 'version', new_version, 'reasons', '[]'::jsonb);
+end;
+$$;
+
+create or replace function public.promote_media_asset(asset_id uuid, expected_version integer)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  current_version integer;
+begin
+  if auth.uid() is null or not private.has_aal2()
+     or not private.has_permission('media.manage') or not private.has_permission('content.publish') then
+    return jsonb_build_object('ok', false, 'reasons', jsonb_build_array(jsonb_build_object('code', 'not_authorized')));
+  end if;
+  select version into current_version from public.media_assets where id = asset_id;
+  if current_version is null then
+    return jsonb_build_object('ok', false, 'reasons', jsonb_build_array(jsonb_build_object('code', 'not_found')));
+  end if;
+  if current_version <> expected_version then
+    return jsonb_build_object('ok', false, 'version', current_version,
+      'reasons', jsonb_build_array(jsonb_build_object('code', 'version_conflict')));
+  end if;
+  if not exists (
+    select 1
+    from public.media_assets
+    join public.media_rights on media_rights.media_asset_id = media_assets.id
+    where media_assets.id = asset_id
+      and media_assets.bucket_id = 'editorial-derivatives'
+      and media_assets.asset_state in ('ready_private', 'promotion_pending')
+      and media_assets.provenance_class not in ('concept_demo', 'generated_reference', 'synthetic_test')
+      and media_assets.mime_type in ('image/jpeg', 'image/png', 'image/webp', 'image/avif', 'video/mp4', 'video/webm')
+      and media_rights.rights_status = 'verified'
+      and media_rights.public_use_permission
+      and (media_rights.review_due_at is null or media_rights.review_due_at > statement_timestamp())
+      and (not media_rights.consent_required or media_rights.consent_state = 'granted')
+  ) then
+    return jsonb_build_object('ok', false, 'reasons', jsonb_build_array(jsonb_build_object('code', 'media_not_eligible')));
+  end if;
+
+  update public.media_assets
+  set asset_state = 'public_eligible',
+      processing_status = 'public_eligible',
+      updated_by = auth.uid(),
+      version = media_assets.version + 1
+  where id = asset_id and version = expected_version;
+
+  perform private.record_audit_event(
+    'media.promote', 'media_asset', asset_id::text, 'success', '{}'::jsonb, null
+  );
+  return jsonb_build_object('ok', true, 'version', expected_version + 1, 'reasons', '[]'::jsonb);
+end;
+$$;
+
+create or replace function public.archive_media_asset(asset_id uuid, expected_version integer)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  current_version integer;
+  usage_count integer;
+begin
+  if auth.uid() is null or not private.has_aal2() or not private.has_permission('media.manage') then
+    return jsonb_build_object('ok', false, 'reasons', jsonb_build_array(jsonb_build_object('code', 'not_authorized')));
+  end if;
+  select version into current_version from public.media_assets where id = asset_id;
+  if current_version is null then
+    return jsonb_build_object('ok', false, 'reasons', jsonb_build_array(jsonb_build_object('code', 'not_found')));
+  end if;
+  if current_version <> expected_version then
+    return jsonb_build_object('ok', false, 'version', current_version,
+      'reasons', jsonb_build_array(jsonb_build_object('code', 'version_conflict')));
+  end if;
+
+  select count(*) into usage_count
+  from (
+    select 1 from public.services where hero_asset_id = asset_id
+    union all select 1 from public.projects where hero_asset_id = asset_id
+    union all select 1 from public.posts where hero_asset_id = asset_id
+    union all select 1 from public.team_members where portrait_asset_id = asset_id
+    union all select 1 from public.page_localizations where social_image_id = asset_id
+    union all select 1 from public.project_media where media_asset_id = asset_id
+    union all select 1 from public.page_section_media where media_asset_id = asset_id
+    union all select 1 from public.media_derivatives where source_asset_id = asset_id or derivative_asset_id = asset_id
+    union all select 1 from public.evidence_attachments where media_asset_id = asset_id
+  ) as usages;
+
+  if usage_count > 0 then
+    return jsonb_build_object('ok', false, 'reasons', jsonb_build_array(jsonb_build_object('code', 'media_in_use')));
+  end if;
+
+  update public.media_assets
+  set asset_state = 'archived',
+      processing_status = 'archived',
+      updated_by = auth.uid(),
+      version = media_assets.version + 1
+  where id = asset_id and version = expected_version;
+
+  perform private.record_audit_event(
+    'media.archive', 'media_asset', asset_id::text, 'success', '{}'::jsonb, null
+  );
+  return jsonb_build_object('ok', true, 'version', expected_version + 1, 'reasons', '[]'::jsonb);
+end;
+$$;
+
+create or replace function public.replace_project_media_asset(
+  project_media_id uuid,
+  expected_version integer,
+  replacement_asset_id uuid
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  current_version integer;
+  project_id_value uuid;
+begin
+  if auth.uid() is null or not private.has_aal2() or not private.has_permission('media.manage') then
+    return jsonb_build_object('ok', false, 'reasons', jsonb_build_array(jsonb_build_object('code', 'not_authorized')));
+  end if;
+  select version, project_id into current_version, project_id_value
+  from public.project_media where id = project_media_id;
+  if current_version is null then
+    return jsonb_build_object('ok', false, 'reasons', jsonb_build_array(jsonb_build_object('code', 'not_found')));
+  end if;
+  if current_version <> expected_version then
+    return jsonb_build_object('ok', false, 'version', current_version,
+      'reasons', jsonb_build_array(jsonb_build_object('code', 'version_conflict')));
+  end if;
+  if not private.media_is_publicly_eligible(replacement_asset_id) then
+    return jsonb_build_object('ok', false, 'reasons', jsonb_build_array(jsonb_build_object('code', 'media_not_eligible')));
+  end if;
+
+  update public.project_media
+  set media_asset_id = replacement_asset_id,
+      updated_by = auth.uid(),
+      version = project_media.version + 1
+  where id = project_media_id and version = expected_version;
+  if not found then
+    return jsonb_build_object('ok', false, 'reasons', jsonb_build_array(jsonb_build_object('code', 'version_conflict')));
+  end if;
+
+  perform private.record_audit_event(
+    'media.replace', 'project_media', project_media_id::text, 'success',
+    jsonb_build_object('project_id', project_id_value), null
+  );
+  return jsonb_build_object('ok', true, 'version', expected_version + 1, 'reasons', '[]'::jsonb);
+end;
+$$;
+
+create or replace function public.update_public_site_setting(
+  namespace_key text,
+  setting_key text,
+  setting_value jsonb,
+  expected_version integer,
+  setting_evidence_id uuid
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  definition public.public_site_setting_definitions;
+  existing public.public_site_settings;
+  new_version integer;
+begin
+  if auth.uid() is null or not private.has_aal2() or not private.has_permission('website.manage') then
+    return jsonb_build_object('ok', false, 'reasons', jsonb_build_array(jsonb_build_object('code', 'not_authorized')));
+  end if;
+
+  select * into definition
+  from public.public_site_setting_definitions
+  where public_site_setting_definitions.namespace = namespace_key
+    and public_site_setting_definitions.key = setting_key
+    and public_site_setting_definitions.public_allowed;
+  if not found or not private.evidence_is_current(setting_evidence_id) then
+    return jsonb_build_object('ok', false, 'reasons', jsonb_build_array(jsonb_build_object('code', 'unknown_public_setting')));
+  end if;
+  if setting_key ~* '(secret|token|password|api[_-]?key|smtp|webhook|private)' or not private.json_is_safe(setting_value) then
+    return jsonb_build_object('ok', false, 'reasons', jsonb_build_array(jsonb_build_object('code', 'unknown_public_setting')));
+  end if;
+  if (definition.value_kind = 'string' and jsonb_typeof(setting_value) <> 'string')
+     or (definition.value_kind = 'number' and jsonb_typeof(setting_value) <> 'number')
+     or (definition.value_kind = 'boolean' and jsonb_typeof(setting_value) <> 'boolean')
+     or (definition.value_kind = 'object' and jsonb_typeof(setting_value) <> 'object')
+     or (definition.value_kind = 'array' and jsonb_typeof(setting_value) <> 'array') then
+    return jsonb_build_object('ok', false, 'reasons', jsonb_build_array(jsonb_build_object('code', 'invalid_setting_value')));
+  end if;
+
+  select * into existing
+  from public.public_site_settings
+  where public_site_settings.namespace = namespace_key
+    and public_site_settings.key = setting_key;
+
+  if found then
+    if existing.version <> expected_version then
+      return jsonb_build_object('ok', false, 'version', existing.version,
+        'reasons', jsonb_build_array(jsonb_build_object('code', 'version_conflict')));
+    end if;
+    update public.public_site_settings
+    set value = setting_value,
+        is_public = true,
+        sensitivity = 'public',
+        review_state = 'verified',
+        evidence_id = setting_evidence_id,
+        updated_by = auth.uid(),
+        version = public_site_settings.version + 1
+    where id = existing.id and version = expected_version;
+    new_version := expected_version + 1;
+  else
+    if expected_version <> 0 then
+      return jsonb_build_object('ok', false, 'reasons', jsonb_build_array(jsonb_build_object('code', 'version_conflict')));
+    end if;
+    insert into public.public_site_settings (
+      namespace, key, value, is_public, sensitivity, review_state, evidence_id,
+      created_by, updated_by
+    )
+    values (
+      namespace_key, setting_key, setting_value, true, 'public', 'verified',
+      setting_evidence_id, auth.uid(), auth.uid()
+    );
+    new_version := 1;
+  end if;
+
+  perform private.record_audit_event(
+    'website.setting.update', 'public_site_setting', namespace_key || '.' || setting_key,
+    'success', '{}'::jsonb, null
+  );
+  return jsonb_build_object('ok', true, 'version', new_version, 'reasons', '[]'::jsonb);
+end;
+$$;
+
+create or replace function public.publish_navigation_menu(menu_id uuid, expected_version integer)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  current_version integer;
+begin
+  if auth.uid() is null or not private.has_aal2() or not private.has_permission('website.manage') then
+    return jsonb_build_object('ok', false, 'reasons', jsonb_build_array(jsonb_build_object('code', 'not_authorized')));
+  end if;
+  select version into current_version from public.navigation_menus where id = menu_id;
+  if current_version is null then
+    return jsonb_build_object('ok', false, 'reasons', jsonb_build_array(jsonb_build_object('code', 'not_found')));
+  end if;
+  if current_version <> expected_version then
+    return jsonb_build_object('ok', false, 'version', current_version,
+      'reasons', jsonb_build_array(jsonb_build_object('code', 'version_conflict')));
+  end if;
+  if exists (
+    select 1 from public.navigation_items
+    where navigation_items.menu_id = menu_id
+      and navigation_items.enabled
+      and not private.navigation_item_is_public(navigation_items.id)
+  ) then
+    return jsonb_build_object('ok', false, 'reasons', jsonb_build_array(jsonb_build_object('code', 'invalid_navigation_target')));
+  end if;
+
+  update public.navigation_menus
+  set is_public = true,
+      reviewed_by = auth.uid(),
+      reviewed_at = statement_timestamp(),
+      updated_by = auth.uid(),
+      version = navigation_menus.version + 1
+  where id = menu_id and version = expected_version;
+
+  perform private.record_audit_event(
+    'navigation.update', 'navigation_menu', menu_id::text, 'success',
+    jsonb_build_object('is_public', true), null
+  );
+  return jsonb_build_object('ok', true, 'version', expected_version + 1, 'reasons', '[]'::jsonb);
+end;
+$$;
+
+create or replace function public.unpublish_navigation_menu(menu_id uuid, expected_version integer)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  current_version integer;
+begin
+  if auth.uid() is null or not private.has_aal2() or not private.has_permission('website.manage') then
+    return jsonb_build_object('ok', false, 'reasons', jsonb_build_array(jsonb_build_object('code', 'not_authorized')));
+  end if;
+  select version into current_version from public.navigation_menus where id = menu_id;
+  if current_version is null then
+    return jsonb_build_object('ok', false, 'reasons', jsonb_build_array(jsonb_build_object('code', 'not_found')));
+  end if;
+  if current_version <> expected_version then
+    return jsonb_build_object('ok', false, 'version', current_version,
+      'reasons', jsonb_build_array(jsonb_build_object('code', 'version_conflict')));
+  end if;
+  update public.navigation_menus
+  set is_public = false,
+      updated_by = auth.uid(),
+      version = navigation_menus.version + 1
+  where id = menu_id and version = expected_version;
+  perform private.record_audit_event(
+    'navigation.update', 'navigation_menu', menu_id::text, 'success',
+    jsonb_build_object('is_public', false), null
+  );
+  return jsonb_build_object('ok', true, 'version', expected_version + 1, 'reasons', '[]'::jsonb);
+end;
+$$;

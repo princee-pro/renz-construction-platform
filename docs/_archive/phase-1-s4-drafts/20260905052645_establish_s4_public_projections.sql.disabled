@@ -1,0 +1,563 @@
+-- RENZ Phase 1 / S4: public projections and RLS/grants.
+-- The projection views are deliberate security-definer boundaries: the base
+-- editorial tables contain reviewer, attribution, and private metadata that
+-- must not become anonymous columns. Views select explicit public columns and
+-- apply the same evidence/rights predicates used by publication operations.
+
+create or replace function private.service_is_public(service_id_value uuid, locale_value text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1
+    from public.services
+    where services.id = service_id_value
+      and services.publication_status = 'published'
+      and services.published_at <= statement_timestamp()
+      and jsonb_array_length(private.publication_reasons('service', service_id_value, locale_value)) = 0
+  );
+$$;
+
+create or replace function private.project_is_public(project_id_value uuid, locale_value text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1
+    from public.projects
+    where projects.id = project_id_value
+      and projects.publication_status = 'published'
+      and projects.published_at <= statement_timestamp()
+      and jsonb_array_length(private.publication_reasons('project', project_id_value, locale_value)) = 0
+  );
+$$;
+
+create or replace function private.post_is_public(post_id_value uuid, locale_value text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1
+    from public.posts
+    where posts.id = post_id_value
+      and posts.publication_status = 'published'
+      and posts.published_at <= statement_timestamp()
+      and jsonb_array_length(private.publication_reasons('post', post_id_value, locale_value)) = 0
+  );
+$$;
+
+create or replace function private.page_is_public(page_id_value uuid, locale_value text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1
+    from public.site_pages
+    where site_pages.id = page_id_value
+      and site_pages.publication_status = 'published'
+      and site_pages.published_at <= statement_timestamp()
+      and jsonb_array_length(private.publication_reasons('page', page_id_value, locale_value)) = 0
+  );
+$$;
+
+create or replace function private.team_member_is_public(team_member_id_value uuid, locale_value text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1
+    from public.team_members
+    where team_members.id = team_member_id_value
+      and team_members.publication_status = 'published'
+      and team_members.published_at <= statement_timestamp()
+      and jsonb_array_length(private.publication_reasons('team_member', team_member_id_value, locale_value)) = 0
+  );
+$$;
+
+create or replace function private.testimonial_is_public(testimonial_id_value uuid, locale_value text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1
+    from public.testimonials
+    where testimonials.id = testimonial_id_value
+      and testimonials.publication_status = 'published'
+      and testimonials.published_at <= statement_timestamp()
+      and jsonb_array_length(private.publication_reasons('testimonial', testimonial_id_value, locale_value)) = 0
+  );
+$$;
+
+create or replace function private.credential_is_public(credential_id_value uuid, locale_value text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1
+    from public.credentials
+    where credentials.id = credential_id_value
+      and credentials.publication_status = 'published'
+      and credentials.published_at <= statement_timestamp()
+      and jsonb_array_length(private.publication_reasons('credential', credential_id_value, locale_value)) = 0
+  );
+$$;
+
+create view public.public_services
+with (security_barrier = true) as
+select
+  services.id,
+  service_localizations.locale,
+  service_localizations.slug,
+  service_localizations.name,
+  service_localizations.summary,
+  service_localizations.scope,
+  service_localizations.deliverables,
+  service_localizations.exclusions,
+  service_localizations.client_inputs,
+  service_localizations.delivery_wording,
+  service_localizations.professional_terminology,
+  service_localizations.body_blocks,
+  service_localizations.seo_title,
+  service_localizations.seo_description,
+  services.sort_order,
+  services.featured,
+  services.published_at
+from public.services
+join public.service_localizations
+  on service_localizations.service_id = services.id
+where private.service_is_public(services.id, service_localizations.locale);
+
+create view public.public_projects
+with (security_barrier = true) as
+select
+  projects.id,
+  project_localizations.locale,
+  project_localizations.slug,
+  project_localizations.title,
+  project_localizations.summary,
+  project_localizations.challenge,
+  project_localizations.approach,
+  project_localizations.solution,
+  project_localizations.outcomes,
+  project_localizations.seo_title,
+  project_localizations.seo_description,
+  projects.public_location,
+  projects.project_type,
+  projects.renz_role,
+  projects.scope,
+  projects.start_year,
+  projects.completion_year,
+  projects.delivery_status,
+  projects.sort_order,
+  projects.featured,
+  projects.published_at
+from public.projects
+join public.project_localizations
+  on project_localizations.project_id = projects.id
+where private.project_is_public(projects.id, project_localizations.locale);
+
+create view public.public_project_media
+with (security_barrier = true) as
+select
+  project_media.id as project_media_id,
+  project_media.project_id,
+  project_media.media_asset_id,
+  project_media.stage_id,
+  project_media.role,
+  project_media.phase,
+  project_media.sort_order,
+  project_media_localizations.locale,
+  project_media_localizations.alt_text,
+  project_media_localizations.caption,
+  project_media_localizations.is_decorative,
+  project_media_localizations.focal_point,
+  media_assets.mime_type,
+  media_assets.width,
+  media_assets.height,
+  media_assets.byte_size,
+  media_rights.credit
+from public.project_media
+join public.projects
+  on projects.id = project_media.project_id
+join public.project_localizations
+  on project_localizations.project_id = projects.id
+join public.project_media_localizations
+  on project_media_localizations.project_media_id = project_media.id
+join public.media_assets
+  on media_assets.id = project_media.media_asset_id
+join public.media_rights
+  on media_rights.media_asset_id = media_assets.id
+where private.project_is_public(projects.id, project_localizations.locale)
+  and project_media_localizations.locale = project_localizations.locale
+  and private.media_is_publicly_eligible(media_assets.id)
+  and (project_media_localizations.is_decorative or btrim(coalesce(project_media_localizations.alt_text, '')) <> '');
+
+create view public.public_posts
+with (security_barrier = true) as
+select
+  posts.id,
+  post_localizations.locale,
+  post_localizations.slug,
+  post_localizations.title,
+  post_localizations.excerpt,
+  post_localizations.body_blocks,
+  post_localizations.seo_title,
+  post_localizations.seo_description,
+  posts.publication_date,
+  posts.published_at
+from public.posts
+join public.post_localizations
+  on post_localizations.post_id = posts.id
+where private.post_is_public(posts.id, post_localizations.locale);
+
+create view public.public_pages
+with (security_barrier = true) as
+select
+  site_pages.id,
+  site_pages.page_key,
+  site_pages.template_key,
+  page_localizations.locale,
+  page_localizations.path,
+  page_localizations.title,
+  page_localizations.summary,
+  page_localizations.body_blocks,
+  page_localizations.seo_title,
+  page_localizations.seo_description,
+  page_localizations.canonical_override,
+  page_localizations.noindex,
+  site_pages.published_at
+from public.site_pages
+join public.page_localizations
+  on page_localizations.page_id = site_pages.id
+where private.page_is_public(site_pages.id, page_localizations.locale);
+
+create view public.public_page_sections
+with (security_barrier = true) as
+select
+  page_sections.id,
+  page_sections.page_id,
+  page_sections.section_type,
+  page_sections.schema_version,
+  page_sections.config,
+  page_sections.sort_order
+from public.page_sections
+join public.page_localizations
+  on page_localizations.page_id = page_sections.page_id
+where page_sections.enabled
+  and exists (
+    select 1 from public.content_section_types
+    where content_section_types.section_type = page_sections.section_type
+      and content_section_types.schema_version = page_sections.schema_version
+  )
+  and private.json_is_safe(page_sections.config)
+  and private.page_is_public(page_sections.page_id, page_localizations.locale);
+
+create view public.public_team_members
+with (security_barrier = true) as
+select
+  team_members.id,
+  team_member_localizations.locale,
+  team_member_localizations.name,
+  team_member_localizations.role_label,
+  team_member_localizations.biography,
+  case when private.media_is_publicly_eligible(team_members.portrait_asset_id)
+    then team_members.portrait_asset_id else null end as portrait_asset_id,
+  team_members.sort_order,
+  team_members.published_at
+from public.team_members
+join public.team_member_localizations
+  on team_member_localizations.team_member_id = team_members.id
+where private.team_member_is_public(team_members.id, team_member_localizations.locale);
+
+create view public.public_testimonials
+with (security_barrier = true) as
+select
+  testimonials.id,
+  testimonial_localizations.locale,
+  testimonial_localizations.quote,
+  testimonial_localizations.attribution_presentation,
+  testimonials.attribution_name,
+  testimonials.attribution_role,
+  testimonials.attribution_organization,
+  testimonials.sort_order,
+  testimonials.featured,
+  testimonials.published_at
+from public.testimonials
+join public.testimonial_localizations
+  on testimonial_localizations.testimonial_id = testimonials.id
+where private.testimonial_is_public(testimonials.id, testimonial_localizations.locale);
+
+create view public.public_credentials
+with (security_barrier = true) as
+select
+  credentials.id,
+  credential_localizations.locale,
+  credential_localizations.name,
+  credential_localizations.description,
+  credentials.issuer,
+  credentials.reference,
+  credentials.valid_from,
+  credentials.valid_to,
+  credentials.team_member_id,
+  credentials.published_at
+from public.credentials
+join public.credential_localizations
+  on credential_localizations.credential_id = credentials.id
+where private.credential_is_public(credentials.id, credential_localizations.locale);
+
+create view public.public_navigation
+with (security_barrier = true) as
+select
+  navigation_menus.key as menu_key,
+  navigation_items.id as item_id,
+  navigation_items.parent_id,
+  navigation_items.sort_order,
+  navigation_items.link_type,
+  navigation_items.internal_path,
+  navigation_items.external_url,
+  navigation_item_localizations.locale,
+  navigation_item_localizations.label,
+  navigation_item_localizations.accessibility_text
+from public.navigation_menus
+join public.navigation_items
+  on navigation_items.menu_id = navigation_menus.id
+join public.navigation_item_localizations
+  on navigation_item_localizations.navigation_item_id = navigation_items.id
+where navigation_menus.is_public
+  and private.navigation_item_is_public(navigation_items.id);
+
+create view public.public_site_settings
+with (security_barrier = true) as
+select
+  public_site_settings.namespace,
+  public_site_settings.key,
+  public_site_settings.value,
+  public_site_settings.version
+from public.public_site_settings
+join public.public_site_setting_definitions
+  on public_site_setting_definitions.namespace = public_site_settings.namespace
+  and public_site_setting_definitions.key = public_site_settings.key
+where public_site_settings.is_public
+  and public_site_settings.sensitivity = 'public'
+  and public_site_settings.review_state = 'verified'
+  and public_site_setting_definitions.public_allowed
+  and private.evidence_is_current(public_site_settings.evidence_id)
+  and private.json_is_safe(public_site_settings.value);
+
+create view public.public_claims
+with (security_barrier = true) as
+select
+  content_claims.id as claim_id,
+  content_claims.claim_type,
+  content_claims.claim_text,
+  content_claims.service_id,
+  content_claims.project_id,
+  content_claims.post_id,
+  content_claims.page_id,
+  content_claims.team_member_id,
+  content_claims.testimonial_id,
+  content_claims.credential_id
+from public.content_claims
+where content_claims.publication_status = 'published'
+  and exists (
+    select 1
+    from public.claim_evidence_links
+    where claim_evidence_links.claim_id = content_claims.id
+      and claim_evidence_links.is_required
+      and private.evidence_is_current(claim_evidence_links.evidence_id)
+  )
+  and (
+    (content_claims.service_id is not null and private.service_is_public(content_claims.service_id, 'en'))
+    or (content_claims.project_id is not null and private.project_is_public(content_claims.project_id, 'en'))
+    or (content_claims.post_id is not null and private.post_is_public(content_claims.post_id, 'en'))
+    or (content_claims.page_id is not null and private.page_is_public(content_claims.page_id, 'en'))
+    or (content_claims.team_member_id is not null and private.team_member_is_public(content_claims.team_member_id, 'en'))
+    or (content_claims.testimonial_id is not null and private.testimonial_is_public(content_claims.testimonial_id, 'en'))
+    or (content_claims.credential_id is not null and private.credential_is_public(content_claims.credential_id, 'en'))
+  );
+
+-- Exposed caller-facing views contain only explicit public columns. Base
+-- content/evidence tables remain inaccessible to anon and are separately
+-- guarded for AAL2 staff reads below.
+revoke all on public.public_services, public.public_projects, public.public_project_media,
+  public.public_posts, public.public_pages, public.public_page_sections,
+  public.public_team_members, public.public_testimonials, public.public_credentials,
+  public.public_navigation, public.public_site_settings, public.public_claims
+from public, anon, authenticated;
+
+grant select on public.public_services, public.public_projects, public.public_project_media,
+  public.public_posts, public.public_pages, public.public_page_sections,
+  public.public_team_members, public.public_testimonials, public.public_credentials,
+  public.public_navigation, public.public_site_settings, public.public_claims
+to anon, authenticated;
+
+-- Every S4 table remains RLS-protected. The anonymous surface is the explicit
+-- projection set above; no base-table grant is made to anon.
+alter table public.evidence_records enable row level security;
+alter table public.content_claims enable row level security;
+alter table public.content_evidence_links enable row level security;
+alter table public.claim_evidence_links enable row level security;
+alter table public.content_section_types enable row level security;
+alter table public.media_rights enable row level security;
+alter table public.media_derivatives enable row level security;
+alter table public.evidence_attachments enable row level security;
+alter table public.team_member_consents enable row level security;
+alter table public.public_site_setting_definitions enable row level security;
+
+revoke all privileges on public.evidence_records, public.content_claims,
+  public.content_evidence_links, public.claim_evidence_links,
+  public.content_section_types, public.media_rights, public.media_derivatives,
+  public.evidence_attachments, public.team_member_consents,
+  public.public_site_setting_definitions
+from public, anon, authenticated;
+
+grant select on public.evidence_records, public.content_claims,
+  public.content_evidence_links, public.claim_evidence_links,
+  public.content_section_types, public.media_rights, public.media_derivatives,
+  public.evidence_attachments, public.team_member_consents,
+  public.public_site_setting_definitions
+to authenticated;
+
+grant select on public.media_assets, public.services, public.service_localizations,
+  public.projects, public.project_localizations, public.project_categories,
+  public.project_category_localizations, public.project_category_assignments,
+  public.project_services, public.project_stages, public.project_media,
+  public.project_media_localizations, public.posts, public.post_localizations,
+  public.post_categories, public.post_category_localizations,
+  public.post_category_assignments, public.team_members,
+  public.team_member_localizations, public.testimonials,
+  public.testimonial_localizations, public.testimonial_verifications,
+  public.credentials, public.credential_localizations, public.site_pages,
+  public.page_localizations, public.page_sections, public.page_section_projects,
+  public.page_section_services, public.page_section_media,
+  public.navigation_menus, public.navigation_items,
+  public.navigation_item_localizations, public.public_site_settings
+to authenticated;
+
+create policy s4_evidence_staff_read on public.evidence_records
+for select to authenticated using (private.has_permission('claims.verify'));
+create policy s4_claims_staff_read on public.content_claims
+for select to authenticated using (private.has_permission('claims.verify') or private.has_permission('content.read'));
+create policy s4_content_evidence_staff_read on public.content_evidence_links
+for select to authenticated using (private.has_permission('claims.verify') or private.has_permission('content.read'));
+create policy s4_claim_evidence_staff_read on public.claim_evidence_links
+for select to authenticated using (private.has_permission('claims.verify') or private.has_permission('content.read'));
+create policy s4_section_registry_staff_read on public.content_section_types
+for select to authenticated using (private.has_permission('content.read'));
+create policy s4_media_rights_staff_read on public.media_rights
+for select to authenticated using (private.has_permission('media.read'));
+create policy s4_media_derivatives_staff_read on public.media_derivatives
+for select to authenticated using (private.has_permission('media.read'));
+create policy s4_evidence_attachments_staff_read on public.evidence_attachments
+for select to authenticated using (private.has_permission('claims.verify'));
+create policy s4_team_consents_staff_read on public.team_member_consents
+for select to authenticated using (private.has_permission('claims.verify'));
+create policy s4_setting_definitions_staff_read on public.public_site_setting_definitions
+for select to authenticated using (private.has_permission('website.manage') or private.has_permission('content.read'));
+
+create policy s4_media_assets_staff_read on public.media_assets
+for select to authenticated using (private.has_permission('media.read'));
+create policy s4_services_staff_read on public.services
+for select to authenticated using (private.has_permission('content.read'));
+create policy s4_service_localizations_staff_read on public.service_localizations
+for select to authenticated using (private.has_permission('content.read'));
+create policy s4_projects_staff_read on public.projects
+for select to authenticated using (private.has_permission('content.read'));
+create policy s4_project_localizations_staff_read on public.project_localizations
+for select to authenticated using (private.has_permission('content.read'));
+create policy s4_project_categories_staff_read on public.project_categories
+for select to authenticated using (private.has_permission('content.read'));
+create policy s4_project_category_localizations_staff_read on public.project_category_localizations
+for select to authenticated using (private.has_permission('content.read'));
+create policy s4_project_category_assignments_staff_read on public.project_category_assignments
+for select to authenticated using (private.has_permission('content.read'));
+create policy s4_project_services_staff_read on public.project_services
+for select to authenticated using (private.has_permission('content.read'));
+create policy s4_project_stages_staff_read on public.project_stages
+for select to authenticated using (private.has_permission('content.read'));
+create policy s4_project_media_staff_read on public.project_media
+for select to authenticated using (private.has_permission('media.read') or private.has_permission('content.read'));
+create policy s4_project_media_localizations_staff_read on public.project_media_localizations
+for select to authenticated using (private.has_permission('media.read') or private.has_permission('content.read'));
+create policy s4_posts_staff_read on public.posts
+for select to authenticated using (private.has_permission('content.read'));
+create policy s4_post_localizations_staff_read on public.post_localizations
+for select to authenticated using (private.has_permission('content.read'));
+create policy s4_post_categories_staff_read on public.post_categories
+for select to authenticated using (private.has_permission('content.read'));
+create policy s4_post_category_localizations_staff_read on public.post_category_localizations
+for select to authenticated using (private.has_permission('content.read'));
+create policy s4_post_category_assignments_staff_read on public.post_category_assignments
+for select to authenticated using (private.has_permission('content.read'));
+create policy s4_team_members_staff_read on public.team_members
+for select to authenticated using (private.has_permission('content.read'));
+create policy s4_team_member_localizations_staff_read on public.team_member_localizations
+for select to authenticated using (private.has_permission('content.read'));
+create policy s4_testimonials_staff_read on public.testimonials
+for select to authenticated using (private.has_permission('content.read'));
+create policy s4_testimonial_localizations_staff_read on public.testimonial_localizations
+for select to authenticated using (private.has_permission('content.read'));
+create policy s4_testimonial_verifications_staff_read on public.testimonial_verifications
+for select to authenticated using (private.has_permission('claims.verify'));
+create policy s4_credentials_staff_read on public.credentials
+for select to authenticated using (private.has_permission('content.read'));
+create policy s4_credential_localizations_staff_read on public.credential_localizations
+for select to authenticated using (private.has_permission('content.read'));
+create policy s4_site_pages_staff_read on public.site_pages
+for select to authenticated using (private.has_permission('content.read'));
+create policy s4_page_localizations_staff_read on public.page_localizations
+for select to authenticated using (private.has_permission('content.read'));
+create policy s4_page_sections_staff_read on public.page_sections
+for select to authenticated using (private.has_permission('content.read'));
+create policy s4_page_section_projects_staff_read on public.page_section_projects
+for select to authenticated using (private.has_permission('content.read'));
+create policy s4_page_section_services_staff_read on public.page_section_services
+for select to authenticated using (private.has_permission('content.read'));
+create policy s4_page_section_media_staff_read on public.page_section_media
+for select to authenticated using (private.has_permission('content.read') or private.has_permission('media.read'));
+create policy s4_navigation_menus_staff_read on public.navigation_menus
+for select to authenticated using (private.has_permission('content.read') or private.has_permission('website.manage'));
+create policy s4_navigation_items_staff_read on public.navigation_items
+for select to authenticated using (private.has_permission('content.read') or private.has_permission('website.manage'));
+create policy s4_navigation_localizations_staff_read on public.navigation_item_localizations
+for select to authenticated using (private.has_permission('content.read') or private.has_permission('website.manage'));
+create policy s4_public_settings_staff_read on public.public_site_settings
+for select to authenticated using (private.has_permission('website.manage'));
+
+revoke all on function private.service_is_public(uuid, text) from public, anon, authenticated;
+revoke all on function private.project_is_public(uuid, text) from public, anon, authenticated;
+revoke all on function private.post_is_public(uuid, text) from public, anon, authenticated;
+revoke all on function private.page_is_public(uuid, text) from public, anon, authenticated;
+revoke all on function private.team_member_is_public(uuid, text) from public, anon, authenticated;
+revoke all on function private.testimonial_is_public(uuid, text) from public, anon, authenticated;
+revoke all on function private.credential_is_public(uuid, text) from public, anon, authenticated;
+
+comment on view public.public_services is
+  'S4 explicit anonymous projection; no private reviewer/evidence columns.';
+comment on view public.public_projects is
+  'S4 explicit anonymous projection; only evidence-gated published projects.';
+comment on view public.public_project_media is
+  'S4 finalized derivative metadata only; raw Storage objects remain private.';
+comment on view public.public_site_settings is
+  'S4 allow-listed, verified, non-secret public settings only.';

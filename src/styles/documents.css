@@ -1,0 +1,197 @@
+/* ------------------------------------------------------------------ */
+/* D1.5 — Document workspace: the HTML invoice / receipt / PO views     */
+/* read as paper sheets in a light workspace; print keeps the sheet.    */
+/* ------------------------------------------------------------------ */
+
+.invoice-document-host {
+  padding: clamp(1rem, 3vw, 2.5rem) 0 1rem;
+  background:
+    linear-gradient(to right, rgb(7 21 35 / 0.035) 1px, transparent 1px) 0 0 / 3rem 3rem,
+    var(--admin-surface-muted, #ebe9e2);
+  border: 1px solid var(--admin-rule, #d8d5cc);
+}
+
+.invoice-document {
+  --doc-gold-light: #c69a3a;
+  position: relative;
+  overflow: hidden;
+  box-shadow:
+    0 1px 0 rgb(7 21 35 / 0.06),
+    0 1.5rem 3rem rgb(7 21 35 / 0.12);
+  font-family: var(--admin-body, "Manrope", sans-serif);
+}
+
+.invoice-document h1,
+.invoice-document h2,
+.invoice-document h3 {
+  font-family: var(--admin-display, "Manrope", sans-serif);
+  letter-spacing: -0.02em;
+}
+
+.invoice-document .invoice-kicker,
+.invoice-document dt,
+.invoice-document thead th {
+  font-family: var(--admin-mono, "IBM Plex Mono", monospace);
+  font-size: 0.64rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--doc-gold);
+}
+
+.invoice-document .invoice-mark {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  background: var(--doc-navy);
+  color: #fff;
+  font-family: var(--admin-display, sans-serif);
+  font-weight: 700;
+}
+
+.invoice-document .invoice-mark::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 56%;
+  height: 2px;
+  background: var(--doc-gold-light);
+}
+
+.invoice-document-head {
+  padding-block-end: 1rem;
+  border-block-end: 2px solid var(--doc-navy);
+}
+
+.document-stamp {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: grid;
+  place-items: center;
+  font-family: var(--admin-display, sans-serif);
+  font-size: clamp(4rem, 14vw, 8.5rem);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  color: var(--doc-navy);
+  opacity: 0.06;
+  transform: rotate(-24deg);
+  pointer-events: none;
+  user-select: none;
+}
+
+.invoice-document[data-lifecycle="void"] .document-stamp {
+  color: var(--doc-danger);
+  opacity: 0.08;
+}
+
+.invoice-document > *:not(.document-stamp) {
+  position: relative;
+  z-index: 1;
+}
+
+.invoice-draft-banner {
+  margin: 0 0 1rem;
+  padding: 0.6rem 0.9rem;
+  border-inline-start: 3px solid var(--doc-muted);
+  background: #f6f4ee;
+  color: var(--doc-ink);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.invoice-document .invoice-lines thead th {
+  padding-block: 0.6rem;
+  border-block-start: 1px solid var(--doc-navy);
+  border-block-end: 1px solid var(--doc-rule);
+  background: #fff;
+  color: var(--doc-gold);
+}
+
+.invoice-document .invoice-lines tbody tr:nth-child(even) {
+  background: #f8f7f3;
+}
+
+.invoice-document .invoice-balance-row {
+  background: var(--doc-navy);
+  color: #fff;
+}
+.invoice-document .invoice-balance-row dt {
+  color: var(--doc-gold-light);
+}
+.invoice-document .invoice-balance-row dd {
+  color: #fff;
+}
+
+.invoice-document-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-block-start: 1.5rem;
+  padding-block-start: 0.75rem;
+  border-block-start: 1px solid var(--doc-rule);
+  font-size: 0.72rem;
+  color: var(--doc-muted);
+}
+
+.invoice-document-foot::before {
+  content: "";
+  position: absolute;
+  width: 2rem;
+  height: 2px;
+  margin-block-start: -0.8rem;
+  background: var(--doc-gold-light);
+}
+
+/* Document tools row above the sheet. */
+.document-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: flex-end;
+  margin: 0 auto 1rem;
+  max-width: 52rem;
+}
+
+@media (max-width: 48rem) {
+  .invoice-document-host {
+    padding: 0.75rem 0 0.75rem;
+  }
+  .invoice-document {
+    padding: 1rem;
+    font-size: 0.86rem;
+  }
+  .invoice-document-head {
+    display: grid;
+    gap: 0.75rem;
+  }
+  .invoice-document .invoice-table-wrap {
+    overflow-x: auto;
+  }
+}
+
+@media print {
+  .invoice-document-host {
+    padding: 0;
+    background: none;
+    border: 0;
+  }
+  .invoice-document {
+    box-shadow: none;
+    border: 0;
+    max-width: none;
+  }
+  .document-stamp {
+    opacity: 0.08;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  .invoice-document .invoice-balance-row,
+  .invoice-document .invoice-mark {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+}

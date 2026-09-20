@@ -1,0 +1,38 @@
+@theme {
+  --color-primary: #071523;
+  --color-navy-raised: #0d2134;
+  --color-gold: #c69a3a;
+  --color-gold-hover: #b78728;
+  --color-white: #ffffff;
+  --color-concrete: #f1f2ef;
+  --color-graphite: #303940;
+  --color-steel: #5a656e;
+  --color-border-light: #d8dcd8;
+  --color-border-dark: #294053;
+  --color-success: #2f6f55;
+  --color-warning: #9a6519;
+  --color-danger: #b33a3a;
+  --color-info: #2d628b;
+  --color-focus: #d7a73e;
+  --color-limestone: #e9e5dc;
+  --color-stone: #b9b3a6;
+  --color-charcoal: #1b2126;
+  --color-bronze: #775a30;
+  --color-timber: #a8784b;
+  --color-ochre: #d9b25c;
+  --font-display: "Manrope, Segoe UI, Arial, sans-serif";
+  --font-body: "Manrope, Segoe UI, Arial, sans-serif";
+  --font-utility: "Manrope, Arial, sans-serif";
+  --font-mono: "IBM Plex Mono, Consolas, monospace";
+  --radius-DEFAULT: 0.25rem;
+  --radius-sharp: 0.125rem;
+  --radius-admin: 0.5rem;
+  --radius-overlay: 0.75rem;
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2.25rem;
+  --spacing-section: 6rem;
+  --spacing-page-max: 108rem;
+}

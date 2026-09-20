@@ -1,0 +1,343 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: renz-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  linux-quality:
+    name: Linux quality gate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js and pnpm
+        uses: pnpm/setup@703c52620218391530e48b9e8870d5c0082e1b9b # v2.1.0
+        with:
+          version: 11.25.0
+          runtime: node@24.20.0
+          cache: true
+          cache-dependency-path: pnpm-lock.yaml
+          install: false
+
+      - name: Report toolchain
+        run: |
+          node --version
+          pnpm --version
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check formatting
+        run: pnpm format:check
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Type-check
+        run: pnpm typecheck
+
+      - name: Run unit tests
+        run: pnpm test:unit
+
+      - name: Run component tests
+        run: pnpm test:component
+
+      - name: Lint design contract
+        run: pnpm design:lint
+
+      - name: Verify exported design tokens
+        run: pnpm design:tokens:check
+
+      - name: Scan for committed secrets
+        run: pnpm scan:secrets
+
+      - name: Build production application
+        run: pnpm build
+
+      - name: Audit production dependencies
+        run: pnpm audit:production
+
+  windows-compatibility:
+    name: Windows compatibility
+    runs-on: windows-2025
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js and pnpm
+        uses: pnpm/setup@703c52620218391530e48b9e8870d5c0082e1b9b # v2.1.0
+        with:
+          version: 11.25.0
+          runtime: node@24.20.0
+          cache: true
+          cache-dependency-path: pnpm-lock.yaml
+          install: false
+
+      - name: Report toolchain
+        run: |
+          node --version
+          pnpm --version
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check formatting
+        run: pnpm format:check
+
+      - name: Type-check
+        run: pnpm typecheck
+
+      - name: Run unit tests
+        run: pnpm test:unit
+
+      - name: Run component tests
+        run: pnpm test:component
+
+      - name: Scan for committed secrets
+        run: pnpm scan:secrets
+
+  database-integration:
+    name: Linux database integration
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    env:
+      DO_NOT_TRACK: "1"
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js and pnpm
+        uses: pnpm/setup@703c52620218391530e48b9e8870d5c0082e1b9b # v2.1.0
+        with:
+          version: 11.25.0
+          runtime: node@24.20.0
+          cache: true
+          cache-dependency-path: pnpm-lock.yaml
+          install: false
+
+      - name: Install exact dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Verify exact database toolchain
+        run: |
+          set -euo pipefail
+          test "$(node --version)" = "v24.20.0"
+          test "$(pnpm --version)" = "11.25.0"
+          test "$(pnpm exec supabase --version)" = "2.116.0"
+
+      - name: Verify local database
+        run: pnpm db:verify
+
+  auth-integration:
+    name: Linux Auth/MFA integration
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    needs: linux-quality
+    permissions:
+      contents: read
+    env:
+      DO_NOT_TRACK: "1"
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js and pnpm
+        uses: pnpm/setup@703c52620218391530e48b9e8870d5c0082e1b9b # v2.1.0
+        with:
+          version: 11.25.0
+          runtime: node@24.20.0
+          cache: true
+          cache-dependency-path: pnpm-lock.yaml
+          install: false
+
+      - name: Install exact dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Start isolated local Supabase Auth stack
+        shell: bash
+        run: |
+          set -euo pipefail
+          start_log="$RUNNER_TEMP/renz-supabase-start.log"
+          if ! pnpm db:start >"$start_log" 2>&1; then
+            echo "Local Supabase Auth stack failed to start."
+            exit 1
+          fi
+
+      - name: Reset local Auth schema and verify invitation/MFA/RBAC
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm db:reset
+          status_env="$(pnpm exec supabase status --output env)"
+
+          extract_value() {
+            local name="$1"
+            local line value
+            line="$(printf '%s\n' "$status_env" | sed -n "s/^${name}=//p" | head -n 1)"
+            value="${line#\"}"
+            value="${value%\"}"
+            printf '%s' "$value"
+          }
+
+          export NEXT_PUBLIC_SUPABASE_URL="$(extract_value API_URL)"
+          export NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="$(extract_value PUBLISHABLE_KEY)"
+          export SUPABASE_SECRET_KEY="$(extract_value SECRET_KEY)"
+          export SUPABASE_ANON_KEY="$(extract_value ANON_KEY)"
+          test -n "$NEXT_PUBLIC_SUPABASE_URL"
+          test -n "$NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"
+          test -n "$SUPABASE_SECRET_KEY"
+          test -n "$SUPABASE_ANON_KEY"
+          pnpm auth:verify
+
+      - name: Stop isolated local Supabase Auth stack
+        if: always()
+        shell: bash
+        run: pnpm db:stop
+
+  s4-integration:
+    name: Linux S4 content/media integration
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    needs: linux-quality
+    permissions:
+      contents: read
+    env:
+      DO_NOT_TRACK: "1"
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js and pnpm
+        uses: pnpm/setup@703c52620218391530e48b9e8870d5c0082e1b9b # v2.1.0
+        with:
+          version: 11.25.0
+          runtime: node@24.20.0
+          cache: true
+          cache-dependency-path: pnpm-lock.yaml
+          install: false
+
+      - name: Install exact dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Verify exact local S4 toolchain
+        run: |
+          set -euo pipefail
+          test "$(node --version)" = "v24.20.0"
+          test "$(pnpm --version)" = "11.25.0"
+          test "$(pnpm exec supabase --version)" = "2.116.0"
+
+      - name: Start isolated local S4 stack
+        shell: bash
+        run: |
+          set -euo pipefail
+          start_log="$RUNNER_TEMP/renz-supabase-s4-start.log"
+          if ! pnpm db:start >"$start_log" 2>&1; then
+            echo "Local Supabase S4 stack failed to start."
+            exit 1
+          fi
+
+      - name: Run S4 database, Auth, content, media, and app verification
+        run: pnpm s4:verify
+
+      - name: Stop isolated local S4 stack
+        if: always()
+        shell: bash
+        run: pnpm db:stop
+
+  s6a-browser-integration:
+    name: Linux S9A-P signature, public, and S5A browser integration
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    needs:
+      - linux-quality
+      - s4-integration
+    permissions:
+      contents: read
+    env:
+      CI: "true"
+      DO_NOT_TRACK: "1"
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js and pnpm
+        uses: pnpm/setup@703c52620218391530e48b9e8870d5c0082e1b9b # v2.1.0
+        with:
+          version: 11.25.0
+          runtime: node@24.20.0
+          cache: true
+          cache-dependency-path: pnpm-lock.yaml
+          install: false
+
+      - name: Install exact dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install the pinned Chromium runtime
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Verify exact S9A-P browser toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(node --version)" = "v24.20.0"
+          test "$(pnpm --version)" = "11.25.0"
+          test "$(pnpm exec playwright --version)" = "Version 1.63.0"
+          test "$(pnpm exec supabase --version)" = "2.116.0"
+
+      - name: Start isolated local S9A-P stack
+        shell: bash
+        run: |
+          set -euo pipefail
+          start_log="$RUNNER_TEMP/renz-supabase-s9ap-start.log"
+          if ! pnpm db:start >"$start_log" 2>&1; then
+            echo "Local Supabase S9A-P stack failed to start."
+            exit 1
+          fi
+
+      - name: Run signature, preview-off, public, screenshot, and admin regression
+        run: pnpm s9ap:verify
+
+      - name: Preserve S9A-P visual review evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: renz-s9ap-visual-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .playwright/screenshots/s9ap-*.png
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Stop isolated local S9A-P stack
+        if: always()
+        shell: bash
+        run: pnpm db:stop

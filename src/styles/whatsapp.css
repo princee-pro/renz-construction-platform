@@ -1,0 +1,144 @@
+/*
+ * CR1 §68–71 — ONE WhatsApp visual system.
+ *
+ * RENZ stays navy / gold / limestone / concrete; WhatsApp green is reserved
+ * for WhatsApp messaging actions so they are recognisable at a glance.
+ * Filled #25D366 surfaces carry near-black ink (AA); where white type is
+ * required the darker green is used. wa.me links only — never tel:.
+ */
+:root {
+  --whatsapp: #25d366;
+  --whatsapp-dark: #075e54;
+  --whatsapp-ink: #0b1f17;
+  --whatsapp-ring: color-mix(in srgb, var(--whatsapp) 55%, transparent);
+  --whatsapp-wash: color-mix(in srgb, var(--whatsapp) 14%, transparent);
+}
+
+/* Filled button (public CTAs, sections, contact strips). */
+.btn-whatsapp {
+  --btn-bg: var(--whatsapp);
+  --btn-fg: var(--whatsapp-ink);
+  --btn-line: transparent;
+}
+.btn-whatsapp:hover,
+.btn-whatsapp:focus-visible {
+  --btn-bg: #1fbd5a;
+  --btn-fg: var(--whatsapp-ink);
+}
+.btn-whatsapp .whatsapp-glyph {
+  width: 1.15rem;
+  height: 1.15rem;
+  color: currentColor;
+}
+.btn-whatsapp:focus-visible {
+  outline: 2px solid var(--whatsapp-dark);
+  outline-offset: 3px;
+}
+
+/* Header and mobile-actions icon. */
+.header-icon-whatsapp {
+  border-color: var(--whatsapp-ring);
+  color: var(--whatsapp);
+}
+.header-icon-whatsapp:hover,
+.header-icon-whatsapp:focus-visible {
+  border-color: var(--whatsapp);
+  background: var(--whatsapp-wash);
+  color: var(--whatsapp);
+}
+.public-header.is-compact .header-icon-whatsapp,
+.public-header[data-compact="true"] .header-icon-whatsapp {
+  color: var(--whatsapp);
+}
+
+/* Floating pill. */
+.public-site .floating-whatsapp {
+  border-color: var(--whatsapp);
+  background: var(--whatsapp);
+  color: var(--whatsapp-ink);
+  box-shadow: 0 0.75rem 1.75rem rgb(7 94 84 / 0.28);
+}
+.public-site .floating-whatsapp svg {
+  color: var(--whatsapp-ink);
+}
+.public-site .floating-whatsapp:hover,
+.public-site .floating-whatsapp:focus-visible {
+  border-color: var(--whatsapp-dark);
+  background: #1fbd5a;
+}
+.public-site .floating-whatsapp:focus-visible {
+  outline-color: var(--whatsapp-dark);
+}
+
+/* Footer, mobile menu, intake rail, service page datum link. */
+.site-footer-whatsapp {
+  color: var(--whatsapp);
+}
+.site-footer-whatsapp .whatsapp-glyph,
+.public-menu-contact-whatsapp .whatsapp-glyph,
+.intake-side-whatsapp .whatsapp-glyph,
+.contact-channel-whatsapp .whatsapp-glyph,
+.datum-link-whatsapp .whatsapp-glyph {
+  color: var(--whatsapp);
+}
+.public-menu-contact-whatsapp {
+  color: var(--whatsapp);
+}
+.intake-side-whatsapp,
+.datum-link-whatsapp {
+  color: var(--whatsapp-dark);
+}
+.tone-ink .datum-link-whatsapp,
+.tone-charcoal .datum-link-whatsapp {
+  color: var(--whatsapp);
+}
+
+/* Contact route card and channel (contact page). */
+.contact-route-whatsapp {
+  border-color: var(--whatsapp-ring);
+}
+.contact-route-whatsapp .whatsapp-glyph {
+  color: var(--whatsapp-dark);
+}
+a.contact-route-whatsapp:hover,
+a.contact-route-whatsapp:focus-visible {
+  border-color: var(--whatsapp);
+  background: var(--whatsapp-wash);
+}
+
+/* Intake fallback / success links (C8 semantics untouched: wa.me only). */
+.public-link-whatsapp {
+  --link-accent: var(--whatsapp);
+  color: var(--whatsapp-dark);
+  border-color: var(--whatsapp);
+}
+.public-link-whatsapp:hover,
+.public-link-whatsapp:focus-visible {
+  background: var(--whatsapp-wash);
+}
+
+/* WhatsApp call-to-action section. */
+.whatsapp-cta-inner {
+  display: grid;
+  gap: 1rem;
+  max-width: 44rem;
+}
+.whatsapp-note {
+  margin-top: 0.25rem;
+}
+
+/* Admin: real messaging actions share the treatment. */
+.button-whatsapp,
+.whatsapp-action {
+  background: var(--whatsapp);
+  border-color: var(--whatsapp);
+  color: var(--whatsapp-ink);
+}
+.button-whatsapp:hover,
+.button-whatsapp:focus-visible,
+.whatsapp-action:hover,
+.whatsapp-action:focus-visible {
+  background: #1fbd5a;
+  border-color: var(--whatsapp-dark);
+  color: var(--whatsapp-ink);
+}

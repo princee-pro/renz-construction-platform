@@ -1,0 +1,24 @@
+.next/
+coverage/
+node_modules/
+pnpm-lock.yaml
+next-env.d.ts
+
+# Local /graphify scratch output — untracked, not part of the product.
+graphify-out/
+
+# Phase 0 evidence and source contracts retain their reviewed formatting.
+design/
+references/
+premium-audit.json
+AGENTS.md
+DESIGN.md
+UX-CONTRACT.md
+docs/*.md
+!docs/PHASE_1_S1_REPORT.md
+!docs/PHASE_1_S1_TOOLCHAIN.md
+!docs/PHASE_1_S2_DATA_MODEL.md
+!docs/PHASE_1_S2_RECOVERY.md
+!docs/PHASE_1_S2_REPORT.md
+!docs/PHASE_1_S2_RLS_GRANT_MATRIX.md
+!docs/PHASE_1_S2_TOOLCHAIN.md

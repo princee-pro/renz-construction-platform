@@ -1,0 +1,161 @@
+"use client";
+
+import { useActionState, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+
+import { Alert } from "@/components/admin/ui/alert";
+import { Button } from "@/components/admin/ui/button";
+import { StatusBadge } from "@/components/admin/ui/status-badge";
+import { changeServicePublicationAction } from "@/features/services/service-actions";
+import {
+  initialServiceActionState,
+  type PublicationStatus,
+  type ReadinessReason,
+} from "@/features/services/service-contract";
+
+type PublicationOperation = "publish" | "unpublish" | "archive";
+
+export function PublicationControls({
+  serviceId,
+  serviceVersion,
+  status,
+  readiness,
+  canPublish,
+  canArchive,
+  onVersionChange,
+}: Readonly<{
+  serviceId: string;
+  serviceVersion: number;
+  status: PublicationStatus;
+  readiness: Readonly<{ ready: boolean; reasons: readonly ReadinessReason[] }>;
+  canPublish: boolean;
+  canArchive: boolean;
+  onVersionChange: (version: number) => void;
+}>) {
+  const [state, action, pending] = useActionState(
+    changeServicePublicationAction,
+    initialServiceActionState,
+  );
+  const [operation, setOperation] = useState<PublicationOperation>("publish");
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const feedbackRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (state.status === "success") {
+      dialogRef.current?.close();
+      if (state.serviceVersion) onVersionChange(state.serviceVersion);
+      router.refresh();
+    } else if (state.status !== "idle") {
+      dialogRef.current?.close();
+      requestAnimationFrame(() => feedbackRef.current?.focus());
+    }
+  }, [onVersionChange, router, state]);
+
+  const open = (nextOperation: PublicationOperation) => {
+    setOperation(nextOperation);
+    dialogRef.current?.showModal();
+  };
+  const heading =
+    operation === "publish"
+      ? "Publish this service?"
+      : operation === "unpublish"
+        ? "Return this service to Draft?"
+        : "Archive this service?";
+  const copy =
+    operation === "publish"
+      ? "The reviewed public projection will become available. Readiness is checked again at the database boundary."
+      : operation === "unpublish"
+        ? "The public projection will be withdrawn and the service will return to Draft."
+        : "The service will leave the active editorial register. Its audit history is retained; this is not deletion.";
+
+  return (
+    <section aria-labelledby="publication-heading" className="rail-panel">
+      <div className="section-heading-row section-heading-compact">
+        <h2 id="publication-heading">Publication</h2>
+        <StatusBadge tone={readiness.ready ? "ready" : "blocked"}>
+          {readiness.ready ? "Ready" : "Blocked"}
+        </StatusBadge>
+      </div>
+      {readiness.ready ? (
+        <p className="panel-copy">All authoritative S4 publication gates currently pass.</p>
+      ) : (
+        <ul className="readiness-list">
+          {readiness.reasons.map((reason, index) => (
+            <li key={`${reason.code}-${reason.field ?? "general"}-${index}`}>{reason.detail}</li>
+          ))}
+        </ul>
+      )}
+      <div className="rail-actions">
+        {status === "draft" && canPublish ? (
+          <Button
+            disabled={!readiness.ready}
+            onClick={() => open("publish")}
+            tone="primary"
+            type="button"
+          >
+            Publish
+          </Button>
+        ) : null}
+        {status === "published" && canPublish ? (
+          <Button onClick={() => open("unpublish")} tone="secondary" type="button">
+            Unpublish
+          </Button>
+        ) : null}
+        {status !== "archived" && canArchive ? (
+          <Button onClick={() => open("archive")} tone="danger" type="button">
+            Archive
+          </Button>
+        ) : null}
+        {!canPublish && status !== "archived" ? (
+          <p className="permission-note">Your role can prepare drafts but cannot publish.</p>
+        ) : null}
+      </div>
+      {state.status !== "idle" && state.status !== "success" ? (
+        <div ref={feedbackRef} tabIndex={-1}>
+          <Alert live tone={state.status === "reauth" ? "warning" : "danger"}>
+            <p>{state.message}</p>
+            {state.reauthHref ? (
+              <a className="text-link" href={state.reauthHref}>
+                Continue to secure sign-in
+              </a>
+            ) : null}
+          </Alert>
+        </div>
+      ) : null}
+      {state.status === "success" ? (
+        <p aria-live="polite" className="form-success">
+          {state.message}
+        </p>
+      ) : null}
+
+      <dialog className={`confirm-dialog confirm-${operation}`} ref={dialogRef}>
+        <form action={action} className="confirm-dialog-panel" noValidate>
+          <input name="serviceId" type="hidden" value={serviceId} />
+          <input name="expectedVersion" type="hidden" value={serviceVersion} />
+          <input name="operation" type="hidden" value={operation} />
+          <p className="eyebrow">Confirm {operation}</p>
+          <h2>{heading}</h2>
+          <p>{copy}</p>
+          <div className="confirm-actions">
+            <Button
+              disabled={pending}
+              onClick={() => dialogRef.current?.close()}
+              tone="quiet"
+              type="button"
+            >
+              Cancel
+            </Button>
+            <Button
+              disabled={pending}
+              tone={operation === "archive" ? "danger" : "primary"}
+              type="submit"
+            >
+              {pending ? "Applying…" : `Confirm ${operation}`}
+            </Button>
+          </div>
+        </form>
+      </dialog>
+    </section>
+  );
+}

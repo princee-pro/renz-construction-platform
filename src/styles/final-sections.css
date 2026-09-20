@@ -1,0 +1,259 @@
+/*
+ * CR1 — owner-composed section types that had no D1 equivalent, plus the
+ * staff preview bar. Everything else reuses the D1 classes (home-*, service-*,
+ * study-card, insight-grid, contact-*) so owner pages look like the site.
+ */
+
+.sec-generous {
+  padding-block: calc(var(--section-y) * 1.35);
+}
+.section-field {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.55;
+}
+.sec > .container {
+  position: relative;
+}
+
+/* Rich text measures */
+.rich-text-measure {
+  max-width: var(--container-narrow, 44rem);
+}
+.rich-text-wide .structured-content {
+  max-width: 62rem;
+}
+.structured-content blockquote {
+  margin: 1.5rem 0;
+  padding-inline-start: 1.25rem;
+  border-inline-start: 0.1875rem solid var(--gold);
+  font-family: var(--public-display);
+  font-size: 1.25rem;
+  line-height: 1.4;
+}
+.structured-content blockquote cite {
+  display: block;
+  margin-top: 0.6rem;
+  font-family: var(--public-mono, monospace);
+  font-size: 0.8rem;
+  font-style: normal;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.tone-ink .structured-content,
+.tone-charcoal .structured-content {
+  color: var(--public-on-ink-soft);
+}
+
+/* Text + media */
+.text-media {
+  display: grid;
+  grid-template-columns: minmax(0, 6fr) minmax(0, 6fr);
+  gap: clamp(1.5rem, 4vw, 4rem);
+  align-items: center;
+}
+.text-media-left .text-media-figure {
+  order: -1;
+}
+.text-media-no-media {
+  grid-template-columns: minmax(0, 1fr);
+}
+.text-media-figure {
+  margin: 0;
+}
+.text-media-media {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  max-width: 100%;
+  overflow: hidden;
+  background: var(--concrete, #d9d6cf);
+}
+.text-media-media img {
+  object-fit: cover;
+}
+.text-media-figure figcaption {
+  margin-top: 0.6rem;
+}
+
+/* Gallery */
+.website-gallery {
+  display: grid;
+  gap: clamp(0.75rem, 2vw, 1.5rem);
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.website-gallery-strip {
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+}
+.website-gallery-count-1 {
+  grid-template-columns: minmax(0, 1fr);
+}
+.website-gallery-item figure {
+  margin: 0;
+}
+.website-gallery-media {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  max-width: 100%;
+  overflow: hidden;
+  background: var(--concrete, #d9d6cf);
+}
+.website-gallery-count-1 .website-gallery-media {
+  aspect-ratio: 16 / 9;
+}
+.website-gallery-media img {
+  object-fit: cover;
+}
+.website-gallery-item figcaption {
+  margin-top: 0.5rem;
+}
+
+/* Pull quote */
+.pull-quote-body {
+  margin: 0;
+  font-family: var(--public-display);
+  font-size: clamp(1.5rem, 2.4vw, 2.2rem);
+  line-height: 1.25;
+}
+.pull-quote-body cite {
+  display: block;
+  margin-top: 1rem;
+  font-family: var(--public-mono, monospace);
+  font-size: 0.8rem;
+  font-style: normal;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* Testimonials (approved only) */
+.testimonial-list {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.testimonial-list blockquote {
+  margin: 0;
+  padding: 1.5rem;
+  border-block-start: 0.1875rem solid var(--gold);
+  background: color-mix(in srgb, var(--paper) 70%, transparent);
+}
+.testimonial-list cite {
+  display: block;
+  margin-top: 0.75rem;
+  font-style: normal;
+  font-size: 0.85rem;
+}
+
+/* Contact strip */
+.contact-strip-inner {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  align-items: center;
+}
+.contact-strip-channels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+/* Divider / transition */
+.section-divider {
+  height: clamp(2rem, 6vw, 5rem);
+}
+.section-divider-line {
+  position: relative;
+}
+.section-divider-line::after {
+  content: "";
+  position: absolute;
+  inset-inline: var(--gutter);
+  top: 50%;
+  border-top: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+}
+.section-divider-datum::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0.5rem;
+  height: 0.5rem;
+  background: var(--gold);
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+/* Real-project badge on the monument card */
+.concept-badge-real {
+  background: var(--gold);
+  color: var(--ink);
+}
+
+/* Motion presets: quiet keeps the reveals but no parallax / stagger drift */
+[data-motion="none"] .reveal,
+[data-motion="none"] [data-reveal] {
+  animation: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+  clip-path: none !important;
+}
+
+/* Staff preview bar (never in public HTML) */
+.preview-bar {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  padding: 0.55rem var(--gutter);
+  background: var(--ink);
+  color: var(--paper);
+  border-bottom: 2px solid var(--gold);
+  font-size: 0.85rem;
+}
+.preview-bar p {
+  margin: 0;
+}
+.preview-bar-status {
+  color: var(--public-on-ink-muted);
+}
+.preview-bar nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.preview-bar-link {
+  padding: 0.35rem 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--paper) 35%, transparent);
+  border-radius: 999px;
+  color: var(--paper);
+  text-decoration: none;
+}
+.preview-bar-edit {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--ink);
+  font-weight: 600;
+}
+.public-site-preview .public-header {
+  top: 0;
+}
+
+@media (max-width: 767px) {
+  .text-media,
+  .contact-strip-inner {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .contact-strip-channels {
+    justify-content: flex-start;
+  }
+}

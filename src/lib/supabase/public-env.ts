@@ -1,0 +1,15 @@
+export type PublicSupabaseEnvironment = Readonly<{
+  url: string;
+  publishableKey: string;
+}>;
+
+export function getPublicSupabaseEnvironment(): PublicSupabaseEnvironment {
+  const url = process.env["NEXT_PUBLIC_SUPABASE_URL"];
+  const publishableKey = process.env["NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"];
+
+  if (!url || !publishableKey) {
+    throw new Error("Supabase public environment is not configured.");
+  }
+
+  return { url, publishableKey };
+}

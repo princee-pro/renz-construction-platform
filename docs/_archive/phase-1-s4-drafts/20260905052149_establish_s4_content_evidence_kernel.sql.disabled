@@ -1,0 +1,562 @@
+-- RENZ Phase 1 / S4: content, evidence, media-governance kernel.
+--
+-- This migration deliberately adds governance state without seeding any real
+-- RENZ facts. Existing S2 content rows remain drafts and existing S2 test
+-- fixtures remain valid when they use the synthetic-test classification.
+
+create table public.evidence_records (
+  id uuid primary key default gen_random_uuid(),
+  source_type text not null,
+  source_reference text not null,
+  internal_notes text,
+  owner_id uuid references public.profiles (id) on delete set null,
+  reviewer_id uuid references public.profiles (id) on delete set null,
+  verification_state text not null default 'unverified',
+  verified_at timestamptz,
+  review_due_at timestamptz,
+  approved_public_wording text,
+  sensitivity text not null default 'private',
+  consent_required boolean not null default false,
+  consent_state text not null default 'not_required',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  version integer not null default 1,
+  constraint evidence_records_source_type_check check (
+    source_type in (
+      'client_supplied',
+      'client_confirmation',
+      'contract_document',
+      'project_document',
+      'media_metadata',
+      'credential_document',
+      'testimonial_consent',
+      'public_authoritative_source',
+      'internal_record',
+      'other_reviewed_source'
+    )
+  ),
+  constraint evidence_records_source_reference_check check (
+    source_reference = btrim(source_reference) and source_reference <> ''
+  ),
+  constraint evidence_records_state_check check (
+    verification_state in ('unverified', 'in_review', 'verified', 'expired', 'rejected')
+  ),
+  constraint evidence_records_sensitivity_check check (sensitivity in ('private', 'public')),
+  constraint evidence_records_consent_state_check check (
+    consent_state in ('not_required', 'pending', 'granted', 'revoked')
+  ),
+  constraint evidence_records_consent_pair_check check (
+    (consent_required and consent_state <> 'not_required')
+    or (not consent_required and consent_state = 'not_required')
+  ),
+  constraint evidence_records_verified_fields_check check (
+    verification_state <> 'verified'
+    or (reviewer_id is not null and verified_at is not null)
+  ),
+  constraint evidence_records_review_order_check check (
+    review_due_at is null or verified_at is null or review_due_at >= verified_at
+  ),
+  constraint evidence_records_public_wording_check check (
+    approved_public_wording is null
+    or (approved_public_wording = btrim(approved_public_wording) and approved_public_wording <> '')
+  ),
+  constraint evidence_records_version_check check (version > 0)
+);
+
+create table public.content_claims (
+  id uuid primary key default gen_random_uuid(),
+  claim_type text not null,
+  claim_text text not null,
+  service_id uuid references public.services (id) on delete cascade,
+  project_id uuid references public.projects (id) on delete cascade,
+  post_id uuid references public.posts (id) on delete cascade,
+  page_id uuid references public.site_pages (id) on delete cascade,
+  team_member_id uuid references public.team_members (id) on delete cascade,
+  testimonial_id uuid references public.testimonials (id) on delete cascade,
+  credential_id uuid references public.credentials (id) on delete cascade,
+  publication_status text not null default 'draft',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  created_by uuid references public.profiles (id) on delete set null,
+  updated_by uuid references public.profiles (id) on delete set null,
+  version integer not null default 1,
+  constraint content_claims_type_check check (
+    claim_type in (
+      'metric', 'saving', 'time', 'performance', 'compliance', 'safety',
+      'sustainability', 'outcome', 'credential', 'other'
+    )
+  ),
+  constraint content_claims_text_check check (claim_text = btrim(claim_text) and claim_text <> ''),
+  constraint content_claims_publication_status_check check (
+    publication_status in ('draft', 'published', 'archived')
+  ),
+  constraint content_claims_single_subject_check check (
+    ((service_id is not null)::integer
+      + (project_id is not null)::integer
+      + (post_id is not null)::integer
+      + (page_id is not null)::integer
+      + (team_member_id is not null)::integer
+      + (testimonial_id is not null)::integer
+      + (credential_id is not null)::integer) = 1
+  ),
+  constraint content_claims_version_check check (version > 0)
+);
+
+create table public.content_evidence_links (
+  id uuid primary key default gen_random_uuid(),
+  evidence_id uuid not null references public.evidence_records (id) on delete restrict,
+  service_id uuid references public.services (id) on delete cascade,
+  project_id uuid references public.projects (id) on delete cascade,
+  post_id uuid references public.posts (id) on delete cascade,
+  page_id uuid references public.site_pages (id) on delete cascade,
+  team_member_id uuid references public.team_members (id) on delete cascade,
+  testimonial_id uuid references public.testimonials (id) on delete cascade,
+  credential_id uuid references public.credentials (id) on delete cascade,
+  media_asset_id uuid references public.media_assets (id) on delete cascade,
+  claim_id uuid references public.content_claims (id) on delete cascade,
+  relationship_key text not null default 'primary',
+  is_required boolean not null default true,
+  created_at timestamptz not null default now(),
+  created_by uuid references public.profiles (id) on delete set null,
+  constraint content_evidence_links_relationship_key_check check (
+    relationship_key = btrim(relationship_key) and relationship_key <> ''
+  ),
+  constraint content_evidence_links_single_subject_check check (
+    ((service_id is not null)::integer
+      + (project_id is not null)::integer
+      + (post_id is not null)::integer
+      + (page_id is not null)::integer
+      + (team_member_id is not null)::integer
+      + (testimonial_id is not null)::integer
+      + (credential_id is not null)::integer
+      + (media_asset_id is not null)::integer
+      + (claim_id is not null)::integer) = 1
+  ),
+  constraint content_evidence_links_unique_relationship unique (
+    evidence_id,
+    service_id,
+    project_id,
+    post_id,
+    page_id,
+    team_member_id,
+    testimonial_id,
+    credential_id,
+    media_asset_id,
+    claim_id,
+    relationship_key
+  )
+);
+
+create table public.claim_evidence_links (
+  claim_id uuid not null references public.content_claims (id) on delete cascade,
+  evidence_id uuid not null references public.evidence_records (id) on delete restrict,
+  is_required boolean not null default true,
+  created_at timestamptz not null default now(),
+  created_by uuid references public.profiles (id) on delete set null,
+  primary key (claim_id, evidence_id)
+);
+
+create table public.content_section_types (
+  section_type text primary key,
+  schema_version integer not null default 1,
+  description text not null,
+  is_system boolean not null default true,
+  constraint content_section_types_key_check check (
+    section_type = btrim(section_type) and section_type ~ '^[a-z][a-z0-9_]*$'
+  ),
+  constraint content_section_types_description_check check (
+    description = btrim(description) and description <> ''
+  ),
+  constraint content_section_types_schema_version_check check (schema_version > 0)
+);
+
+insert into public.content_section_types (section_type, description)
+values
+  ('hero', 'Bounded hero composition'),
+  ('proposition', 'Bounded proposition composition'),
+  ('expertise', 'Bounded expertise selection'),
+  ('selected_projects', 'Bounded selected-project selection'),
+  ('audiences', 'Bounded audience composition'),
+  ('process', 'Bounded process composition'),
+  ('quality_responsibility', 'Bounded quality and responsibility composition'),
+  ('proof', 'Bounded proof composition'),
+  ('insights', 'Bounded insight selection'),
+  ('final_cta', 'Bounded final call-to-action composition')
+on conflict (section_type) do update
+set description = excluded.description,
+    is_system = true;
+
+create table public.media_rights (
+  media_asset_id uuid primary key references public.media_assets (id) on delete cascade,
+  rights_status text not null default 'unknown',
+  rights_holder text,
+  credit text,
+  source_reference text,
+  consent_required boolean not null default false,
+  consent_state text not null default 'not_required',
+  public_use_permission boolean not null default false,
+  reviewed_by uuid references public.profiles (id) on delete set null,
+  verified_at timestamptz,
+  review_due_at timestamptz,
+  internal_notes text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  version integer not null default 1,
+  constraint media_rights_status_check check (
+    rights_status in ('unknown', 'in_review', 'verified', 'expired', 'rejected')
+  ),
+  constraint media_rights_holder_check check (
+    rights_holder is null or (rights_holder = btrim(rights_holder) and rights_holder <> '')
+  ),
+  constraint media_rights_credit_check check (
+    credit is null or (credit = btrim(credit) and credit <> '')
+  ),
+  constraint media_rights_source_reference_check check (
+    source_reference is null or (source_reference = btrim(source_reference) and source_reference <> '')
+  ),
+  constraint media_rights_consent_state_check check (
+    consent_state in ('not_required', 'pending', 'granted', 'revoked')
+  ),
+  constraint media_rights_consent_pair_check check (
+    (consent_required and consent_state <> 'not_required')
+    or (not consent_required and consent_state = 'not_required')
+  ),
+  constraint media_rights_verified_fields_check check (
+    rights_status <> 'verified' or (reviewed_by is not null and verified_at is not null)
+  ),
+  constraint media_rights_review_order_check check (
+    review_due_at is null or verified_at is null or review_due_at >= verified_at
+  ),
+  constraint media_rights_version_check check (version > 0)
+);
+
+create table public.media_derivatives (
+  id uuid primary key default gen_random_uuid(),
+  source_asset_id uuid not null references public.media_assets (id) on delete restrict,
+  derivative_asset_id uuid not null unique references public.media_assets (id) on delete restrict,
+  variant text not null,
+  width integer,
+  height integer,
+  format text not null,
+  byte_size bigint not null,
+  checksum_sha256 text not null,
+  quality_profile text,
+  processing_state text not null default 'registered',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  version integer not null default 1,
+  constraint media_derivatives_variant_check check (
+    variant in ('thumbnail', 'listing', 'hero', 'social', 'responsive')
+  ),
+  constraint media_derivatives_width_check check (width is null or width > 0),
+  constraint media_derivatives_height_check check (height is null or height > 0),
+  constraint media_derivatives_format_check check (
+    format in ('jpeg', 'png', 'webp', 'avif', 'mp4', 'webm')
+  ),
+  constraint media_derivatives_byte_size_check check (byte_size > 0),
+  constraint media_derivatives_checksum_check check (checksum_sha256 ~ '^[0-9a-f]{64}$'),
+  constraint media_derivatives_processing_state_check check (
+    processing_state in ('registered', 'processing', 'ready_private', 'failed', 'archived')
+  ),
+  constraint media_derivatives_version_check check (version > 0),
+  constraint media_derivatives_source_variant_unique unique (source_asset_id, variant, width, height)
+);
+
+create table public.evidence_attachments (
+  evidence_id uuid not null references public.evidence_records (id) on delete cascade,
+  media_asset_id uuid not null references public.media_assets (id) on delete restrict,
+  attachment_kind text not null default 'supporting_document',
+  created_at timestamptz not null default now(),
+  created_by uuid references public.profiles (id) on delete set null,
+  primary key (evidence_id, media_asset_id),
+  constraint evidence_attachments_kind_check check (
+    attachment_kind in ('supporting_document', 'source_image', 'consent_record')
+  )
+);
+
+create table public.team_member_consents (
+  team_member_id uuid primary key references public.team_members (id) on delete cascade,
+  consent_state text not null default 'pending',
+  source_reference text,
+  consented_at timestamptz,
+  reviewed_by uuid references public.profiles (id) on delete set null,
+  reviewed_at timestamptz,
+  internal_notes text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  version integer not null default 1,
+  constraint team_member_consents_state_check check (
+    consent_state in ('pending', 'granted', 'revoked')
+  ),
+  constraint team_member_consents_source_check check (
+    source_reference is null or (source_reference = btrim(source_reference) and source_reference <> '')
+  ),
+  constraint team_member_consents_granted_fields_check check (
+    consent_state <> 'granted'
+    or (source_reference is not null and consented_at is not null and reviewed_by is not null)
+  ),
+  constraint team_member_consents_version_check check (version > 0)
+);
+
+create table public.public_site_setting_definitions (
+  namespace text not null,
+  key text not null,
+  value_kind text not null,
+  public_allowed boolean not null default false,
+  description text not null,
+  primary key (namespace, key),
+  constraint public_site_setting_definitions_namespace_check check (
+    namespace = btrim(namespace) and namespace ~ '^[a-z][a-z0-9._-]*$'
+  ),
+  constraint public_site_setting_definitions_key_check check (
+    key = btrim(key) and key ~ '^[a-z][a-z0-9._-]*$'
+  ),
+  constraint public_site_setting_definitions_kind_check check (
+    value_kind in ('string', 'number', 'boolean', 'object', 'array')
+  ),
+  constraint public_site_setting_definitions_description_check check (
+    description = btrim(description) and description <> ''
+  )
+);
+
+insert into public.public_site_setting_definitions (namespace, key, value_kind, public_allowed, description)
+values
+  ('brand.public', 'display', 'object', true, 'Future verified public identity display configuration'),
+  ('contact.public', 'channels', 'object', true, 'Future verified public contact channels'),
+  ('social.public', 'profiles', 'array', true, 'Future verified public social profiles'),
+  ('website.public', 'behavior', 'object', true, 'Future non-secret public website behavior')
+on conflict (namespace, key) do update
+set value_kind = excluded.value_kind,
+    public_allowed = excluded.public_allowed,
+    description = excluded.description;
+
+-- S2 tables receive only governance columns/constraints here. All new
+-- defaults are fail-closed and preserve the existing draft-only seed.
+alter table public.media_assets
+  add column provenance_class text not null default 'synthetic_test',
+  add column asset_state text not null default 'registered',
+  add column media_metadata jsonb not null default '{}'::jsonb,
+  add column processing_error text;
+
+alter table public.media_assets
+  add constraint media_assets_provenance_class_check check (
+    provenance_class in (
+      'client_original', 'client_derivative', 'production_asset',
+      'concept_demo', 'generated_reference', 'synthetic_test'
+    )
+  ),
+  add constraint media_assets_asset_state_check check (
+    asset_state in (
+      'registered', 'upload_pending', 'uploaded_private', 'processing',
+      'ready_private', 'promotion_pending', 'public_eligible', 'archived', 'failed'
+    )
+  ),
+  add constraint media_assets_metadata_object_check check (jsonb_typeof(media_metadata) = 'object'),
+  add constraint media_assets_editorial_bucket_check check (
+    bucket_id in ('editorial-originals', 'editorial-derivatives')
+    or provenance_class = 'synthetic_test'
+  ),
+  add constraint media_assets_editorial_mime_check check (
+    provenance_class = 'synthetic_test'
+    or mime_type in (
+      'image/jpeg', 'image/png', 'image/webp', 'image/avif', 'video/mp4', 'video/webm'
+    )
+  ),
+  add constraint media_assets_object_path_safety_check check (
+    provenance_class = 'synthetic_test'
+    or (
+      object_path !~ '(^|/)(\.\.?)(/|$)'
+      and object_path !~ '[\\\\]'
+      and object_path ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/[A-Za-z0-9][A-Za-z0-9._-]{0,127}$'
+    )
+  );
+
+alter table public.service_localizations
+  add column scope text,
+  add column deliverables jsonb not null default '[]'::jsonb,
+  add column exclusions jsonb not null default '[]'::jsonb,
+  add column client_inputs jsonb not null default '[]'::jsonb,
+  add column delivery_wording text,
+  add column professional_terminology jsonb not null default '[]'::jsonb;
+
+alter table public.service_localizations
+  add constraint service_localizations_scope_check check (
+    scope is null or (scope = btrim(scope) and scope <> '')
+  ),
+  add constraint service_localizations_deliverables_array_check check (jsonb_typeof(deliverables) = 'array'),
+  add constraint service_localizations_exclusions_array_check check (jsonb_typeof(exclusions) = 'array'),
+  add constraint service_localizations_client_inputs_array_check check (jsonb_typeof(client_inputs) = 'array'),
+  add constraint service_localizations_delivery_wording_check check (
+    delivery_wording is null or (delivery_wording = btrim(delivery_wording) and delivery_wording <> '')
+  ),
+  add constraint service_localizations_professional_terms_array_check check (
+    jsonb_typeof(professional_terminology) = 'array'
+  );
+
+alter table public.projects
+  add column renz_role text,
+  add column scope text,
+  add column reviewed_by uuid references public.profiles (id) on delete set null,
+  add column reviewed_at timestamptz;
+
+alter table public.projects
+  add constraint projects_renz_role_check check (
+    renz_role is null or (renz_role = btrim(renz_role) and renz_role <> '')
+  ),
+  add constraint projects_scope_check check (
+    scope is null or (scope = btrim(scope) and scope <> '')
+  );
+
+alter table public.posts
+  add column reviewed_by uuid references public.profiles (id) on delete set null,
+  add column reviewed_at timestamptz;
+
+alter table public.team_members
+  add column reviewed_by uuid references public.profiles (id) on delete set null,
+  add column reviewed_at timestamptz;
+
+alter table public.testimonials
+  add column consent_state text not null default 'pending',
+  add column attribution_approved boolean not null default false,
+  add column reviewed_by uuid references public.profiles (id) on delete set null,
+  add column reviewed_at timestamptz;
+
+alter table public.testimonials
+  drop constraint testimonials_s2_claim_publication_guard,
+  add constraint testimonials_consent_state_check check (
+    consent_state in ('pending', 'granted', 'revoked')
+  );
+
+alter table public.testimonial_verifications
+  add column verification_state text not null default 'unverified',
+  add column consent_state text not null default 'pending',
+  add column reviewed_at timestamptz;
+
+alter table public.testimonial_verifications
+  add constraint testimonial_verifications_state_check check (
+    verification_state in ('unverified', 'in_review', 'verified', 'expired', 'rejected')
+  ),
+  add constraint testimonial_verifications_consent_state_check check (
+    consent_state in ('pending', 'granted', 'revoked')
+  );
+
+alter table public.credentials
+  add column reviewed_by uuid references public.profiles (id) on delete set null,
+  add column reviewed_at timestamptz;
+
+alter table public.credentials
+  drop constraint credentials_s2_claim_publication_guard;
+
+alter table public.site_pages
+  add column reviewed_by uuid references public.profiles (id) on delete set null,
+  add column reviewed_at timestamptz;
+
+alter table public.page_sections
+  drop constraint page_sections_s2_enablement_guard,
+  add constraint page_sections_config_size_check check (octet_length(config::text) <= 16384);
+
+alter table public.navigation_menus
+  add column is_public boolean not null default false,
+  add column reviewed_by uuid references public.profiles (id) on delete set null,
+  add column reviewed_at timestamptz;
+
+alter table public.navigation_items
+  add column enabled boolean not null default false,
+  add column reviewed_by uuid references public.profiles (id) on delete set null,
+  add column reviewed_at timestamptz;
+
+alter table public.navigation_items
+  add constraint navigation_items_internal_path_safety_check check (
+    link_type <> 'internal'
+    or (
+      internal_path ~ '^/[^/]'
+      and internal_path !~ '^/(admin|preview)(/|$)'
+      and internal_path !~ '(^|/)\.\.?(/|$)'
+      and internal_path !~ '[<>"''`\\\\]'
+    )
+  ),
+  add constraint navigation_items_external_url_safety_check check (
+    link_type <> 'external'
+    or (
+      external_url ~* '^https://[^[:space:]<>"'']+$'
+      and external_url !~ '[<>"''`\\\\]'
+    )
+  );
+
+alter table public.navigation_item_localizations
+  add constraint navigation_item_localizations_label_safety_check check (
+    label !~ '[<>]' and label !~* 'javascript:'
+  );
+
+alter table public.public_site_settings
+  add column is_public boolean not null default false,
+  add column sensitivity text not null default 'private',
+  add column review_state text not null default 'unverified',
+  add column evidence_id uuid references public.evidence_records (id) on delete restrict,
+  add constraint public_site_settings_sensitivity_check check (sensitivity in ('private', 'public')),
+  add constraint public_site_settings_review_state_check check (
+    review_state in ('unverified', 'in_review', 'verified', 'expired', 'rejected')
+  ),
+  add constraint public_site_settings_public_pair_check check (
+    not is_public or (sensitivity = 'public' and review_state = 'verified' and evidence_id is not null)
+  ),
+  add constraint public_site_settings_value_size_check check (octet_length(value::text) <= 16384);
+
+alter table public.project_media_localizations
+  add column is_decorative boolean not null default false,
+  add column focal_point jsonb,
+  add constraint project_media_localizations_focal_point_object_check check (
+    focal_point is null or jsonb_typeof(focal_point) = 'object'
+  );
+
+-- S4 governance triggers and mutable-row version discipline.
+create trigger evidence_records_touch_mutable_row
+before update on public.evidence_records
+for each row execute function private.touch_mutable_row();
+create trigger content_claims_touch_mutable_row
+before update on public.content_claims
+for each row execute function private.touch_mutable_row();
+create trigger media_rights_touch_mutable_row
+before update on public.media_rights
+for each row execute function private.touch_mutable_row();
+create trigger media_derivatives_touch_mutable_row
+before update on public.media_derivatives
+for each row execute function private.touch_mutable_row();
+create trigger team_member_consents_touch_mutable_row
+before update on public.team_member_consents
+for each row execute function private.touch_mutable_row();
+
+create or replace function private.enforce_enabled_section_type()
+returns trigger
+language plpgsql
+security invoker
+set search_path = ''
+as $$
+begin
+  if new.enabled and not exists (
+    select 1 from public.content_section_types
+    where content_section_types.section_type = new.section_type
+      and content_section_types.schema_version = new.schema_version
+  ) then
+    raise check_violation using message = 'Page section type is not in the approved S4 registry.';
+  end if;
+  return new;
+end;
+$$;
+
+revoke all on function private.enforce_enabled_section_type() from public, anon, authenticated;
+
+create trigger page_sections_enabled_type_check
+before insert or update of section_type, schema_version, enabled on public.page_sections
+for each row execute function private.enforce_enabled_section_type();
+
+comment on table public.evidence_records is
+  'Private evidence governance. Verification state is independent from content publication status.';
+comment on table public.content_evidence_links is
+  'Bounded typed-FK evidence relationships; exactly one subject FK is required, avoiding entity_type/entity_id polymorphism.';
+comment on table public.media_rights is
+  'First-class rights and consent metadata. Missing or expired rights cannot promote media.';
+comment on table public.media_derivatives is
+  'Provider-independent derivative state; S4 does not require a native image processor.';
+comment on table public.content_section_types is
+  'Allow-listed homepage/page section registry. No arbitrary renderer, CSS, HTML, or script is admitted.';

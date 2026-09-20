@@ -1,0 +1,840 @@
+/* ------------------------------------------------------------------ */
+/* D1 — Final forms: the measured brief.                               */
+/* Presentation only. Every C8 class, id, role and state is preserved;  */
+/* these rules restyle the intake wizard, the two enquiry forms and the */
+/* contact form as one "site record" register.                          */
+/* ------------------------------------------------------------------ */
+
+.intake-section {
+  padding-block: clamp(2.5rem, 6vw, 5.5rem);
+}
+
+.intake-layout {
+  display: grid;
+  gap: clamp(2.5rem, 6vw, 5rem);
+  align-items: start;
+}
+
+@media (min-width: 64rem) {
+  .intake-layout {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 4fr);
+    gap: clamp(3rem, 8vw, 7rem);
+  }
+  .intake-side {
+    position: sticky;
+    top: calc(5.25rem + 1.5rem);
+  }
+}
+
+.intake-main {
+  min-width: 0;
+}
+
+.intake-form {
+  display: grid;
+  gap: clamp(1.5rem, 3vw, 2.25rem);
+  max-width: 44rem;
+}
+
+/* Heading register: kicker, title and lead read like a drawing title block. */
+.intake-form-heading,
+.intake-step {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.intake-form-heading .section-kicker,
+.intake-success .section-kicker {
+  margin: 0;
+  font-family: var(--public-mono);
+  font-size: var(--step--2);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--bronze);
+}
+
+.intake-form-heading h2,
+.intake-step-title {
+  margin: 0;
+  font-family: var(--public-display);
+  font-size: var(--step-3);
+  font-weight: 560;
+  font-variation-settings: "wdth" 96;
+  letter-spacing: -0.025em;
+  line-height: 1.02;
+  color: var(--ink);
+}
+
+.intake-form-heading p:last-child,
+.intake-step-lead {
+  margin: 0;
+  max-width: 40rem;
+  font-size: var(--step-0);
+  line-height: 1.55;
+  color: var(--graphite);
+}
+
+.intake-step-title:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.intake-step-title:focus-visible {
+  outline: 1px solid var(--gold);
+  outline-offset: 0.5rem;
+}
+
+/* Progress: a datum rail — done in ink, current in gold, ahead in stone. */
+.intake-progress {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.intake-progress li {
+  position: relative;
+  display: grid;
+  gap: 0.45rem;
+  min-width: 0;
+  padding-block-start: 0.75rem;
+  font-family: var(--public-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--steel);
+  border: 0;
+}
+
+.intake-progress li::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  inset-block-start: 0;
+  height: 2px;
+  background: var(--stone);
+  transform-origin: left center;
+  transition: background-color var(--t-content) var(--ease-out);
+}
+
+.intake-progress-done::before {
+  background: var(--ink);
+}
+
+.intake-progress-current {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.intake-progress-current::before {
+  background: var(--gold);
+  animation: intake-rail-draw var(--t-content) var(--ease-out) both;
+}
+
+@keyframes intake-rail-draw {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.intake-progress-index::after {
+  content: "";
+}
+
+.intake-progress-label {
+  display: none;
+  overflow-wrap: anywhere;
+  letter-spacing: 0.06em;
+  text-transform: none;
+  font-size: 0.72rem;
+}
+
+@media (min-width: 45rem) {
+  .intake-progress-label {
+    display: block;
+  }
+}
+
+.intake-progress-live {
+  margin: 0;
+  font-family: var(--public-mono);
+  font-size: var(--step--2);
+  letter-spacing: 0.08em;
+  color: var(--steel);
+}
+
+/* Fields: a lowered baseline rule that draws gold on focus. */
+.intake-grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+@media (min-width: 40rem) {
+  .intake-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.intake-field {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.intake-field > label,
+.intake-fieldset > legend {
+  font-family: var(--public-mono);
+  font-size: var(--step--2);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+
+.intake-optional {
+  color: var(--steel);
+  text-transform: none;
+  letter-spacing: 0.04em;
+}
+
+.intake-hint {
+  margin: 0;
+  font-size: var(--step--1);
+  line-height: 1.5;
+  color: var(--graphite);
+}
+
+.intake-field input[type="text"],
+.intake-field input[type="email"],
+.intake-field input[type="tel"],
+.intake-field input[type="number"],
+.intake-field input[type="file"],
+.intake-field select,
+.intake-field textarea {
+  width: 100%;
+  min-height: 3.25rem;
+  padding: 0.85rem 0.95rem;
+  border: 1px solid var(--stone);
+  border-block-end: 2px solid var(--concrete);
+  border-radius: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--step-0);
+  line-height: 1.4;
+  transition:
+    border-color var(--t-micro) var(--ease-out),
+    background-color var(--t-micro) var(--ease-out);
+}
+
+.intake-field input[type="file"] {
+  padding: 0.7rem 0.95rem;
+  cursor: pointer;
+}
+
+.intake-field textarea {
+  min-height: 9.5rem;
+  resize: vertical;
+}
+
+.intake-field select {
+  appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--ink) 50%),
+    linear-gradient(135deg, var(--ink) 50%, transparent 50%);
+  background-position:
+    calc(100% - 1.25rem) 50%,
+    calc(100% - 0.95rem) 50%;
+  background-size: 0.35rem 0.35rem;
+  background-repeat: no-repeat;
+  padding-inline-end: 2.5rem;
+}
+
+.intake-field input:hover,
+.intake-field select:hover,
+.intake-field textarea:hover {
+  border-block-end-color: var(--graphite);
+}
+
+.intake-field input:focus-visible,
+.intake-field select:focus-visible,
+.intake-field textarea:focus-visible {
+  outline: none;
+  border-color: var(--ink);
+  border-block-end-color: var(--gold);
+  background: #fff;
+}
+
+.intake-field-invalid input,
+.intake-field-invalid select,
+.intake-field-invalid textarea {
+  border-color: var(--ochre);
+  border-block-end-color: var(--ochre);
+}
+
+.intake-error {
+  margin: 0;
+  display: flex;
+  gap: 0.5rem;
+  align-items: baseline;
+  font-size: var(--step--1);
+  line-height: 1.45;
+  color: var(--ochre);
+}
+
+.intake-error::before {
+  content: "—";
+  font-family: var(--public-mono);
+}
+
+/* Error summary: a site note, not a red box. */
+.intake-summary {
+  display: grid;
+  gap: 0.6rem;
+  padding: 1.1rem 1.25rem;
+  border: 1px solid var(--ochre);
+  border-inline-start-width: 4px;
+  background: color-mix(in srgb, var(--ochre) 6%, var(--paper));
+  color: var(--ink);
+}
+
+.intake-summary:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 0.35rem;
+}
+
+.intake-summary-title {
+  margin: 0;
+  font-weight: 600;
+}
+
+.intake-summary ul {
+  margin: 0;
+  padding-inline-start: 1.1rem;
+  display: grid;
+  gap: 0.3rem;
+  font-size: var(--step--1);
+}
+
+.intake-summary a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  text-decoration-color: var(--ochre);
+}
+
+/* Choice cards: numbered tiles; the selected one carries the gold datum. */
+.intake-fieldset {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.intake-fieldset > legend {
+  margin-block-end: 0.5rem;
+  padding: 0;
+}
+
+.intake-choices {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+  counter-reset: choice;
+}
+
+.intake-choice {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: start;
+  min-height: 4.25rem;
+  padding: 1rem 1.05rem 1rem 1rem;
+  border: 1px solid var(--stone);
+  background: var(--paper);
+  color: var(--ink);
+  font-size: var(--step--1);
+  line-height: 1.4;
+  cursor: pointer;
+  counter-increment: choice;
+  transition:
+    border-color var(--t-micro) var(--ease-out),
+    background-color var(--t-micro) var(--ease-out),
+    transform var(--t-micro) var(--ease-out);
+}
+
+.intake-choice::before {
+  content: counter(choice, decimal-leading-zero);
+  font-family: var(--public-mono);
+  font-size: var(--step--2);
+  letter-spacing: 0.08em;
+  color: var(--bronze);
+  line-height: 1.6;
+}
+
+.intake-choice::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: -1px;
+  height: 2px;
+  background: var(--gold);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform var(--t-content) var(--ease-out);
+}
+
+.intake-choice input[type="radio"] {
+  /* The real control covers the whole tile (opacity only): pointer, touch
+     and automation hit the input itself; the label styling stays visual. */
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  inline-size: 100%;
+  block-size: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.intake-choice:hover {
+  border-color: var(--graphite);
+}
+
+.intake-choice:focus-within {
+  outline: 2px solid var(--gold);
+  outline-offset: 0.25rem;
+}
+
+.intake-choice-selected {
+  border-color: var(--ink);
+  background: #fff;
+}
+
+.intake-choice-selected::before {
+  color: var(--ink);
+}
+
+.intake-choice-selected::after {
+  transform: scaleX(1);
+}
+
+/* Multi-item register (material enquiry). */
+.intake-items {
+  display: grid;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.intake-item {
+  display: grid;
+  gap: 1rem;
+  padding: 1.25rem;
+  border: 1px solid var(--stone);
+  border-inline-start: 3px solid var(--ink);
+  background: var(--paper);
+}
+
+.intake-item-details {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 34rem) {
+  .intake-item-details {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Consent, honeypot, attachments. */
+.intake-consent label {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: start;
+  font-family: var(--public-body);
+  font-size: var(--step--1);
+  letter-spacing: 0;
+  text-transform: none;
+  line-height: 1.5;
+  color: var(--graphite);
+}
+
+.intake-consent input[type="checkbox"] {
+  inline-size: 1.15rem;
+  block-size: 1.15rem;
+  margin: 0.15rem 0 0;
+  accent-color: var(--ink);
+}
+
+.intake-consent a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  text-decoration-color: var(--gold);
+}
+
+.intake-attachments {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.intake-attachments li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  align-items: baseline;
+  padding: 0.65rem 0;
+  border-block-end: 1px solid var(--stone);
+  font-size: var(--step--1);
+}
+
+.intake-attachment-name {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.intake-attachment-meta {
+  font-family: var(--public-mono);
+  font-size: var(--step--2);
+  color: var(--steel);
+}
+
+.intake-upload-status {
+  font-family: var(--public-mono);
+  font-size: var(--step--2);
+  letter-spacing: 0.06em;
+}
+
+/* Actions: the same button register as the rest of the site. */
+.intake-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem 1.25rem;
+  align-items: center;
+  padding-block-start: 0.5rem;
+}
+
+.intake-wizard-actions {
+  justify-content: space-between;
+  border-block-start: 1px solid var(--stone);
+  padding-block-start: 1.5rem;
+}
+
+.intake-submit,
+.intake-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 3.25rem;
+  padding: 0.85rem 1.6rem;
+  border: 1px solid var(--ink);
+  border-radius: 0;
+  font: inherit;
+  font-size: var(--step--1);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition:
+    background-color var(--t-micro) var(--ease-out),
+    color var(--t-micro) var(--ease-out),
+    border-color var(--t-micro) var(--ease-out),
+    transform var(--t-micro) var(--ease-out);
+}
+
+.intake-submit {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.intake-submit:hover {
+  background: var(--graphite);
+  border-color: var(--graphite);
+}
+
+.intake-submit:active {
+  transform: translateY(1px);
+}
+
+.intake-submit:disabled {
+  background: var(--concrete);
+  border-color: var(--concrete);
+  color: var(--paper);
+  cursor: progress;
+}
+
+.intake-secondary {
+  background: transparent;
+  color: var(--ink);
+  border-color: var(--concrete);
+}
+
+.intake-secondary:hover {
+  border-color: var(--ink);
+}
+
+.intake-submit:focus-visible,
+.intake-secondary:focus-visible,
+.intake-remove:focus-visible,
+.intake-edit:focus-visible,
+.intake-copy:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 0.3rem;
+}
+
+.intake-remove,
+.intake-edit,
+.intake-copy {
+  padding: 0.25rem 0;
+  border: 0;
+  border-block-end: 1px solid var(--gold);
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--step--1);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Review: a facts register. */
+.intake-review {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  border-block-start: 1px solid var(--ink);
+}
+
+.intake-review > div {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.95rem 0;
+  border-block-end: 1px solid var(--stone);
+}
+
+@media (min-width: 40rem) {
+  .intake-review > div {
+    grid-template-columns: 11rem minmax(0, 1fr) auto;
+    gap: 1.5rem;
+    align-items: baseline;
+  }
+}
+
+.intake-review dt {
+  font-family: var(--public-mono);
+  font-size: var(--step--2);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--steel);
+}
+
+.intake-review dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+}
+
+/* Success: the reference plate. */
+.intake-success {
+  display: grid;
+  gap: 1.25rem;
+  max-width: 44rem;
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+  border: 1px solid var(--stone);
+  border-block-start: 3px solid var(--gold);
+  background: #fff;
+}
+
+.intake-success h2 {
+  margin: 0;
+  font-family: var(--public-display);
+  font-size: var(--step-3);
+  font-weight: 560;
+  letter-spacing: -0.025em;
+  line-height: 1.02;
+}
+
+.intake-reference-label {
+  margin: 0;
+  font-family: var(--public-mono);
+  font-size: var(--step--2);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--bronze);
+}
+
+.intake-reference {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  align-items: center;
+}
+
+.intake-reference code {
+  font-family: var(--public-mono);
+  font-size: var(--step-2);
+  letter-spacing: 0.08em;
+  color: var(--ink);
+}
+
+.intake-fallback {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1.25rem;
+  border: 1px solid var(--stone);
+  border-inline-start: 4px solid var(--gold);
+  background: var(--paper);
+}
+
+.intake-fallback p {
+  margin: 0;
+}
+
+.intake-fallback-actions,
+.intake-success .intake-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+}
+
+/* Aside: service cue, next steps, alternatives. */
+.intake-side {
+  display: grid;
+  gap: clamp(1.5rem, 3vw, 2.25rem);
+  align-content: start;
+}
+
+.intake-service-cue {
+  position: relative;
+  display: grid;
+  gap: 0.5rem;
+  padding: 1.5rem;
+  overflow: hidden;
+  border: 1px solid var(--stone);
+  background: var(--limestone);
+  color: var(--ink);
+  isolation: isolate;
+}
+
+.intake-service-cue .field {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  opacity: 0.55;
+}
+
+.intake-service-cue .index-mark {
+  color: var(--bronze);
+}
+
+.intake-service-cue strong {
+  font-family: var(--public-display);
+  font-size: var(--step-2);
+  font-weight: 560;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+}
+
+.intake-service-cue p {
+  margin: 0;
+  font-size: var(--step--1);
+  line-height: 1.5;
+  color: var(--graphite);
+}
+
+.intake-side-block {
+  display: grid;
+  gap: 0.85rem;
+  padding-block-start: 1rem;
+  border-block-start: 1px solid var(--ink);
+}
+
+.intake-side-block .datum-label {
+  margin: 0;
+}
+
+.intake-next {
+  display: grid;
+  gap: 0.85rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.intake-next li {
+  display: grid;
+  grid-template-columns: 2.25rem minmax(0, 1fr);
+  gap: 0.5rem;
+  align-items: baseline;
+  font-size: var(--step--1);
+  line-height: 1.5;
+  color: var(--graphite);
+}
+
+.intake-next .index-mark {
+  color: var(--bronze);
+}
+
+.intake-side-whatsapp,
+.intake-side-email {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: fit-content;
+  color: var(--ink);
+  font-weight: 600;
+  text-decoration: none;
+  border-block-end: 1px solid var(--gold);
+  padding-block-end: 0.15rem;
+  overflow-wrap: anywhere;
+}
+
+.intake-side-whatsapp svg {
+  inline-size: 1.1rem;
+  block-size: 1.1rem;
+  color: var(--bronze);
+}
+
+.intake-side-whatsapp:hover,
+.intake-side-email:hover {
+  border-block-end-color: var(--ink);
+}
+
+.intake-side-note,
+.intake-paused {
+  margin: 0;
+  font-size: var(--step--1);
+  line-height: 1.55;
+  color: var(--steel);
+}
+
+/* Contact form slot shares the register. */
+.contact-form-slot .intake-form {
+  max-width: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .intake-progress-current::before {
+    animation: none;
+    transform: none;
+  }
+  .intake-choice,
+  .intake-choice::after,
+  .intake-submit,
+  .intake-secondary,
+  .intake-field input,
+  .intake-field select,
+  .intake-field textarea {
+    transition: none;
+  }
+}

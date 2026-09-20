@@ -1,0 +1,23 @@
+{
+  "profile": "product-admin",
+  "sourceRoots": ["src"],
+  "locale": "en",
+  "canonicalMap": "UX-CONTRACT.md",
+  "requiredCapabilities": [
+    "Table Selection",
+    "Select/Listbox",
+    "Date",
+    "Form",
+    "Scrollbar",
+    "Toast",
+    "CRUD"
+  ],
+  "ownership": {
+    "Select/Listbox": "native",
+    "Dialog/confirmation": "native"
+  },
+  "evidence": {
+    "crudFullFlow": "tests/e2e/s5a-admin.spec.ts",
+    "failurePaths": "tests/component/service-admin-states.test.tsx"
+  }
+}

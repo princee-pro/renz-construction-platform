@@ -1,0 +1,85 @@
+# Environment and secrets
+.local/
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+*.jks
+*.keystore
+
+# Node / Next.js / package managers
+node_modules/
+.next/
+out/
+dist/
+build/
+.turbo/
+.cache/
+.parcel-cache/
+.pnpm-store/
+.yarn/
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.tsbuildinfo
+next-env.d.ts
+
+# Test and browser output
+coverage/
+playwright-report/
+test-results/
+blob-report/
+.nyc_output/
+.playwright/
+
+# Supabase local state and generated temporary data
+.supabase/
+supabase/.temp/
+supabase/.branches/
+
+# Hosting and deployment state
+.vercel/
+.netlify/
+
+# Editors and operating systems
+.vs/
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Local scratch, logs, and archives
+*.log
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+*.zip
+*.7z
+*.tar
+*.tar.gz
+tmp/
+temp/
+
+# graphify knowledge-graph output (generated, 100+ MB)
+graphify-out/

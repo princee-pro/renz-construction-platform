@@ -1,0 +1,70 @@
+# Supabase CLI 2.116.0 local configuration.
+# S4 enables the local Storage API in addition to the S3 Auth/API foundation.
+# Storage remains private and is provisioned by an explicit, idempotent script.
+# C4 enables Realtime for the Control Room's targeted invalidation channel
+# (public.realtime_events only — see 20260911100000_establish_c4_control_room.sql).
+# Analytics, edge-runtime, and Studio remain disabled.
+project_id = "renz-construction-local"
+
+[api]
+enabled = true
+port = 56231
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 56232
+shadow_port = 56230
+health_timeout = "2m"
+major_version = 17
+
+[db.pooler]
+enabled = false
+
+[db.migrations]
+enabled = true
+schema_paths = []
+
+[db.seed]
+enabled = true
+sql_paths = ["./seed.sql"]
+
+[realtime]
+enabled = true
+
+[studio]
+enabled = false
+
+[local_smtp]
+enabled = true
+port = 56234
+smtp_port = 56235
+pop3_port = 56236
+
+[storage]
+enabled = true
+
+[auth]
+enabled = true
+site_url = "http://127.0.0.1:3000"
+additional_redirect_urls = ["http://localhost:3000/**"]
+enable_signup = false
+enable_anonymous_sign_ins = false
+
+[auth.email]
+# The provider must remain enabled for invited users to sign in; the global
+# auth.enable_signup=false setting still blocks public account creation.
+enable_signup = true
+enable_confirmations = false
+double_confirm_changes = true
+
+[auth.mfa.totp]
+enroll_enabled = true
+verify_enabled = true
+
+[edge_runtime]
+enabled = false
+
+[analytics]
+enabled = false

@@ -1,0 +1,7 @@
+minimumReleaseAgeExclude:
+  - "@supabase/ssr@0.12.6"
+  - eslint@10.10.0
+saveExact: true
+strictDepBuilds: true
+strictPeerDependencies: true
+verifyDepsBeforeRun: error

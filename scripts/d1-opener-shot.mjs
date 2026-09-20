@@ -1,0 +1,10 @@
+import { chromium } from "@playwright/test";
+const browser = await chromium.launch();
+const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+await page.goto("http://localhost:3000/", { waitUntil: "commit" });
+await page.waitForSelector(".brand-opener", { timeout: 10000 });
+await page.waitForTimeout(650);
+await page.screenshot({ path: ".playwright/screenshots/d1/opener-650.png" });
+await page.waitForTimeout(500);
+await page.screenshot({ path: ".playwright/screenshots/d1/opener-1150.png" });
+await browser.close();
