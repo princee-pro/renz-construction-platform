@@ -8,7 +8,6 @@ type PageRow = Database["public"]["Views"]["published_pages"]["Row"];
 type TeamRow = Database["public"]["Views"]["published_team_members"]["Row"];
 type CredentialRow = Database["public"]["Views"]["published_credentials"]["Row"];
 type TestimonialRow = Database["public"]["Views"]["published_testimonials"]["Row"];
-type SettingRow = Database["public"]["Views"]["published_site_settings"]["Row"];
 type ClaimRow = Database["public"]["Views"]["published_project_claims"]["Row"];
 type ProjectMediaRow = Database["public"]["Views"]["published_project_media"]["Row"];
 type ProjectServiceLinkRow = Database["public"]["Views"]["published_project_services"]["Row"];
@@ -144,12 +143,6 @@ function requiredText(value: string | null): string | null {
   const normalized = value?.trim();
   return normalized ? normalized : null;
 }
-
-const publicUrlSettingIds = new Set([
-  "contact.public:directions_url",
-  "social.public:instagram",
-  "social.public:linkedin",
-]);
 
 export function normalizePublicHttpsUrl(value: string | null | undefined): string | null {
   const candidate = requiredText(value ?? null);
@@ -373,12 +366,6 @@ export type PublicTestimonial = Readonly<{
   attribution: string;
 }>;
 
-export type PublicSetting = Readonly<{
-  namespace: string;
-  key: string;
-  value: string;
-}>;
-
 export type PublicProjectClaim = Readonly<{
   id: string;
   projectId: string;
@@ -571,18 +558,6 @@ export function mapPublicTestimonial(row: TestimonialProjection): PublicTestimon
   const attribution = requiredText(row.attribution_presentation);
   if (!id || !locale || !quote || !attribution) return null;
   return { id, locale, quote, attribution };
-}
-
-export function mapPublicSetting(row: SettingRow): PublicSetting | null {
-  const namespace = requiredText(row.namespace);
-  const key = requiredText(row.key);
-  let value = typeof row.value === "string" ? requiredText(row.value) : null;
-  if (!namespace || !key || !value) return null;
-  if (publicUrlSettingIds.has(`${namespace}:${key}`)) {
-    value = normalizePublicHttpsUrl(value);
-    if (!value) return null;
-  }
-  return { namespace, key, value };
 }
 
 export function mapPublicProjectClaim(row: ClaimRow): PublicProjectClaim | null {

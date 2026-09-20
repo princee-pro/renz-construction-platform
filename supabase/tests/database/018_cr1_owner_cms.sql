@@ -41,7 +41,7 @@ reset role;
 -- Public facade (anon) ---------------------------------------------------
 select pg_temp.as_anon();
 select ok((select public.public_website_page('/') ->> 'sections') is not null, 'anon reads the published home page through the facade');
-select is((select (public.public_website_page('/') -> 'revision' ->> 'no')::integer), 1, 'the public home page is revision 1');
+select ok((select (public.public_website_page('/') -> 'revision' ->> 'no')::integer) >= 1, 'the public home page has a published revision (D1.6 republished the seed as revision 2)');
 select ok((select jsonb_array_length(public.public_website_page('/') -> 'sections') >= 8), 'the home page carries its approved sections');
 select is(public.public_website_page('/does-not-exist'), null, 'an unknown path is null (404)');
 select is((public.public_website_page('/_globals') -> 'page' ->> 'page_type'), 'global', 'global content is served to the public layout through the same snapshot facade (never routable: the slug rules refuse a leading underscore)');

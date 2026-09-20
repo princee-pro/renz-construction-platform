@@ -6,8 +6,6 @@ import {
   contentCollectionTag,
   contentItemTag,
   homepageTag,
-  navigationTag,
-  publicSettingsTag,
   type PublishedContentType,
 } from "@/lib/content/cache-tags";
 
@@ -27,15 +25,6 @@ export function invalidatePublishedContent(
   if (path) {
     revalidatePath(path);
   }
-}
-
-export function invalidateNavigation(menuId?: string): void {
-  revalidateTag(navigationTag(menuId), "max");
-  revalidateTag(homepageTag(), "max");
-}
-
-export function invalidatePublicSettings(namespace?: string, key?: string): void {
-  revalidateTag(publicSettingsTag(namespace, key), "max");
 }
 
 /**

@@ -78,7 +78,7 @@ test.describe.serial("RENZ S9A-P signature preview contracts", () => {
     await expect(page.getByRole("heading", { level: 1, name: "Ridge Residence" })).toBeVisible();
     await expect(page.locator(".project-story-chapter")).toHaveCount(9);
     await expect(
-      page.getByText(/Generated visual \/ not RENZ project evidence/iu).first(),
+      page.getByText(/Generated (?:concept )?visual \/ not RENZ project evidence/iu).first(),
     ).toBeVisible();
 
     const range = page.getByRole("slider", { name: "Reveal resolved concept" });

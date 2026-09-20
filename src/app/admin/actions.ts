@@ -2,9 +2,8 @@
 
 import { redirect } from "next/navigation";
 
-import { getAdminAuthSnapshot, requireAal2User, requirePermission } from "@/lib/auth/guards";
+import { getAdminAuthSnapshot } from "@/lib/auth/guards";
 import { safeInternalRedirect } from "@/lib/auth/redirects";
-import { inviteAdminUser } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export type ActionState = Readonly<{
@@ -52,12 +51,10 @@ export async function verifyMfaAction(
     return { error: "Your authenticator could not be activated. Try again." };
   }
 
-  const { error: auditError } = await client.rpc("record_audit_event", {
+  // C10: audited through a permission-free session event so every role
+  // (and an account still holding a temporary password) can sign in.
+  const { error: auditError } = await client.rpc("record_session_event", {
     event_action: "mfa.verify",
-    event_entity_type: "auth_factor",
-    event_entity_id: factor.id,
-    event_outcome: "success",
-    event_metadata: {},
   });
   if (auditError) {
     return { error: "The verification could not be recorded. Try again." };
@@ -69,70 +66,9 @@ export async function verifyMfaAction(
 export async function signOutAction(): Promise<void> {
   const snapshot = await getAdminAuthSnapshot();
   const client = await createServerSupabaseClient();
-  if (snapshot?.currentLevel === "aal2") {
-    await client.rpc("record_audit_event", {
-      event_action: "auth.sign_out",
-      event_entity_type: "auth_session",
-      event_entity_id: "current",
-      event_outcome: "success",
-      event_metadata: {},
-    });
+  if (snapshot) {
+    await client.rpc("record_session_event", { event_action: "auth.sign_out" });
   }
   await client.auth.signOut();
   redirect("/admin/sign-in");
-}
-
-export async function inviteAdminAction(
-  _previousState: ActionState,
-  formData: FormData,
-): Promise<ActionState> {
-  await requirePermission("users.invite");
-  const email = readText(formData, "email").toLowerCase();
-
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return { error: "Enter a valid administrator email address." };
-  }
-
-  try {
-    const invitation = await inviteAdminUser(email);
-    const client = await createServerSupabaseClient();
-    const { data: assigned, error: assignmentError } = await client.rpc("assign_invited_admin", {
-      target_user_id: invitation.userId,
-    });
-    if (assignmentError || assigned !== true) {
-      return {
-        error:
-          "The invitation could not be assigned. Try again or use the approved recovery process.",
-      };
-    }
-  } catch {
-    return {
-      error: "The invitation could not be sent. Try again or use the approved recovery process.",
-    };
-  }
-
-  return { success: "Invitation sent." };
-}
-
-export async function disableAdminAction(
-  _previousState: ActionState,
-  formData: FormData,
-): Promise<ActionState> {
-  await requirePermission("users.disable");
-  const targetUserId = readText(formData, "userId");
-
-  if (!/^[0-9a-f-]{36}$/i.test(targetUserId)) {
-    return { error: "The administrator reference is invalid." };
-  }
-
-  const client = await createServerSupabaseClient();
-  const { error } = await client.rpc("disable_user", { target_user_id: targetUserId });
-
-  return error
-    ? { error: "The administrator could not be disabled." }
-    : { success: "Administrator access disabled." };
-}
-
-export async function requireSecurityAccess() {
-  return requireAal2User();
 }

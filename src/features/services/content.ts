@@ -41,10 +41,3 @@ export function getServiceBySlug(
 ): ServiceCategory | null {
   return services.find((service) => service.slug === slug) ?? null;
 }
-
-export function getAdjacentServices(
-  services: readonly ServiceCategory[],
-  slug: string,
-): readonly ServiceCategory[] {
-  return services.filter((service) => service.slug !== slug);
-}

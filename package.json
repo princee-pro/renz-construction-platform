@@ -79,6 +79,15 @@
     "scan:secrets": "node scripts/scan-secrets.mjs",
     "audit:production": "node scripts/audit-production.mjs",
     "audit:public-bundles": "node scripts/audit-public-bundles.mjs",
+    "test:e2e:c10": "playwright test tests/e2e/c10-staff-access.spec.ts",
+    "c10:verify": "node scripts/verify-c10.mjs",
+    "c10:security": "node scripts/verify-c10-security.mjs",
+    "c10:headers": "node scripts/c10-headers.mjs",
+    "c10:scale": "node scripts/c10-scale.mjs",
+    "c10:perf": "node scripts/c10-admin-perf.mjs",
+    "backup:dump": "node scripts/backup.mjs dump",
+    "backup:restore": "node scripts/backup.mjs restore",
+    "backup:counts": "node scripts/backup.mjs counts",
     "verify": "prettier . --check && eslint . --max-warnings 0 && next typegen && tsc --noEmit && vitest run --project unit && vitest run --project component && designmd lint DESIGN.md && node scripts/design-tokens.mjs check && node scripts/scan-secrets.mjs && next build && node scripts/audit-production.mjs"
   },
   "dependencies": {

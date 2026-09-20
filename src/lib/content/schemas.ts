@@ -143,14 +143,6 @@ export type ContentBlocks = z.infer<typeof contentBlocksSchema>;
 export type PublicationCommand = z.infer<typeof publicationCommandSchema>;
 export type MediaMetadata = z.infer<typeof mediaMetadataSchema>;
 
-export function parseContentBlocks(value: unknown): ContentBlocks {
-  return contentBlocksSchema.parse(value);
-}
-
 export function parsePublicationCommand(value: unknown): PublicationCommand {
   return publicationCommandSchema.parse(value);
-}
-
-export function parseMediaMetadata(value: unknown): MediaMetadata {
-  return mediaMetadataSchema.parse(value);
 }

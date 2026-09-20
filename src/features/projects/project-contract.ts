@@ -143,21 +143,6 @@ export const projectReviewSchema = z
   })
   .strict();
 
-export const projectServicesSchema = z
-  .object({
-    projectId: z.string().uuid(),
-    expectedVersion: z.number().int().positive(),
-    services: z.array(
-      z
-        .object({
-          serviceId: z.string().uuid(),
-          scopeLabel: optionalText(200),
-        })
-        .strict(),
-    ),
-  })
-  .strict();
-
 export const stageCreateSchema = z
   .object({
     projectId: z.string().uuid(),
@@ -251,13 +236,6 @@ export const mediaRemoveSchema = z
     projectMediaId: z.string().uuid(),
     projectId: z.string().uuid(),
     expectedMediaVersion: z.number().int().positive(),
-  })
-  .strict();
-
-export const mediaReorderSchema = z
-  .object({
-    projectId: z.string().uuid(),
-    orderedIds: z.array(z.string().uuid()).min(1),
   })
   .strict();
 

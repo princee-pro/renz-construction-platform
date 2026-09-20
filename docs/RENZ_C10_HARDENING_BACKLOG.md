@@ -237,3 +237,38 @@ records where the boundary currently sits.
 53. **Generated-media rights text**: the seed writes the tool and job id into
     `rights_source`; the Admin form should offer the same structured fields
     (tool, job / seed) for owner uploads instead of free text.
+
+## C10 disposition (2026-09-20)
+
+Each numbered item above, as it stood at the end of C10 (report:
+`docs/RENZ_C10_PRODUCTION_HARDENING_REPORT.md`). Nothing below was deleted
+from the sections above; historical wording is preserved.
+
+| Item | Disposition |
+| --- | --- |
+| 1 malware scanning | OPEN — no scanner wired; attachments stay `pending_review` until staff mark them safe/rejected; Launch Readiness shows the scanner check. Decision + vendor required. |
+| 2 intake PDF policy | DONE by policy — images-only remains the shipped default; documented in the go-live checklist. |
+| 3 bypass prohibition | DONE — `RENZ_INTAKE_ALLOW_DEV_BYPASS` and `RENZ_CLIENT_PREVIEW` set in a production build → `/api/health` 503 `blocked`, Launch Readiness `blocked` (required). |
+| 4 CSP / headers | DONE — `next.config.ts` headers; `scripts/c10-headers.mjs` + `c10-csp-check.mjs` (0 violations; fonts, inline styles, Storage media covered; HSTS + upgrade-insecure-requests only in https production). Nonce-based script CSP not adopted (Next streaming still needs `'unsafe-inline'` styles; scripts are `'self'`). |
+| 5 edge rate limiting | OPEN — needs the hosting provider (Vercel WAF / Cloudflare); the database HMAC limiter is proven by `c8-intake` and the security probe. |
+| 6 secret rotation / env parity | DONE — `.env.example` complete; rotation runbook in `RENZ_INCIDENT_RESPONSE.md` §C. CI parity check not applicable (no CI). |
+| 7 dependency audit | DONE — `pnpm audit --prod`: no known vulnerabilities; part of `pnpm c10:verify`. |
+| 8 RLS / grant sweep | DONE — pgTAP 001/006/007 updated for C10 (88 SECURITY DEFINER functions, 6 system roles, 195 role permissions); security probe drives all 151 facades anonymously and at AAL1. |
+| 9 scheduler | OPEN (needs hosting) — endpoint armed by `RENZ_TASK_TOKEN`; adapter decision in `RENZ_PRODUCTION_DEPLOYMENT.md` §5. |
+| 10 notification retention | OPEN — decision required; nothing is deleted today. |
+| 11 retention / purge | PARTIAL — `pnpm intake:cleanup` exists for upload sessions; audit / notification / realtime rows are kept (append-only by design). Decision required for retention windows. |
+| 12 backup / restore rehearsal | DONE locally — `scripts/backup.mjs`, `RENZ_BACKUP_RESTORE.md` (five restore pitfalls found and fixed). Cloud rehearsal open. |
+| 13 migration rehearsal | DONE locally — clean `db reset` (47 migrations), pgTAP 1,313, `db:types:check`, `db lint` clean in `pnpm c10:verify`. |
+| 14 monitoring | PARTIAL — `/api/health` + System Health panel; no external error reporting (needs hosting decision). |
+| 15 performance budgets | PARTIAL — admin facades measured at 5× expected volume (report §"Scale"): registers bounded; `admin_analytics_overview` 1.3–1.7 s and `admin_finance_overview` 0.3–1.2 s at 2,500 invoices (per-invoice financial function); acceptable at RENZ volume, index/materialisation deferred until real profiles. Public Web Vitals not re-measured in C10 (D1 budgets stand). |
+| 16 image / video pipeline | UNCHANGED — D1.6/D1.7 delivered the media; `next/image` in place. |
+| 17 final accessibility audit | DONE for automated scope — admin 22 routes × 3 widths axe serious/critical 0 + no overflow; public suites' axe checks green; keyboard paths verified. Forced-colours and screen-reader passes remain manual (NOT TESTED). |
+| 18 privacy / legal sync | OPEN (owner) — publish notices; Launch Readiness checks exist. |
+| 19 domain / DNS / SSL | OPEN (hosting). |
+| 20 DR / runbooks | DONE — five runbooks written. |
+| 21 configuration cache | UNCHANGED — not measured as a problem. |
+| 22 realtime anonymous residual | UNCHANGED — accepted. |
+| 23 order-independent suites | DONE by construction — `pnpm c10:verify` runs one spec per process with reset/reseed. |
+| 24 bundle delta | UNCHANGED — `audit:public-bundles` in the gate; no CMS chunk on public routes. |
+| 25 hydration-dependent beacon | UNCHANGED — accepted. |
+| 26 legacy CSS retirement | UNCHANGED — visual freeze; `public.css` still hosts the system-state styles now used by the root 404/error. |

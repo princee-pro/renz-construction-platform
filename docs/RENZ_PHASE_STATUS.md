@@ -3,7 +3,7 @@
 Single source of truth for where the RENZ Construction Services Ltd build is.
 Update this file at the end of every phase; do not let it drift.
 
-Last updated: 2026-09-20 (end of D1.7 — owner experience + portfolio completion; FINAL PRODUCT FREEZE; C10 next).
+Last updated: 2026-09-20 (end of C10 — production hardening; local release candidate; Release next, gated on hosting decisions).
 
 ## DONE
 
@@ -37,6 +37,7 @@ domain changes require a bug or security justification.
 | D1.6 | Client final art direction (presentation + content, one function-only migration): plain-English rewrite of every public page (website_pages revision 2 via migration `20260920100000`, services / studies / insights as content revision 2 via `website-seed-content.mjs --rewrite-copy`, JSX form / label / error wording, public intake labels split from staff labels), bounded audit `scripts/d16-copy-audit.mjs`; typography audition (Poppins / Manrope / Plus Jakarta Sans) → **Manrope** as the one public family; **RENZ Measured Track** navigation (moving plate + preview mark, services mega panel with related study, "More" overflow for owner-added pages, full-screen mobile navigator with travelling rail); landing system with sixteen route concepts and procedural scenes, film-archive Projects opening, poster-first video engine with save-data / reduced-motion / offscreen rules, CMS video ingestion (media library, picker, hero video field; gate widened by migration `20260920110000`), one rendered concept loop for Home (`scripts/d16-render-loop.mjs`), motion sheet (button wipe, card blueprint hover, scroll-driven section datums, reading progress); useful 404; legacy nav CSS removed from `public.css`; CMS stress fixtures (`scripts/d16-cms-stress.mjs`: 8 nav links, Service #6, 12 studies); docs: `RENZ_PLAIN_ENGLISH_GUIDE.md`, `RENZ_CINEMATIC_MEDIA_GUIDE.md`, `RENZ_NAVIGATION_SYSTEM.md`, `RENZ_HERO_MEDIA_CONTACT_SHEET.md`, freeze §7c | `docs/RENZ_D16_CLIENT_ART_DIRECTION_REPORT.md`, `src/components/site/nav/*`, `src/components/site/landing/*`, `src/styles/final-landing.css` + `final-motion.css`, `.playwright/screenshots/d1-6/` |
 
 | D1.7 | Owner experience + portfolio expansion + public completion (presentation, content, one evidence-class migration): git checkpoint `f69790b`; public composition repair (process ledger replaces the horizontal story, `margin-block` rule for container companions, balanced showcases); classic four-column footer; **Staff Login** in the footer and mobile navigator; centred sign-in / MFA column with a breathing survey mark; owner Admin IA (Work / Delivery / Money / Website / Business / System), plain wording, styled project editor + gallery workspace (thumbnails, Move up / down, generated-concept confirmation, `>1 MB` attach bug fixed); evidence class `context_study` (migration `20260921100000`); six Rwanda-context studies (07–12) generated with Higgsfield Seedream 5.0 Lite + four secondaries + sixty locally drawn diagrams; galleries (7 pieces each) for all twelve; tile-rhythm index with category filters and featured strip; project detail with per-chapter planes, sequences, full gallery and accessible lightbox; thumbnail derivatives (`?size=thumb`); split-plane posters; owner Project #13 + archive test through the Admin only; docs `RENZ_PROJECT_GALLERY_GUIDE.md`, freeze §7d | `docs/RENZ_D17_OWNER_PORTFOLIO_REPORT.md`, `src/components/site/project-gallery.tsx`, `src/features/client-preview/project-galleries.ts`, `scripts/d17-*.mjs`, `.playwright/screenshots/d1-7/` |
+| C10 | Production hardening + release candidate (security and bug justifications only; product frozen): owner-controlled staff access (role templates super_admin / admin / project_manager / finance / content_editor / viewer, owner-only create / disable / reactivate / reset / rename / role change, temporary password shown once, first-login forced password change gated in `private.has_permission`, MFA unchanged, last-owner protection; migration `20260922100000`); permission-aware Help drawer, Getting started, capability summaries; System Health panel + `/api/health` (categories only; `ops_migration_state`, migration `20260922110000`); security headers (CSP, HSTS in https production, nosniff, frame deny, referrer, permissions policy); proxy-level 307 for anonymous staff routes; double-submit guard on every create/edit form; **bounded action queues** (scale test found the operations / finance / delivery queues rendering every item — migration `20260922120000`, pgTAP 020); admin field controls never exceed 320 px; root 404 / error surfaces in the public system state; fail-fast on test-only switches in production; dead exports removed (26); `.env.example` complete; backup → reset → restore rehearsed (`scripts/backup.mjs`); C10 test matrix, security probe (15), scale (500/1000/500/300/2500), admin a11y+responsive matrix (66 checks), `pnpm c10:verify` gate; runbooks `RENZ_BACKUP_RESTORE.md`, `RENZ_PRODUCTION_DEPLOYMENT.md`, `RENZ_ROLLBACK.md`, `RENZ_GO_LIVE_CHECKLIST.md`, `RENZ_INCIDENT_RESPONSE.md` | `docs/RENZ_C10_PRODUCTION_HARDENING_REPORT.md`, `docs/RENZ_C10_TEST_MATRIX.md`, `supabase/migrations/20260922*`, `supabase/tests/database/019_c10_staff_access.sql` + `020_c10_bounded_queues.sql`, `tests/e2e/c10-staff-access.spec.ts`, `scripts/verify-c10*.mjs`, `scripts/c10-*.mjs`, `scripts/backup.mjs`, `.playwright/screenshots/c10/` |
 
 ## DESIGN: FINAL VISUAL FREEZE
 
@@ -47,15 +48,17 @@ that change control: the WhatsApp green system (`RENZ_DESIGN_FREEZE.md` §7b).
 
 ## NEXT
 
-**C10 — Hardening / release candidate** (`docs/RENZ_C10_HARDENING_BACKLOG.md`),
-now including the D1 and CR1 additions (CR1 items are listed in the backlog's
-"CR1 carry-forward" section): CSP coverage for fonts/inline motion styles,
-the media production queue, the bundle budget, legacy `public.css`
-retirement, forced-colours and screen-reader passes.
+**Release** — gated on the owner decisions in
+`docs/RENZ_GO_LIVE_CHECKLIST.md` (hosting, region, domain, owner email,
+SMTP, backup location). The local release candidate is commit
+`chore: prepare renz production release candidate`; it was not pushed and
+nothing was deployed. Remaining backlog items that need a cloud
+environment or a decision are listed in `docs/RENZ_C10_HARDENING_BACKLOG.md`
+with their C10 disposition.
 
 ## LEFT
 
-- Release
+- Release (cloud rehearsal of backup/restore and rollback, scheduler adapter, Turnstile keys)
 
 ## Known open items carried forward (not blockers)
 

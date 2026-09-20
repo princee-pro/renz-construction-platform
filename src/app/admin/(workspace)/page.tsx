@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { GettingStarted } from "@/components/admin/getting-started";
 import { PageHeader } from "@/components/admin/ui/page-header";
 import { StatusBadge } from "@/components/admin/ui/status-badge";
 import { RecentlyViewedPanel } from "@/components/admin/recently-viewed-panel";
@@ -169,6 +170,8 @@ export default async function AdminOverviewPage() {
         }
         title="Overview"
       />
+
+      {access.roles.includes("super_admin") ? <GettingStarted /> : null}
 
       {/* D1.5 §27–28 Command strip: real metrics only, summary before detail. */}
       <dl className="command-strip" aria-label="Command strip">

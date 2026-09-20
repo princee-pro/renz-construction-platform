@@ -80,10 +80,6 @@ const renderers: Readonly<Record<string, ComponentType<SectionRenderProps>>> = {
   intake_success: IntakeSuccessSection,
 };
 
-export function hasRenderer(type: string): boolean {
-  return Object.hasOwn(renderers, type);
-}
-
 export function pageClassName(snapshot: PageSnapshot): string {
   const key = snapshot.page.page_key.replace(/[^a-z0-9-]/gu, "");
   return `public-main ${key}-page website-page`;

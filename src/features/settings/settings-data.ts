@@ -140,7 +140,6 @@ export function environmentPresence(): readonly Readonly<{ key: string; configur
     "NEXT_PUBLIC_SUPABASE_URL",
     "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
     "SUPABASE_SECRET_KEY",
-    "NEXT_PUBLIC_SITE_URL",
     "RENZ_CLIENT_PREVIEW",
     "INTAKE_RATE_LIMIT_SECRET",
     "NEXT_PUBLIC_TURNSTILE_SITE_KEY",

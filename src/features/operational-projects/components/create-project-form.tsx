@@ -1,5 +1,7 @@
 "use client";
 
+import { useSingleSubmit } from "@/features/admin-shared/single-submit";
+
 import { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
@@ -24,6 +26,7 @@ export function CreateProjectForm({
 }: Readonly<{ initialClientId?: string | undefined; initialClientLabel?: string | undefined }>) {
   const router = useRouter();
   const [state, action, pending] = useActionState(createProjectAction, initialAdminActionState);
+  const guard = useSingleSubmit(pending);
 
   useEffect(() => {
     if (state.status === "success") {
@@ -36,7 +39,7 @@ export function CreateProjectForm({
   }, [state.status, state.createdId, router]);
 
   return (
-    <form action={action} className="admin-form" noValidate>
+    <form action={action} className="admin-form" noValidate onSubmit={guard.onSubmit}>
       <ClientPickerField
         error={state.fieldErrors["clientId"]}
         initialClientId={initialClientId}

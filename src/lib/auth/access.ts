@@ -13,7 +13,13 @@ export type ActionAuthorization =
   | Readonly<{ ok: true; userId: string }>
   | Readonly<{
       ok: false;
-      reason: "signed_out" | "disabled" | "mfa_required" | "forbidden" | "unavailable";
+      reason:
+        | "signed_out"
+        | "disabled"
+        | "mfa_required"
+        | "password_change_required"
+        | "forbidden"
+        | "unavailable";
       reauthHref: string;
     }>;
 
@@ -45,6 +51,13 @@ export async function authorizeServerAction(
       ok: false,
       reason: "mfa_required",
       reauthHref: snapshot.verifiedTotpFactorCount > 0 ? "/admin/mfa" : "/admin/mfa/enroll",
+    };
+  }
+  if (snapshot.mustChangePassword) {
+    return {
+      ok: false,
+      reason: "password_change_required",
+      reauthHref: "/admin/security/password",
     };
   }
 

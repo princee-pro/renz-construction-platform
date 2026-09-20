@@ -155,6 +155,15 @@ function isPlausibleAssignedCredential(candidate) {
     return false;
   }
 
+  // A member path or snake_case identifier (`profile.must_change_password`)
+  // is code reading a flag, not a value being assigned.
+  if (
+    /^[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)+$/u.test(value) ||
+    /^[a-z][a-z0-9]*(?:_[a-z0-9]+)+$/u.test(value)
+  ) {
+    return false;
+  }
+
   // Require more than one character class so ordinary prose and repeated filler
   // cannot satisfy the broad credential-assignment fallback.
   const classes = [

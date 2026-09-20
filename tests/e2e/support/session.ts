@@ -41,7 +41,7 @@ function decodeBase32(value: string): Buffer {
   return Buffer.from(bytes);
 }
 
-function totp(secret: string): string {
+export function totp(secret: string): string {
   const message = Buffer.alloc(8);
   message.writeBigUInt64BE(BigInt(Math.floor(Date.now() / 30_000)));
   const digest = createHmac("sha1", decodeBase32(secret)).update(message).digest();

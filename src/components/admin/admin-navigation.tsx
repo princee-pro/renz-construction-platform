@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import { signOutAction } from "@/app/admin/actions";
+import { HelpDrawer } from "@/components/admin/help-drawer";
 import { QuickFind } from "@/components/admin/quick-find";
 import { PreviewRenzIdentity } from "@/components/site/preview-renz-identity";
 import { NotificationBell } from "@/features/notifications/components/notification-bell";
@@ -17,6 +18,8 @@ type AdminNavigationProps = Readonly<{
   items: readonly AdminNavigationItem[];
   /** null when the actor lacks notifications.read (no bell is rendered). */
   notifications: NotificationSummary | null | undefined;
+  /** C10: the actor's permission keys, for the permission-aware help drawer. */
+  permissions: readonly string[];
 }>;
 
 const railStorageKey = "renz-admin-rail";
@@ -152,6 +155,7 @@ export function AdminNavigation({
   roleLabel,
   items,
   notifications,
+  permissions,
 }: AdminNavigationProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const pathname = usePathname();
@@ -267,6 +271,7 @@ export function AdminNavigation({
         </div>
         <div className="admin-topbar-tools">
           <QuickFind />
+          <HelpDrawer permissions={permissions} roleLabel={roleLabel} />
           {notifications !== undefined ? (
             <NotificationBell compact initial={notifications} />
           ) : null}

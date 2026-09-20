@@ -1,5 +1,7 @@
 "use client";
 
+import { useSingleSubmit } from "@/features/admin-shared/single-submit";
+
 import { useActionState, useEffect, useRef, useState } from "react";
 
 import { Alert } from "@/components/admin/ui/alert";
@@ -10,6 +12,7 @@ import { initialProjectActionState } from "@/features/projects/project-contract"
 
 export function CreateProjectForm() {
   const [state, action, pending] = useActionState(createProjectAction, initialProjectActionState);
+  const guard = useSingleSubmit(pending);
   const [values, setValues] = useState({ title: "", slug: "", locale: "en" });
   const summaryRef = useRef<HTMLDivElement>(null);
 
@@ -27,7 +30,12 @@ export function CreateProjectForm() {
       .join(" ") || undefined;
 
   return (
-    <form action={action} className="editor-form editor-form-narrow" noValidate>
+    <form
+      action={action}
+      className="editor-form editor-form-narrow"
+      noValidate
+      onSubmit={guard.onSubmit}
+    >
       {state.status !== "idle" ? (
         <div ref={summaryRef} tabIndex={-1}>
           <Alert

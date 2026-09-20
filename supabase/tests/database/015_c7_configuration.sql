@@ -185,7 +185,7 @@ select is(public.change_site_mode(3, 'preview') ->> 'ok', 'true', 'restored to p
 
 -- Staff ---------------------------------------------------------------
 select is((select count(*) from jsonb_array_elements(public.admin_list_staff() -> 'staff'))::bigint >= 4::bigint, true, 'staff register lists the actors');
-select ok(public.admin_list_staff()::text not like '%password%' and public.admin_list_staff()::text not like '%secret%', 'staff register exposes no secrets');
+select ok(public.admin_list_staff()::text !~* '"(password|encrypted_password|secret|token|totp_secret)"\s*:' and public.admin_list_staff()::text not like '%encrypted%', 'staff register exposes no secrets (C10: it reports only the must_change_password flag, never a password)');
 select is(public.reactivate_user('97000000-0000-4000-8000-0000000000e4') ->> 'ok', 'true', 'super admin reactivates a disabled account');
 select is((select account_status from public.profiles where id = '97000000-0000-4000-8000-0000000000e4'), 'active', 'account is active again');
 select pg_temp.as_actor('97000000-0000-4000-8000-0000000000e2', 'aal2');

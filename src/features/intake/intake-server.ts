@@ -237,6 +237,9 @@ export function intakeEnvironmentChecks(): readonly Readonly<{
     {
       key: "intake_test_bypass",
       label: "Anti-bot test bypass disabled",
+      // Stays "recommended": the browser-test server must be able to go
+      // live with the bypass set. The production fail-fast lives in
+      // /api/health (503 "blocked"), which the go-live checklist requires.
       classification: "recommended",
       state: bypass ? "warning" : "ready",
       detail: bypass

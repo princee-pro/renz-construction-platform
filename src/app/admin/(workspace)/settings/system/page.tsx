@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { SystemHealthPanel } from "@/components/admin/system-health";
 import { Breadcrumbs } from "@/components/admin/ui/breadcrumbs";
 import { PageHeader } from "@/components/admin/ui/page-header";
 import { RealtimeRefresh } from "@/features/admin-shared/realtime-refresh";
@@ -9,6 +10,7 @@ import { loadIntakeSettings } from "@/features/leads/lead-data";
 import { environmentPresence, loadSystemSettings } from "@/features/settings/settings-data";
 import { getCurrentAdminAccess } from "@/lib/auth/access";
 import { requirePermission } from "@/lib/auth/guards";
+import { runHealthChecks } from "@/lib/ops/health";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +31,8 @@ export default async function Page({ searchParams }: PageProps<"/admin/settings/
     loadSystemSettings(),
     loadIntakeSettings(),
   ]);
+  // System Health is owner-only (C10 §35); the probes run server-side.
+  const health = access.roles.includes("super_admin") ? await runHealthChecks() : null;
   const section = first(params["section"]);
   void section;
   return (
@@ -41,14 +45,17 @@ export default async function Page({ searchParams }: PageProps<"/admin/settings/
         ]}
       />
       <PageHeader
-        description="Document defaults for new drafts, deterministic operational thresholds, read-only numbering and the secrets boundary."
+        description="System health, document defaults for new drafts, operational thresholds and numbering."
         eyebrow="Settings"
         status={<RealtimeRefresh entityTypes={["settings"]} />}
         title="System"
       />
       <SettingsNav current="system" permissions={access.permissions} />
       {data ? (
-        <SystemSettingsView data={data} environment={environmentPresence()} intake={intake} />
+        <>
+          {health ? <SystemHealthPanel report={health} /> : null}
+          <SystemSettingsView data={data} environment={environmentPresence()} intake={intake} />
+        </>
       ) : (
         <p className="quiet-empty" role="alert">
           System could not be loaded. Try again; the public site is unaffected.

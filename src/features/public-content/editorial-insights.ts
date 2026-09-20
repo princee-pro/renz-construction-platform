@@ -211,7 +211,3 @@ export function readingMinutes(blocks: ContentBlocks): number {
     .filter(Boolean).length;
   return Math.max(1, Math.round(words / 200));
 }
-
-export function getEditorialInsight(slug: string): EditorialInsight | null {
-  return editorialInsights.find((entry) => entry.slug === slug) ?? null;
-}

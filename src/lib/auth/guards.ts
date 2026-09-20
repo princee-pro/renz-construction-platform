@@ -12,6 +12,8 @@ export type AdminAuthSnapshot = Readonly<{
   currentLevel: "aal1" | "aal2";
   nextLevel: "aal1" | "aal2";
   verifiedTotpFactorCount: number;
+  /** C10: a temporary password must be replaced before the workspace opens. */
+  mustChangePassword: boolean;
 }>;
 
 function normalizeAssuranceLevel(value: string | null | undefined): "aal1" | "aal2" {
@@ -31,7 +33,7 @@ export async function getAdminAuthSnapshot(): Promise<AdminAuthSnapshot | null> 
 
   const { data: profile } = await client
     .from("profiles")
-    .select("id, display_name, account_status")
+    .select("id, display_name, account_status, must_change_password")
     .eq("id", userData.user.id)
     .maybeSingle();
 
@@ -51,6 +53,7 @@ export async function getAdminAuthSnapshot(): Promise<AdminAuthSnapshot | null> 
     currentLevel,
     nextLevel: verifiedTotpFactorCount > 0 ? "aal2" : currentLevel,
     verifiedTotpFactorCount,
+    mustChangePassword: profile.must_change_password === true,
   };
 }
 
@@ -64,7 +67,11 @@ export async function requireAuthenticatedUser(): Promise<AdminAuthSnapshot> {
   return snapshot;
 }
 
-export async function requireAal2User(): Promise<AdminAuthSnapshot> {
+export const PASSWORD_CHANGE_ROUTE = "/admin/security/password";
+
+export async function requireAal2User(
+  options: Readonly<{ allowPasswordChangePending?: boolean }> = {},
+): Promise<AdminAuthSnapshot> {
   const snapshot = await requireAuthenticatedUser();
 
   if (snapshot.accountStatus === "disabled") {
@@ -73,6 +80,13 @@ export async function requireAal2User(): Promise<AdminAuthSnapshot> {
 
   if (snapshot.currentLevel !== "aal2") {
     redirect(snapshot.verifiedTotpFactorCount > 0 ? "/admin/mfa" : "/admin/mfa/enroll");
+  }
+
+  // C10 §100: the first-login password change is enforced here for every
+  // workspace route and, independently, by the database (no permission is
+  // granted while the flag is set), so typing /admin cannot bypass it.
+  if (snapshot.mustChangePassword && !options.allowPasswordChangePending) {
+    redirect(PASSWORD_CHANGE_ROUTE);
   }
 
   return snapshot;

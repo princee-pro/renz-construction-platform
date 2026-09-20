@@ -1,5 +1,7 @@
 "use client";
 
+import { useSingleSubmit } from "@/features/admin-shared/single-submit";
+
 import { useActionState, useEffect, useRef, useState } from "react";
 
 import { Alert } from "@/components/admin/ui/alert";
@@ -10,6 +12,7 @@ import { initialServiceActionState } from "@/features/services/service-contract"
 
 export function CreateServiceForm() {
   const [state, action, pending] = useActionState(createServiceAction, initialServiceActionState);
+  const guard = useSingleSubmit(pending);
   const [values, setValues] = useState({ name: "", slug: "", locale: "en" });
   const summaryRef = useRef<HTMLDivElement>(null);
 
@@ -27,7 +30,12 @@ export function CreateServiceForm() {
       .join(" ") || undefined;
 
   return (
-    <form action={action} className="editor-form editor-form-narrow" noValidate>
+    <form
+      action={action}
+      className="editor-form editor-form-narrow"
+      noValidate
+      onSubmit={guard.onSubmit}
+    >
       {state.status !== "idle" ? (
         <div ref={summaryRef} tabIndex={-1}>
           <Alert

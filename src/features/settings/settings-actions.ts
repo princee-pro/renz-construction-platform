@@ -1,5 +1,7 @@
 "use server";
 
+import { randomBytes } from "node:crypto";
+
 import { revalidatePath } from "next/cache";
 
 import {
@@ -27,11 +29,15 @@ import {
   siteModeInput,
   socialLinkInput,
   staffActionInput,
+  createStaffInput,
+  temporaryPasswordSchema,
   websiteSettingsInput,
   zodFieldErrors,
   type BrandCandidate,
 } from "@/features/settings/settings-contract";
 import { environmentLaunchBlockers, loadBrandCandidates } from "@/features/settings/settings-data";
+import { roleDescriptions } from "@/lib/auth/capabilities";
+import { createStaffUser, setStaffBan, setStaffPassword } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 function revalidateSettings(section: string): void {
@@ -521,16 +527,39 @@ export async function staffAction(
     if (error || data !== true) {
       return actionState("error", "The account could not be disabled.");
     }
+    try {
+      await setStaffBan(parsed.data.userId, true);
+    } catch {
+      // the profile status already blocks every facade; the ban is defence in depth
+    }
     revalidateSettings("staff");
-    return actionState("success", "Account disabled.");
+    return actionState("success", "Account disabled. They can no longer sign in.");
   }
   if (parsed.data.action === "reactivate") {
     const { data, error } = await client.rpc("reactivate_user", {
       target_user_id: parsed.data.userId,
     });
     if (error || !commandSucceeded(data)) return actionState("error", commandReason(data));
+    try {
+      await setStaffBan(parsed.data.userId, false);
+    } catch {
+      // best effort
+    }
     revalidateSettings("staff");
     return actionState("success", "Account reactivated.");
+  }
+  if (parsed.data.action === "rename") {
+    if (!parsed.data.displayName) return actionState("error", "Enter a name.");
+    const { data, error } = await client.rpc("admin_update_staff_profile", {
+      target_user_id: parsed.data.userId,
+      target_display_name: parsed.data.displayName,
+    });
+    if (error || !commandSucceeded(data)) return actionState("error", commandReason(data));
+    revalidateSettings("staff");
+    return actionState("success", "Name saved.");
+  }
+  if (parsed.data.action === "reset_password") {
+    return resetStaffPassword(client, parsed.data.userId, parsed.data.temporaryPassword);
   }
   if (!parsed.data.role) return actionState("error", "Choose a role.");
   const { data, error } = await client.rpc("set_staff_role", {
@@ -539,7 +568,107 @@ export async function staffAction(
   });
   if (error || !commandSucceeded(data)) return actionState("error", commandReason(data));
   revalidateSettings("staff");
-  return actionState("success", `Role set to ${parsed.data.role}.`);
+  return actionState(
+    "success",
+    `Role set to ${roleDescriptions[parsed.data.role]?.label ?? parsed.data.role}.`,
+  );
+}
+
+/** Cryptographically strong temporary password: 16 chars, letters + digits, no ambiguous glyphs. */
+function generateTemporaryPassword(): string {
+  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
+  const bytes = randomBytes(16);
+  let value = "";
+  for (const byte of bytes) value += alphabet[byte % alphabet.length];
+  // guarantee the policy (a letter and a digit) without weakening randomness
+  return `${value.slice(0, 14)}${alphabet[bytes[0]! % 50]}${(bytes[1]! % 8) + 2}`;
+}
+
+/**
+ * The temporary password exists only in this request and in the one
+ * success message the owner reads once. Never logged, never audited, never
+ * stored: the profile only records that a change is required.
+ */
+async function resetStaffPassword(
+  client: Awaited<ReturnType<typeof createServerSupabaseClient>>,
+  userId: string,
+  typed: string | null,
+): Promise<AdminActionState> {
+  const temporary = typed && typed.length > 0 ? typed : generateTemporaryPassword();
+  const policy = temporaryPasswordSchema.safeParse(temporary);
+  if (!policy.success) {
+    return actionState("error", policy.error.issues[0]?.message ?? "Choose a stronger password.");
+  }
+  // The facade decides (owner only, never self) before the Auth Admin call.
+  const gate = await client.rpc("admin_require_password_change", { target_user_id: userId });
+  if (gate.error || !commandSucceeded(gate.data))
+    return actionState("error", commandReason(gate.data));
+  try {
+    await setStaffPassword(userId, temporary);
+  } catch {
+    return actionState("error", "The password could not be reset. Try again.");
+  }
+  try {
+    await setStaffBan(userId, false);
+  } catch {
+    // a lifted ban is best-effort; the profile status governs access
+  }
+  revalidateSettings("staff");
+  return actionState(
+    "success",
+    `Temporary password set. Give it to the staff member privately — it is shown once: ${temporary}`,
+    { currentVersion: null },
+  );
+}
+
+/** C10 §19–21: the owner creates a staff account with a temporary password (no email is sent). */
+export async function createStaffAction(
+  _previous: AdminActionState,
+  formData: FormData,
+): Promise<AdminActionState> {
+  const denied = await authorize("staff.manage");
+  if (denied) return denied;
+  const parsed = createStaffInput(formData);
+  if (!parsed.success) return invalid("Check the highlighted fields.", parsed.error);
+  const client = await createServerSupabaseClient();
+  // Owner-only, server-side: the facade refuses anyone but a Super Admin with
+  // staff.manage before any Auth Admin call is made.
+  const probe = await client.rpc("admin_list_staff");
+  const canManage =
+    !probe.error &&
+    typeof probe.data === "object" &&
+    probe.data !== null &&
+    (probe.data as { can_manage?: boolean }).can_manage === true;
+  if (!canManage) return actionState("error", "Only the owner (Super Admin) can create staff.");
+  const temporary =
+    parsed.data.temporaryPassword.length > 0
+      ? parsed.data.temporaryPassword
+      : generateTemporaryPassword();
+  let userId: string;
+  try {
+    userId = (await createStaffUser(parsed.data.email, temporary, parsed.data.displayName)).userId;
+  } catch (error) {
+    return actionState(
+      "error",
+      error instanceof Error && error.message === "email_exists"
+        ? "An account with this email already exists."
+        : "The account could not be created. Try again.",
+    );
+  }
+  const prepared = await client.rpc("admin_prepare_staff_profile", {
+    target_user_id: userId,
+    target_display_name: parsed.data.displayName,
+    requested_role_key: parsed.data.role,
+  });
+  if (prepared.error || !commandSucceeded(prepared.data)) {
+    return actionState("error", commandReason(prepared.data));
+  }
+  revalidateSettings("staff");
+  return actionState(
+    "success",
+    `Account created for ${parsed.data.email}. Temporary password (shown once — give it privately): ${temporary}. They will be asked to change it and set up their authenticator at first sign-in.`,
+    { currentVersion: null },
+  );
 }
 
 export async function searchBrandMediaAction(query: string): Promise<readonly BrandCandidate[]> {

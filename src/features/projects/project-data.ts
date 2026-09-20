@@ -5,10 +5,8 @@ import { z } from "zod";
 import {
   projectDetailSchema,
   projectListResultSchema,
-  projectOverviewSchema,
   type ProjectDetail,
   type ProjectListResult,
-  type ProjectOverview,
 } from "@/features/projects/project-contract";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
@@ -58,13 +56,6 @@ export function normalizeProjectListFilters(
     locale: /^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$/u.test(locale) ? locale : "",
     cursor: decodeProjectCursor(first("cursor")) ? first("cursor") : "",
   };
-}
-
-export async function loadProjectOverview(): Promise<ProjectOverview> {
-  const client = await createServerSupabaseClient();
-  const { data, error } = await client.rpc("admin_project_overview");
-  if (error || data === null) throw new Error("Project overview could not be loaded.");
-  return projectOverviewSchema.parse(data);
 }
 
 export async function loadProjectList(filters: ProjectListFilters): Promise<ProjectListResult> {

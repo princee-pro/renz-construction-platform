@@ -599,13 +599,19 @@ function SectionEditor({
   // unsaved; unsaved edits stay so a conflict never silently discards them.
   // (React's "adjust state during render" pattern — the editor stays
   // mounted, so the save result below still reaches the owner.)
+  // `baseVersion` is the version the local copy was edited FROM: it moves
+  // only when the local copy is replaced. C10 §31 found that sending the
+  // newest server version with unsaved edits let a stale save pass the
+  // optimistic-concurrency check and overwrite another staff member's work.
   const [seenVersion, setSeenVersion] = useState(section.version);
   const [seenClean, setSeenClean] = useState(clean);
+  const [baseVersion, setBaseVersion] = useState(section.version);
   if (seenVersion !== section.version) {
     setSeenVersion(section.version);
     if (JSON.stringify({ config, meta }) === seenClean) {
       setConfig(section.config);
       setMeta(metaOf(section));
+      setBaseVersion(section.version);
     }
     setSeenClean(clean);
   }
@@ -623,6 +629,13 @@ function SectionEditor({
       onSaved(state);
     }
   }, [state, onDirty, onSaved]);
+  // Own save: the local copy is now the server's; further edits are based
+  // on the returned version (render-time adjustment, keyed on the state).
+  const [adoptedState, setAdoptedState] = useState<AdminActionState | null>(null);
+  if (state !== adoptedState && state.status === "success") {
+    setAdoptedState(state);
+    if (typeof state.currentVersion === "number") setBaseVersion(state.currentVersion);
+  }
 
   if (!definition) {
     return <p className="quiet-empty">This section type is not available in this version.</p>;
@@ -633,7 +646,7 @@ function SectionEditor({
       <input name="pageId" type="hidden" value={pageId} />
       <input name="sectionId" type="hidden" value={section.id} />
       <input name="sectionType" type="hidden" value={section.type} />
-      <input name="expectedVersion" type="hidden" value={section.version} />
+      <input name="expectedVersion" type="hidden" value={baseVersion} />
       <input name="config" type="hidden" value={JSON.stringify(config)} />
       <header className="section-editor-head">
         <div>
@@ -788,6 +801,23 @@ function PageSettingsForm({
     initialAdminActionState,
   );
   const [ogMediaId, setOgMediaId] = useState<string | null>(page.og_media_id);
+  // Same rule as the section editor (C10 §31): the version this form
+  // submits is the one it was edited from, not the newest the page holds
+  // after a realtime refresh, so a stale save is refused rather than
+  // silently overwriting someone else's page settings.
+  const [dirty, setDirty] = useState(false);
+  const [seenVersion, setSeenVersion] = useState(page.version);
+  const [baseVersion, setBaseVersion] = useState(page.version);
+  if (seenVersion !== page.version) {
+    setSeenVersion(page.version);
+    if (!dirty) setBaseVersion(page.version);
+  }
+  const [adoptedState, setAdoptedState] = useState<AdminActionState | null>(null);
+  if (state !== adoptedState && state.status === "success") {
+    setAdoptedState(state);
+    setDirty(false);
+    if (typeof state.currentVersion === "number") setBaseVersion(state.currentVersion);
+  }
   const lastHandled = useRef<AdminActionState | null>(null);
   useEffect(() => {
     if (state !== lastHandled.current && state.status !== "idle") {
@@ -798,9 +828,16 @@ function PageSettingsForm({
   }, [state, onDirty, onSaved]);
   const isGlobal = page.page_type === "global";
   return (
-    <form action={formAction} className="section-editor" onChange={() => onDirty(true)}>
+    <form
+      action={formAction}
+      className="section-editor"
+      onChange={() => {
+        onDirty(true);
+        setDirty(true);
+      }}
+    >
       <input name="pageId" type="hidden" value={page.id} />
-      <input name="expectedVersion" type="hidden" value={page.version} />
+      <input name="expectedVersion" type="hidden" value={baseVersion} />
       <input name="ogMediaId" type="hidden" value={ogMediaId ?? ""} />
       <header className="section-editor-head">
         <div>

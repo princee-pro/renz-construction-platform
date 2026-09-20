@@ -118,7 +118,7 @@ select is(
     where namespaces.nspname = 'private'
       and procedures.prosecdef
   ),
-  87::bigint,
+  88::bigint,
   'S3, S4, C4 and C9 private authorization, analytics and notification helpers are SECURITY DEFINER functions'
 );
 
@@ -422,7 +422,7 @@ select is(
   'the seed contains only the four reviewed synthetic content identities'
 );
 
-select is((select count(*) from public.roles), 2::bigint, 'S3 seeds only super_admin and admin roles');
+select is((select count(*) from public.roles), 6::bigint, 'S3 seeds super_admin and admin; C10 adds four role templates');
 select is(
   (select count(*) from public.permissions),
   63::bigint,
@@ -435,8 +435,8 @@ select is(
 );
 select is(
   (select count(*) from public.role_permissions),
-  114::bigint,
-  'S3, S4, C4, C5, C6 and C9 map only the approved permissions to the two system roles'
+  195::bigint,
+  'S3–C9 map the approved permissions to super_admin and admin; C10 adds four role templates (project_manager 27, finance 18, content_editor 22, viewer 16)'
 );
 select col_is_pk(
   'public',

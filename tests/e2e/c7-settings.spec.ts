@@ -360,7 +360,7 @@ test.describe.serial("RENZ C7 configuration", () => {
       ["seo", "/admin/settings/website?section=seo", "Title template"],
       ["legal", "/admin/settings/legal", "Privacy Notice"],
       ["system", "/admin/settings/system", "Document defaults"],
-      ["staff", "/admin/settings/staff", "Invitations are created"],
+      ["staff", "/admin/settings/staff", "Staff & Access"],
       ["launch", "/admin/settings/launch-readiness", "System checks"],
     ];
     for (const width of [390, 768, 1440]) {

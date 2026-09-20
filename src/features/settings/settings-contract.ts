@@ -654,18 +654,57 @@ export function operationalSettingsInput(formData: FormData) {
   });
 }
 
+export const staffRoleKeys = [
+  "super_admin",
+  "admin",
+  "project_manager",
+  "finance",
+  "content_editor",
+  "viewer",
+] as const;
+
 export const staffActionSchema = z
   .object({
     userId: z.string().uuid(),
-    action: z.enum(["disable", "reactivate", "set_role"]),
-    role: z.enum(["admin", "super_admin"]).nullable(),
+    action: z.enum(["disable", "reactivate", "set_role", "rename", "reset_password"]),
+    role: z.enum(staffRoleKeys).nullable(),
+    displayName: z.string().trim().min(1).max(80).nullable(),
+    /** Owner-typed temporary password (reset); empty → the server generates one. */
+    temporaryPassword: z.string().nullable(),
   })
   .strict();
+
+/** Temporary password policy (C10 §154): 12+ characters, letters and digits. */
+export const temporaryPasswordSchema = z
+  .string()
+  .min(12, "Use at least 12 characters.")
+  .max(128, "Use at most 128 characters.")
+  .regex(/[A-Za-z]/u, "Include a letter.")
+  .regex(/\d/u, "Include a digit.");
+
+export const createStaffSchema = z
+  .object({
+    displayName: z.string().trim().min(1, "Enter the staff member's name.").max(80),
+    email: z.string().trim().toLowerCase().email("Enter a valid email address.").max(160),
+    role: z.enum(staffRoleKeys),
+    temporaryPassword: z.union([temporaryPasswordSchema, z.literal("")]),
+  })
+  .strict();
+export function createStaffInput(formData: FormData) {
+  return createStaffSchema.safeParse({
+    displayName: formText(formData, "displayName"),
+    email: formText(formData, "email"),
+    role: formText(formData, "role"),
+    temporaryPassword: formText(formData, "temporaryPassword"),
+  });
+}
 export function staffActionInput(formData: FormData) {
   return staffActionSchema.safeParse({
     userId: formText(formData, "userId"),
     action: formText(formData, "action"),
     role: formText(formData, "role") || null,
+    displayName: formText(formData, "displayName") || null,
+    temporaryPassword: formText(formData, "temporaryPassword") || null,
   });
 }
 
@@ -1061,9 +1100,18 @@ export const staffRegisterSchema = z.object({
       created_at: z.string(),
       last_activity_at: z.string().nullable(),
       is_self: z.boolean(),
+      must_change_password: z.boolean().catch(false),
     }),
   ),
-  roles: z.array(z.string()),
+  roles: z.array(
+    z.object({
+      key: z.string(),
+      display_name: z.string(),
+      is_system: z.boolean().catch(true),
+      permissions: z.array(z.string()).catch([]),
+    }),
+  ),
+  active_super_admins: z.number().int().catch(1),
   can_manage: z.boolean(),
 });
 export type StaffRegister = z.infer<typeof staffRegisterSchema>;

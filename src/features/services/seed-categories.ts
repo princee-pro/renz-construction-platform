@@ -270,7 +270,3 @@ export const SERVICE_CATEGORIES: readonly ServiceCategory[] = [
 export function getServiceBySlug(slug: string): ServiceCategory | null {
   return SERVICE_CATEGORIES.find((service) => service.slug === slug) ?? null;
 }
-
-export function getAdjacentServiceSlugs(slug: string): readonly ServiceCategory[] {
-  return SERVICE_CATEGORIES.filter((service) => service.slug !== slug);
-}

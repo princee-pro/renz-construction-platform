@@ -3,12 +3,10 @@ import "server-only";
 import {
   clientDetailSchema,
   clientListResultSchema,
-  clientOverviewSchema,
   clientPickerListSchema,
   duplicateClientListSchema,
   type ClientDetail,
   type ClientListResult,
-  type ClientOverview,
   type ClientPickerEntry,
   type DuplicateClient,
 } from "@/features/clients/client-contract";
@@ -38,13 +36,6 @@ export function normalizeClientListFilters(
     cursorUpdatedAt: first("cu"),
     cursorId: first("ci"),
   };
-}
-
-export async function loadClientOverview(): Promise<ClientOverview> {
-  const client = await createServerSupabaseClient();
-  const { data, error } = await client.rpc("admin_clients_overview");
-  if (error) throw new Error("The client overview could not be loaded.");
-  return clientOverviewSchema.parse(data);
 }
 
 export async function loadClientList(filters: ClientListFilters): Promise<ClientListResult> {

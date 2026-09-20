@@ -288,29 +288,6 @@ export async function moveWebsiteSectionAction(
   });
 }
 
-export async function reorderWebsiteSectionsAction(
-  pageId: string,
-  expectedPageVersion: number,
-  orderedIds: readonly string[],
-): Promise<AdminActionState> {
-  const denied = await authorize("website.layout.write");
-  if (denied) return denied;
-  if (!uuid.safeParse(pageId).success || !orderedIds.every((id) => uuid.safeParse(id).success)) {
-    return actionState("error", "The order could not be read.");
-  }
-  const client = await createServerSupabaseClient();
-  const { data, error } = await client.rpc("reorder_website_sections", {
-    target_page_id: pageId,
-    expected_page_version: expectedPageVersion,
-    ordered_ids: [...orderedIds],
-  });
-  if (error || !commandSucceeded(data)) return conflictOrError(data);
-  revalidateAdmin(pageId);
-  return actionState("success", "Order saved.", {
-    currentVersion: commandVersion(data, "page_version"),
-  });
-}
-
 export async function duplicateWebsiteSectionAction(
   pageId: string,
   sectionId: string,

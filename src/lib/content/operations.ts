@@ -12,7 +12,6 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 type DatabaseClient = SupabaseClient<Database>;
 type PublicationResult = Database["public"]["Functions"]["publish_content"]["Returns"];
-type ReadinessResult = Database["public"]["Functions"]["check_publication_readiness"]["Returns"];
 type PublicationCachePolicy = "stale-while-revalidate" | "read-your-own-writes";
 
 type PublicationOptions = Readonly<{
@@ -27,22 +26,6 @@ function publicationSucceeded(result: PublicationResult): boolean {
 
 async function getClient(client?: DatabaseClient): Promise<DatabaseClient> {
   return client ?? (await createServerSupabaseClient());
-}
-
-export async function checkPublicationReadiness(
-  commandInput: unknown,
-  client?: DatabaseClient,
-): Promise<ReadinessResult> {
-  const command = parsePublicationCommand(commandInput);
-  const supabase = await getClient(client);
-  const { data, error } = await supabase.rpc("check_publication_readiness", {
-    content_type: command.contentType,
-    target_id: command.targetId,
-  });
-  if (error || data === null) {
-    throw new Error("Publication readiness could not be evaluated.");
-  }
-  return data;
 }
 
 export async function publishContent(

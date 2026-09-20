@@ -188,8 +188,11 @@ test.describe.serial("RENZ C5 finance", () => {
     expect((await anonymousPdf.body()).subarray(0, 5).toString()).toBe("%PDF-");
     const tampered = await anonymousPage.request.get(`${shareUrl.slice(0, -2)}zz`);
     expect(tampered.status()).toBe(404);
+    // C10: the proxy answers anonymous staff routes with a 307 to sign-in;
+    // do not follow it (the sign-in page itself is a 200).
     const anonymousAdmin = await anonymousPage.request.get(
       `/admin/finance/invoices/${invoiceId}/pdf`,
+      { maxRedirects: 0 },
     );
     expect([302, 307, 401, 403, 404]).toContain(anonymousAdmin.status());
     await anonymousContext.close();
@@ -423,7 +426,9 @@ test.describe.serial("RENZ C5 finance", () => {
     expect(csvText).not.toContain("SYNTHETIC private");
     const anonymousCsv = await browser.newContext();
     const anonymousCsvPage = await anonymousCsv.newPage();
-    const denied = await anonymousCsvPage.request.get("/admin/finance/invoices/export");
+    const denied = await anonymousCsvPage.request.get("/admin/finance/invoices/export", {
+      maxRedirects: 0,
+    });
     expect(denied.status()).not.toBe(200);
     await anonymousCsv.close();
 

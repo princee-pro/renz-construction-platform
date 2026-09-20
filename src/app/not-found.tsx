@@ -1,22 +1,29 @@
 import Link from "next/link";
 
+/**
+ * Root 404 for URLs outside every route group (C10 §128–130): the same calm
+ * system-state surface as the public error page, plain words, useful ways
+ * forward. The public group renders its own richer 404 for content routes.
+ */
 export default function NotFound() {
   return (
-    <main id="main-content" className="grid min-h-dvh place-items-center px-5 py-16 sm:px-8">
-      <section className="w-full max-w-2xl border border-slate-200 bg-white p-6 sm:p-10">
-        <p className="text-sm font-semibold text-slate-600">Application foundation</p>
-        <h1 className="mt-3 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">
-          Route not found
-        </h1>
-        <p className="mt-4 max-w-prose text-base leading-7 text-slate-700">
-          This technical shell currently exposes only the approved foundation route.
+    <main className="public-system-state" id="main-content">
+      <section aria-labelledby="not-found-title">
+        <p className="section-kicker">Page not found</p>
+        <h1 id="not-found-title">That page could not be found.</h1>
+        <p>
+          The link may be old, or the page may have moved. You can go back to the home page, look at
+          our services, or start a project.
         </p>
-        <Link
-          className="mt-7 inline-flex min-h-11 items-center rounded-sm bg-slate-950 px-5 py-3 text-sm font-semibold text-white hover:bg-slate-800"
-          href="/"
-        >
-          Return to application foundation
-        </Link>
+        <p>
+          <Link className="system-state-action" href="/">
+            Go to the home page
+          </Link>
+        </p>
+        <p>
+          <Link href="/services">See our services</Link> ·{" "}
+          <Link href="/contact">Send us a message</Link>
+        </p>
       </section>
     </main>
   );

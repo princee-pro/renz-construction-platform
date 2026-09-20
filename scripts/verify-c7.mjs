@@ -632,7 +632,9 @@ async function verifyC7() {
       "business_location.update",
       "seo_settings.update",
       "website_settings.update",
-      "navigation_settings.update",
+      // CR1 redefined update_navigation_settings and renamed its audit
+      // action (docs/CLAUDE_OWNER_CMS_ARCHITECTURE.md); the C7 name is gone.
+      "navigation.update",
       "public_configuration.publish",
       "legal_page.update",
       "legal_page.publish",

@@ -228,6 +228,14 @@ body {
   resize: none;
 }
 
+/* C10 §92: a select's intrinsic width is its longest option and a file
+   input's is its button + file name; neither may widen a 320 px page. */
+.field-group :is(input:not([type="checkbox"], [type="radio"]), textarea, select) {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
 .field-group :is(input, textarea, select):focus-visible {
   border-color: var(--admin-ink);
 }
@@ -4063,6 +4071,21 @@ body {
   }
 }
 
+/* C10 §92: at phone width the two-column card wrapped values letter by
+   letter; one column, label above value. */
+@media (max-width: 30rem) {
+  .staff-register > li {
+    grid-template-columns: 1fr;
+  }
+
+  .staff-register > li > [data-label] {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.2rem;
+    overflow-wrap: normal;
+  }
+}
+
 /* --- Print + shared page ------------------------------------------------- */
 
 .print-toolbar {
@@ -5433,4 +5456,74 @@ body {
     width: 1.2rem;
     height: 1.2rem;
   }
+}
+
+/* ---------- C10 Users & Access ---------- */
+.staff-create-panel > summary {
+  cursor: pointer;
+  font-weight: 700;
+  padding: 0.25rem 0;
+}
+.staff-create-panel[open] > summary {
+  margin-block-end: 1rem;
+}
+.staff-role-notes {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border-inline-start: 3px solid var(--admin-accent);
+  background: var(--admin-surface);
+  list-style: none;
+  font-size: 0.85rem;
+  color: var(--admin-muted);
+}
+.staff-role-notes strong {
+  color: var(--admin-ink);
+}
+.staff-secret-once {
+  font-family: var(--admin-mono);
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+.staff-capability-toggle {
+  justify-self: start;
+  font-size: 0.8rem;
+}
+.staff-capabilities {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0.5rem 0 0;
+  font-size: 0.82rem;
+}
+.staff-capabilities dt {
+  font-weight: 700;
+  color: var(--admin-ink);
+}
+.staff-capabilities dd {
+  margin: 0;
+  color: var(--admin-muted);
+}
+.staff-cannot {
+  opacity: 0.75;
+}
+.staff-role-select select {
+  min-height: 2.5rem;
+  max-width: 12rem;
+  font-size: 0.85rem;
+}
+.staff-register-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+.capability-technical {
+  margin-block-start: 1rem;
+  font-size: 0.85rem;
+}
+.capability-technical > summary {
+  cursor: pointer;
+  color: var(--admin-muted);
 }

@@ -1,5 +1,7 @@
 "use client";
 
+import { useSingleSubmit } from "@/features/admin-shared/single-submit";
+
 import { useActionState, useState } from "react";
 
 import { Alert } from "@/components/admin/ui/alert";
@@ -10,11 +12,17 @@ import { slugify } from "@/features/website/routes";
 
 export function CreateInsightForm() {
   const [state, formAction, pending] = useActionState(createInsightAction, initialAdminActionState);
+  const guard = useSingleSubmit(pending);
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
   const [touched, setTouched] = useState(false);
   return (
-    <form action={formAction} className="editor-form create-page-form" noValidate>
+    <form
+      action={formAction}
+      className="editor-form create-page-form"
+      noValidate
+      onSubmit={guard.onSubmit}
+    >
       {state.status === "error" ? (
         <Alert live tone="danger">
           <p>{state.message}</p>

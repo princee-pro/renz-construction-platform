@@ -4293,6 +4293,7 @@ export type Database = {
           created_at: string;
           display_name: string | null;
           id: string;
+          must_change_password: boolean;
           updated_at: string;
           version: number;
         };
@@ -4301,6 +4302,7 @@ export type Database = {
           created_at?: string;
           display_name?: string | null;
           id: string;
+          must_change_password?: boolean;
           updated_at?: string;
           version?: number;
         };
@@ -4309,6 +4311,7 @@ export type Database = {
           created_at?: string;
           display_name?: string | null;
           id?: string;
+          must_change_password?: boolean;
           updated_at?: string;
           version?: number;
         };
@@ -8082,6 +8085,14 @@ export type Database = {
         Returns: Json;
       };
       admin_operations_overview: { Args: never; Returns: Json };
+      admin_prepare_staff_profile: {
+        Args: {
+          requested_role_key: string;
+          target_display_name: string;
+          target_user_id: string;
+        };
+        Returns: Json;
+      };
       admin_preview_website_page: { Args: { target_id: string }; Returns: Json };
       admin_project_contractors: {
         Args: { target_project_id: string };
@@ -8121,6 +8132,10 @@ export type Database = {
         Args: { target_new_id: string; target_old_id: string };
         Returns: Json;
       };
+      admin_require_password_change: {
+        Args: { target_user_id: string };
+        Returns: Json;
+      };
       admin_run_notification_sweep: { Args: never; Returns: Json };
       admin_service_overview: { Args: never; Returns: Json };
       admin_setting_href: { Args: { target_id: string }; Returns: string };
@@ -8150,6 +8165,10 @@ export type Database = {
           target_role: string;
           target_stage_id: string;
         };
+        Returns: Json;
+      };
+      admin_update_staff_profile: {
+        Args: { target_display_name: string; target_user_id: string };
         Returns: Json;
       };
       admin_website_media: { Args: { target_ids: string[] }; Returns: Json };
@@ -8279,6 +8298,7 @@ export type Database = {
         Args: { expected_version: number; reason: string; target_id: string };
         Returns: Json;
       };
+      complete_password_change: { Args: never; Returns: Json };
       convert_lead_to_client: {
         Args: {
           existing_client_id?: string;
@@ -8568,6 +8588,7 @@ export type Database = {
         Args: { requested_permission: string };
         Returns: boolean;
       };
+      current_user_password_state: { Args: never; Returns: Json };
       delete_admin_project_stage: {
         Args: {
           expected_stage_version: number;
@@ -8720,6 +8741,7 @@ export type Database = {
         };
         Returns: Json;
       };
+      ops_migration_state: { Args: never; Returns: Json };
       promote_media_asset: {
         Args: { expected_version: number; target_id: string };
         Returns: Json;
@@ -8843,6 +8865,10 @@ export type Database = {
           target_reference?: string;
         };
         Returns: Json;
+      };
+      record_session_event: {
+        Args: { event_action: string };
+        Returns: undefined;
       };
       register_media_asset: {
         Args: {

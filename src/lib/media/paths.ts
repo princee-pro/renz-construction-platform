@@ -29,9 +29,3 @@ export function assertSafeEditorialObjectPath(assetId: string, objectPath: strin
   }
   return objectPath;
 }
-
-export function assertEditorialBucket(bucket: string): asserts bucket is EditorialBucket {
-  if (!EDITORIAL_BUCKETS.includes(bucket as EditorialBucket)) {
-    throw new TypeError("Only the private editorial buckets are supported.");
-  }
-}

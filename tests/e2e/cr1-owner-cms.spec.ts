@@ -605,14 +605,23 @@ test.describe("CR1 owner website control", () => {
     const other = await secondSession(browser, "superB", `/admin/website/pages/${pageId}`);
     await page.getByRole("button", { name: /Hero/u }).first().click();
     await other.page.getByRole("button", { name: /Hero/u }).first().click();
+    // B starts editing FIRST, then A saves: B's unsaved edits survive the
+    // realtime refresh and B's save must still be refused (C10 §31 — the
+    // hidden version once advanced to A's and B overwrote A silently).
+    await other.page.getByLabel("Summary").fill("SYNTHETIC stale summary from B");
     await page.getByLabel("Summary").fill("SYNTHETIC summary from A");
     await page.getByRole("button", { name: "Save section" }).click();
     await expect(
       page.getByText("Section saved. Changes stay private until you publish."),
     ).toBeVisible();
-    await other.page.getByLabel("Summary").fill("SYNTHETIC stale summary from B");
+    await other.page.waitForTimeout(3_000);
+    await expect(other.page.getByLabel("Summary")).toHaveValue("SYNTHETIC stale summary from B");
     await other.page.getByRole("button", { name: "Save section" }).click();
     await expect(other.page.getByText(/Another staff member/u)).toBeVisible();
+    // A's version is what the server holds.
+    await other.page.reload();
+    await other.page.getByRole("button", { name: /Hero/u }).first().click();
+    await expect(other.page.getByLabel("Summary")).toHaveValue("SYNTHETIC summary from A");
     await other.context.close();
   });
 

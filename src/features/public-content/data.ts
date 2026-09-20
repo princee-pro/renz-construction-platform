@@ -12,11 +12,9 @@ import {
   mapPublicProjectMedia,
   mapPublicProjectServiceLink,
   mapPublicService,
-  mapPublicSetting,
   mapPublicTeamMember,
   mapPublicTestimonial,
   type PublicCredential,
-  type PublicHomepageSnapshot,
   type PublicPage,
   type PublicPost,
   type PublicProject,
@@ -24,11 +22,10 @@ import {
   type PublicProjectMedia,
   type PublicProjectServiceLink,
   type PublicService,
-  type PublicSetting,
   type PublicTeamMember,
   type PublicTestimonial,
 } from "@/features/public-content/contracts";
-import { contentCollectionTag, homepageTag, publicSettingsTag } from "@/lib/content/cache-tags";
+import { contentCollectionTag, homepageTag } from "@/lib/content/cache-tags";
 import { createPublicSupabaseClient } from "@/lib/supabase/public-server";
 
 // Published content is tag-revalidated by every publish command; the window
@@ -55,22 +52,6 @@ async function queryServices(): Promise<readonly PublicService[]> {
     .limit(48);
   if (error) throw new Error("Published expertise could not be loaded.");
   return compact((data ?? []).map(mapPublicService));
-}
-
-async function queryServiceBySlug(slug: string): Promise<PublicService | null> {
-  const client = createPublicSupabaseClient();
-  if (!client) return null;
-  const { data, error } = await client
-    .from("published_services")
-    .select(
-      "id,locale,slug,name,summary,body_blocks,scope,client_inputs,deliverables,exclusions,delivery_wording,seo_title,seo_description,featured,sort_order,positioning,sub_services,use_cases,process_steps,coordination,faqs,hero_asset_id",
-    )
-    .eq("locale", "en")
-    .eq("slug", slug)
-    .limit(1)
-    .maybeSingle();
-  if (error) throw new Error("Published expertise could not be loaded.");
-  return data ? mapPublicService(data) : null;
 }
 
 async function queryProjects(): Promise<readonly PublicProject[]> {
@@ -258,25 +239,8 @@ async function queryTestimonials(): Promise<readonly PublicTestimonial[]> {
   return compact((data ?? []).map(mapPublicTestimonial));
 }
 
-async function querySettings(): Promise<readonly PublicSetting[]> {
-  const client = createPublicSupabaseClient();
-  if (!client) return [];
-  const { data, error } = await client
-    .from("published_site_settings")
-    .select("namespace,key,value")
-    .order("namespace", { ascending: true })
-    .order("key", { ascending: true })
-    .limit(48);
-  if (error) throw new Error("Published site details could not be loaded.");
-  return compact((data ?? []).map(mapPublicSetting));
-}
-
 const cachedServices = unstable_cache(queryServices, ["public-services-v1"], {
   tags: [contentCollectionTag("service"), homepageTag()],
-  revalidate: PUBLIC_REVALIDATE_SECONDS,
-});
-const cachedServiceBySlug = unstable_cache(queryServiceBySlug, ["public-service-v1"], {
-  tags: [contentCollectionTag("service")],
   revalidate: PUBLIC_REVALIDATE_SECONDS,
 });
 const cachedProjects = unstable_cache(queryProjects, ["public-projects-v1"], {
@@ -335,13 +299,9 @@ const cachedTestimonials = unstable_cache(queryTestimonials, ["public-testimonia
   tags: [contentCollectionTag("testimonial"), homepageTag()],
   revalidate: PUBLIC_REVALIDATE_SECONDS,
 });
-const cachedSettings = unstable_cache(querySettings, ["public-settings-v1"], {
-  tags: [publicSettingsTag()],
-  revalidate: PUBLIC_REVALIDATE_SECONDS,
-});
 
 export const getPublishedServices = cache(cachedServices);
-export const getPublishedServiceBySlug = cache(cachedServiceBySlug);
+
 export const getPublishedProjects = cache(cachedProjects);
 export const getPublishedProjectBySlug = cache(cachedProjectBySlug);
 export const getPublishedProjectClaims = cache(cachedProjectClaims);
@@ -376,29 +336,6 @@ export const getPublishedPageByPath = cache(cachedPageByPath);
 export const getPublishedTeam = cache(cachedTeam);
 export const getPublishedCredentials = cache(cachedCredentials);
 export const getPublishedTestimonials = cache(cachedTestimonials);
-export const getPublishedSettings = cache(cachedSettings);
-
-export const getPublicHomepageSnapshot = cache(async (): Promise<PublicHomepageSnapshot> => {
-  const [services, projects, posts, testimonials] = await Promise.all([
-    getPublishedServices(),
-    getPublishedProjects(),
-    getPublishedPosts(),
-    getPublishedTestimonials(),
-  ]);
-  const homeFeatured = projects.filter((project) => project.homeFeatured);
-  const featured = projects.filter((project) => project.featured);
-  return {
-    services: services.slice(0, 6),
-    projects: (homeFeatured.length > 0
-      ? homeFeatured
-      : featured.length > 0
-        ? featured
-        : projects
-    ).slice(0, 4),
-    posts: posts.slice(0, 3),
-    testimonials: testimonials.slice(0, 3),
-  };
-});
 
 /** Public, published slugs for the sitemap (services, projects, insights). */
 export async function getPublicSitemapEntries(): Promise<readonly string[]> {

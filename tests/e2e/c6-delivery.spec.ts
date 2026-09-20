@@ -379,6 +379,7 @@ test.describe.serial("RENZ C6 delivery", () => {
     expect(tampered.status()).toBe(404);
     const anonymousAdmin = await anonymousPage.request.get(
       `/admin/procurement/orders/${orderId}/pdf`,
+      { maxRedirects: 0 },
     );
     expect([302, 307, 401, 403, 404]).toContain(anonymousAdmin.status());
     await anonymousContext.close();

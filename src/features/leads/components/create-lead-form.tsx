@@ -1,5 +1,7 @@
 "use client";
 
+import { useSingleSubmit } from "@/features/admin-shared/single-submit";
+
 import { useRouter } from "next/navigation";
 import { useActionState, useEffect } from "react";
 
@@ -15,6 +17,7 @@ import { leadSourceLabels, leadTypeLabels, staffSources } from "@/features/leads
 export function CreateLeadForm() {
   const router = useRouter();
   const [state, action, pending] = useActionState(createLeadAction, initialAdminActionState);
+  const guard = useSingleSubmit(pending);
   useEffect(() => {
     if (state.status === "success" && state.createdId) {
       router.push(`/admin/operations/leads/${state.createdId}`);
@@ -22,7 +25,7 @@ export function CreateLeadForm() {
   }, [state, router]);
   const errors = state.fieldErrors;
   return (
-    <form action={action} className="admin-form">
+    <form action={action} className="admin-form" onSubmit={guard.onSubmit}>
       {state.status === "error" ? (
         <Alert live tone="danger">
           <p>{state.message}</p>

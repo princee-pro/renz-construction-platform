@@ -1,5 +1,7 @@
 "use client";
 
+import { useSingleSubmit } from "@/features/admin-shared/single-submit";
+
 import { useActionState, useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
@@ -96,6 +98,7 @@ function PurchaseOrderEditorForm({
   pending: boolean;
   edit: ReturnType<typeof usePinnedEdit>;
 }>) {
+  const guard = useSingleSubmit(pending);
   const router = useRouter();
   const projectLocked = mode === "edit" || initial.projectId !== "";
   const [projectId, setProjectId] = useState(initial.projectId);
@@ -176,7 +179,12 @@ function PurchaseOrderEditorForm({
   const lineError = state.fieldErrors["lines"];
 
   return (
-    <form action={action} className="admin-form invoice-editor po-editor" noValidate>
+    <form
+      action={action}
+      className="admin-form invoice-editor po-editor"
+      noValidate
+      onSubmit={guard.onSubmit}
+    >
       {orderId ? <input name="orderId" type="hidden" value={orderId} /> : null}
       {mode === "edit" ? (
         <input name="expectedVersion" type="hidden" value={edit.pinnedVersion} />

@@ -6,8 +6,8 @@ select plan(32);
 
 select is(
   (select array_agg(key order by key) from public.roles),
-  array['admin', 'super_admin']::text[],
-  'S3 role vocabulary is exactly admin and super_admin'
+  array['admin', 'content_editor', 'finance', 'project_manager', 'super_admin', 'viewer']::text[],
+  'S3 role vocabulary is admin and super_admin plus the C10 role templates'
 );
 
 select is(
@@ -55,8 +55,8 @@ select is(
     where roles.key = 'admin'
       and permissions.key <> 'roles.manage'
   ),
-  51::bigint,
-  'admin receives only conservative S3+S4+C4+C5+C6 draft/media/CRM/billing/delivery permissions (never finance.invoices.void)'
+  49::bigint,
+  'admin receives only conservative S3+S4+C4+C5+C6 draft/media/CRM/billing/delivery permissions (never finance.invoices.void; C10: never users.invite / users.disable)'
 );
 
 select is(
@@ -153,7 +153,7 @@ select is(
       and pg_proc.prosecdef
       and pg_proc.proconfig = array['search_path=""']::text[]
   ),
-  87::bigint,
+  88::bigint,
   'S3+S4+C4+C9 authorization, integrity, analytics, notification and trigger helpers use SECURITY DEFINER with an empty search_path'
 );
 

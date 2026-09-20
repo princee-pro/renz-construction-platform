@@ -1,5 +1,7 @@
 "use client";
 
+import { useSingleSubmit } from "@/features/admin-shared/single-submit";
+
 import { useActionState, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -18,6 +20,7 @@ import { DuplicateClientCheck } from "@/features/clients/components/duplicate-cl
 export function CreateClientForm() {
   const router = useRouter();
   const [state, action, pending] = useActionState(createClientAction, initialAdminActionState);
+  const guard = useSingleSubmit(pending);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -33,7 +36,7 @@ export function CreateClientForm() {
   }, [state.status, state.createdId, router]);
 
   return (
-    <form action={action} className="admin-form" noValidate>
+    <form action={action} className="admin-form" noValidate onSubmit={guard.onSubmit}>
       <div className="field-grid field-grid-two">
         <Field
           error={state.fieldErrors["full_name"] ?? state.fieldErrors["fullName"]}

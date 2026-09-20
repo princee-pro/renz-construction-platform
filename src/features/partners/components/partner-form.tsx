@@ -1,5 +1,7 @@
 "use client";
 
+import { useSingleSubmit } from "@/features/admin-shared/single-submit";
+
 import Link from "next/link";
 import { useActionState, useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
@@ -135,6 +137,7 @@ function PartnerFormFields({
   defaultCapability: PartnerCapability;
   returnHref: string;
 }>) {
+  const guard = useSingleSubmit(pending);
   const router = useRouter();
   const [displayName, setDisplayName] = useState(initial.displayName);
   const [companyName, setCompanyName] = useState(initial.companyName);
@@ -191,7 +194,7 @@ function PartnerFormFields({
   const isContractor = capabilities.includes("contractor");
 
   return (
-    <form action={action} className="admin-form" noValidate>
+    <form action={action} className="admin-form" noValidate onSubmit={guard.onSubmit}>
       {partnerId ? <input name="partnerId" type="hidden" value={partnerId} /> : null}
       {mode === "edit" ? (
         <input name="expectedVersion" type="hidden" value={edit.pinnedVersion} />

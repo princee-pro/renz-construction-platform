@@ -1,5 +1,7 @@
 "use client";
 
+import { useSingleSubmit } from "@/features/admin-shared/single-submit";
+
 import Link from "next/link";
 import { useActionState, useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
@@ -107,6 +109,7 @@ function MaterialFormFields({
   pending: boolean;
   edit: ReturnType<typeof usePinnedEdit>;
 }>) {
+  const guard = useSingleSubmit(pending);
   const router = useRouter();
   const [name, setName] = useState(initial.name);
   const [unit, setUnit] = useState(initial.unit);
@@ -127,7 +130,7 @@ function MaterialFormFields({
   }, [name, code, materialId]);
 
   return (
-    <form action={action} className="admin-form" noValidate>
+    <form action={action} className="admin-form" noValidate onSubmit={guard.onSubmit}>
       {materialId ? <input name="materialId" type="hidden" value={materialId} /> : null}
       {mode === "edit" ? (
         <input name="expectedVersion" type="hidden" value={edit.pinnedVersion} />

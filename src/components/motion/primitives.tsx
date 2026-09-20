@@ -8,7 +8,6 @@ import {
   useSpring,
   useTransform,
   type MotionStyle,
-  type MotionValue,
   type Variants,
 } from "motion/react";
 import {
@@ -385,12 +384,6 @@ export function ScrollProgress({
       style={reduced ? {} : { scaleX, transformOrigin: "left center" }}
     />
   );
-}
-
-/** Exposes section scroll progress (0–1) to a child render function. */
-export function useSectionProgress(ref: React.RefObject<HTMLElement | null>): MotionValue<number> {
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end end"] });
-  return scrollYProgress;
 }
 
 /**

@@ -278,17 +278,17 @@ test.describe.serial("RENZ C8 intake and leads", () => {
     await staff.page.screenshot({ path: `${screenshotRoot}/1440-lead-360.png`, fullPage: true });
 
     // 25. The public reference is not a credential.
-    // The register streams a shell (loading.tsx) and redirects to sign-in from
-    // the server component, so assert on content: no lead data reaches an
-    // anonymous request, and a browser lands on the sign-in page.
+    // C10: the proxy answers an anonymous staff route with a real 307 to
+    // sign-in (no streamed shell); no lead data reaches the response.
     const anonymousRegister = await page.request.get(
       `/admin/operations/leads?q=${encodeURIComponent(projectReference)}`,
+      { maxRedirects: 0 },
     );
+    expect(anonymousRegister.status()).toBe(307);
+    expect(anonymousRegister.headers()["location"]).toContain("/admin/sign-in");
     const anonymousBody = await anonymousRegister.text();
-    // The query string is echoed in the router payload; lead data never is.
     expect(anonymousBody).not.toContain(visitorEmail);
     expect(anonymousBody).not.toContain(visitorName);
-    expect(anonymousBody).toContain("/admin/sign-in");
     await page.goto(`/admin/operations/leads?q=${encodeURIComponent(projectReference)}`);
     await expect(page).toHaveURL(/\/admin\/sign-in/u);
     const anonymousRpc = await page.request.post(

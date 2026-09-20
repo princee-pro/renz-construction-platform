@@ -39,7 +39,7 @@ export type AnalyticsEvent = Readonly<{
   d?: string | undefined;
   dc?: DeviceClass | undefined;
 }>;
-export const analyticsRateLimit = { maxHits: 120, windowSeconds: 3600 } as const;
+
 export const analyticsConsentStorageKey = "renz-analytics-consent";
 
 const staticRoutes = new Set([

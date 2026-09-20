@@ -23,11 +23,6 @@ export const notificationCategoryLabels: Readonly<Record<NotificationCategory, s
   system: "System",
 };
 
-export const mandatoryNotificationCategories: readonly NotificationCategory[] = [
-  "security",
-  "system",
-];
-
 export const notificationSeverities = ["info", "attention", "urgent"] as const;
 export type NotificationSeverity = (typeof notificationSeverities)[number];
 

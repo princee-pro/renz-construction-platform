@@ -315,13 +315,3 @@ export const previewProjects = [
     ],
   },
 ] as const satisfies ReadonlyArray<PreviewProject>;
-
-export function getPreviewProject(slug: string): PreviewProject | undefined {
-  return previewProjects.find((project) => project.slug === slug);
-}
-
-export function getNextPreviewProject(slug: string): PreviewProject {
-  const currentIndex = previewProjects.findIndex((project) => project.slug === slug);
-  const nextIndex = currentIndex < 0 ? 0 : (currentIndex + 1) % previewProjects.length;
-  return previewProjects[nextIndex] ?? previewProjects[0];
-}

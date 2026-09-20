@@ -126,22 +126,7 @@ export function MfaEnrollment({ next }: MfaEnrollmentProps) {
         throw activated.error ?? new Error("Profile activation did not complete.");
       }
 
-      const audit = await withTimeout(
-        Promise.resolve(
-          client.rpc("record_audit_event", {
-            event_action: "mfa.enroll",
-            event_entity_type: "auth_factor",
-            event_entity_id: enrollment.factorId,
-            event_outcome: "success",
-            event_metadata: {},
-          }),
-        ),
-        10_000,
-      );
-      if (audit.error) {
-        throw audit.error;
-      }
-
+      // The activation facade records the enrolment audit server-side (C10).
       setEnrollment(null);
       setCode("");
       window.location.assign(next);
