@@ -47,16 +47,16 @@ export function ProjectList({
             </Link>
           ) : canCreate ? (
             <Link className="button button-primary" href="/admin/content/projects/new">
-              Create first draft
+              Create the first project
             </Link>
           ) : null
         }
-        title={filtered ? "No projects match these filters" : "No project drafts yet"}
+        title={filtered ? "No projects match these filters" : "No website projects yet"}
       >
         <p>
           {filtered
             ? "Adjust or clear the current search and filters."
-            : "The Projects register is empty. Create a project and it appears on the website once published."}
+            : "Create the first project. It appears on the website once you publish it."}
         </p>
       </EmptyState>
     );
@@ -64,17 +64,17 @@ export function ProjectList({
 
   return (
     <>
-      <div className="project-register-heading" aria-hidden="true">
+      <div className="service-register-heading" aria-hidden="true">
         <span>Project</span>
         <span>Status</span>
         <span>Readiness</span>
         <span>Media</span>
         <span>Updated</span>
       </div>
-      <ol className="project-register">
+      <ol className="service-register">
         {result.items.map((project) => (
           <li key={`${project.id}:${project.locale}`}>
-            <div className="project-register-identity">
+            <div className="service-register-identity">
               <Link href={projectUrl(project.id, project.locale)}>{project.title}</Link>
               <span>
                 /{project.slug} · {project.locale}
@@ -93,7 +93,7 @@ export function ProjectList({
                 {project.readiness === "ready" ? "Ready" : `Blocked · ${project.blocker_count}`}
               </StatusBadge>
             </div>
-            <span data-label="Media" className="project-media-count">
+            <span data-label="Media" className="service-version">
               {project.media_count}
             </span>
             <time data-label="Updated" dateTime={project.updated_at}>

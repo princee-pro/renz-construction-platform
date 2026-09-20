@@ -227,7 +227,9 @@ function stageList(value: unknown): readonly PublicProjectStage[] {
 }
 
 function evidenceClass(value: string | null): ProjectEvidenceClass {
-  return value === "concept_study" || value === "experience_study" ? value : "real_project";
+  return value === "concept_study" || value === "context_study" || value === "experience_study"
+    ? value
+    : "real_project";
 }
 
 function layoutHint(value: string | null): ProjectLayoutHint {
@@ -272,7 +274,8 @@ export type PublicService = Readonly<{
   heroAssetId: string | null;
 }>;
 
-export type ProjectEvidenceClass = "real_project" | "concept_study" | "experience_study";
+export type ProjectEvidenceClass =
+  "real_project" | "concept_study" | "context_study" | "experience_study";
 export type ProjectLayoutHint =
   "auto" | "monument" | "portrait" | "landscape" | "technical" | "strip" | "wide";
 

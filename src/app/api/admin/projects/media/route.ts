@@ -8,7 +8,12 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
-const provenanceValues = ["client_original", "client_derivative", "production_asset"] as const;
+const provenanceValues = [
+  "client_original",
+  "client_derivative",
+  "production_asset",
+  "generated_reference",
+] as const;
 
 /** Project media upload (S5C): the shared editorial ingestion with the S5C provenance vocabulary. */
 export async function POST(request: Request): Promise<NextResponse> {

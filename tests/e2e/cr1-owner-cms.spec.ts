@@ -410,19 +410,28 @@ test.describe("CR1 owner website control", () => {
     await page
       .getByLabel("Image file")
       .setInputFiles({ name: "synthetic-hero.png", mimeType: "image/png", buffer: tinyPng() });
-    await page.getByLabel("Provenance").selectOption("production_asset");
-    await page.getByLabel("Role", { exact: true }).last().selectOption("hero");
+    // D1.7: the upload form sits behind "Add an image" once the list has items.
+    const addImage = page.locator("details.media-upload-details");
+    if (!(await addImage.evaluate((element) => (element as HTMLDetailsElement).open))) {
+      await addImage.locator("summary").click();
+    }
+    await page.getByLabel("Where this image comes from").selectOption("production_asset");
+    await page.getByLabel("Role in the gallery").selectOption("hero");
     await page
-      .getByLabel("Contextual alt text")
+      .getByLabel("Alt text (describe the image)")
       .last()
       .fill("SYNTHETIC generated concept hero; not RENZ project evidence");
     await page.getByRole("button", { name: "Upload & attach" }).click();
-    await expect(page.getByRole("button", { name: "Clear rights & mark eligible" })).toBeVisible({
+    await expect(
+      page.getByRole("button", { name: "Confirm rights & show on website" }),
+    ).toBeVisible({
       timeout: 20_000,
     });
     await page.getByLabel("Rights holder").fill("RENZ Construction Services Ltd (synthetic)");
-    await page.getByRole("button", { name: "Clear rights & mark eligible" }).click();
-    await expect(page.getByText(/eligible/iu).first()).toBeVisible();
+    await page.getByRole("button", { name: "Confirm rights & show on website" }).click();
+    await expect(
+      page.locator(".media-card").getByText("Shown on the website", { exact: true }).first(),
+    ).toBeVisible({ timeout: 20_000 });
 
     // Review + publish.
     await page.getByRole("button", { name: "Overview" }).click();
@@ -434,7 +443,8 @@ test.describe("CR1 owner website control", () => {
     await page.getByRole("button", { name: "Confirm publish" }).click();
     await expect(page.getByRole("button", { name: "Unpublish" })).toBeVisible();
 
-    // Public: route, index (7 records, no overlap, filters), related service, home.
+    // Public: route, index (13 tiles — the twelve seeded studies plus this one — no
+    // overlap, filters), related service, home.
     const visitor = await page.context().newPage();
     await visitor.goto(`/projects/synthetic-owner-project-${uniqueSuffix}`);
     await expect(
@@ -442,24 +452,39 @@ test.describe("CR1 owner website control", () => {
     ).toBeVisible();
     await expect(visitor.getByText("Concept study").first()).toBeVisible();
     await visitor.goto("/projects");
-    const slots = visitor.locator(".studies-slot");
-    await expect(slots).toHaveCount(7);
+    const tiles = visitor.locator(".study-tile");
+    await expect(tiles).toHaveCount(13);
     await expect(
       visitor.getByRole("button", { name: /Synthetic residential concept/u }),
     ).toBeVisible();
-    const boxes = await slots.evaluateAll((elements) =>
+    // D1.7 rhythm grid: no tile overlaps another (rows may hold several tiles).
+    const boxes = await tiles.evaluateAll((elements) =>
       elements.map((element) => {
         const rect = element.getBoundingClientRect();
-        return { top: rect.top + window.scrollY, bottom: rect.bottom + window.scrollY };
+        return {
+          top: rect.top + window.scrollY,
+          bottom: rect.bottom + window.scrollY,
+          left: rect.left,
+          right: rect.right,
+        };
       }),
     );
     for (let index = 1; index < boxes.length; index += 1) {
-      expect(boxes[index]!.top).toBeGreaterThanOrEqual(boxes[index - 1]!.bottom - 1);
+      for (let other = 0; other < index; other += 1) {
+        const a = boxes[index]!;
+        const b = boxes[other]!;
+        const overlaps =
+          a.left < b.right - 1 &&
+          a.right > b.left + 1 &&
+          a.top < b.bottom - 1 &&
+          a.bottom > b.top + 1;
+        expect(overlaps).toBe(false);
+      }
     }
     await expectNoHorizontalOverflow(visitor);
     await visitor.setViewportSize({ width: 390, height: 844 });
     await visitor.goto("/projects");
-    await expect(visitor.locator(".studies-slot")).toHaveCount(7);
+    await expect(visitor.locator(".study-tile")).toHaveCount(13);
     await expectNoHorizontalOverflow(visitor);
     await visitor.setViewportSize({ width: 1440, height: 900 });
     await visitor.goto("/services/design");
@@ -483,14 +508,14 @@ test.describe("CR1 owner website control", () => {
     await visitor.goto("/");
     await expect(visitor.getByRole("link", { name: /SYNTHETIC OWNER PROJECT/u })).toHaveCount(0);
     await visitor.goto("/projects");
-    await expect(visitor.locator(".studies-slot")).toHaveCount(7);
+    await expect(visitor.locator(".study-tile")).toHaveCount(13);
 
     // Unpublish removes it from the public site.
     await page.getByRole("button", { name: "Unpublish" }).click();
     await page.getByRole("button", { name: "Confirm unpublish" }).click();
     await expect(page.getByRole("button", { exact: true, name: "Publish" })).toBeVisible();
     await visitor.goto("/projects");
-    await expect(visitor.locator(".studies-slot")).toHaveCount(6);
+    await expect(visitor.locator(".study-tile")).toHaveCount(12);
     const gone = await visitor.goto(`/projects/synthetic-owner-project-${uniqueSuffix}`);
     expect(gone?.status()).toBe(404);
     await visitor.close();
@@ -614,7 +639,8 @@ test.describe("CR1 owner website control", () => {
     await expect(page.getByText(/Published as revision \d+\./u)).toBeVisible();
     const visitor = await page.context().newPage();
     await visitor.goto("/");
-    const rail = visitor.locator(".process-rail li");
+    // D1.7: the process ledger's index rail replaces the horizontal story rail.
+    const rail = visitor.locator(".process-ledger-rail li");
     await expect(rail.nth(1)).toContainText(firstTitle);
 
     // Footer statement.

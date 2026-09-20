@@ -67,7 +67,7 @@ export default async function ServicesPage({ searchParams }: PageProps<"/admin/c
           </select>
         </div>
         <div className="field-group">
-          <label htmlFor="service-locale">Locale</label>
+          <label htmlFor="service-locale">Language</label>
           <input
             autoComplete="off"
             defaultValue={filters.locale}

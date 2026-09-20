@@ -8,3 +8,14 @@
 export function isApiMediaSrc(src: string): boolean {
   return src.startsWith("/api/media/");
 }
+
+/**
+ * Project media by role size (D1.7 §101): `thumb` asks the route for the
+ * 960px child derivative (cards, strips, gallery grids); `full` is the
+ * 2400px derivative (hero planes, the lightbox).
+ */
+export function projectMediaSrc(projectMediaId: string, size: "thumb" | "full" = "full"): string {
+  return size === "thumb"
+    ? `/api/media/project/${projectMediaId}?size=thumb`
+    : `/api/media/project/${projectMediaId}`;
+}

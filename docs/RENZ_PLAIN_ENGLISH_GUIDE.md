@@ -117,3 +117,24 @@ Privacy and terms may stay formal. Their introductions must still be plain.
 Open the site as a first-time visitor. Can you say, in one breath, what
 RENZ does, what help you can get, what projects you can see, how the process
 works and how to contact RENZ? If not, rewrite.
+
+## Writing in the Admin (D1.7)
+
+The Admin belongs to the business owner. The same rules apply, with a few
+translations that recur:
+
+| Never show                       | Write instead                                              |
+| -------------------------------- | ---------------------------------------------------------- |
+| Facade, entity, projection       | the business noun: project, client, invoice, public version |
+| Invalidate, revalidate           | Refresh / Update                                           |
+| Version conflict                 | "Someone else saved first" — "This record changed while you were editing." |
+| Restricted workspace             | "Your business today"                                      |
+| Register (as a screen name)      | the plain noun: Services, Projects, Insights                |
+| Locale, BCP 47                   | Language                                                   |
+| Sort order                       | Order on the website                                       |
+| Schema, payload, RPC             | (do not show)                                              |
+| Provenance class values          | "Generated concept visual", "RENZ record", "Client photo"  |
+| Eligible for public use          | "Shown on the website"                                     |
+
+Empty states: "No projects yet. Create the first project." Success: "Project
+saved.", "Page published." Errors: "We couldn't save this project."

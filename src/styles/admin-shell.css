@@ -436,7 +436,11 @@ html[data-admin-rail] {
 }
 
 .command-strip small {
-  font-size: 0.74rem;
+  font-family: var(--admin-body);
+  font-size: 0.78rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.4;
   color: var(--admin-muted);
 }
 

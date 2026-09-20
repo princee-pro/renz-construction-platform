@@ -401,7 +401,7 @@ export function ClientDetailView({
             ))}
           </ul>
         ) : (
-          <p className="quiet-empty">No operational projects yet for this client.</p>
+          <p className="quiet-empty">No projects yet for this client.</p>
         )
       ) : null}
 

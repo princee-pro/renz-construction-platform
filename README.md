@@ -148,7 +148,9 @@ node scripts/website-seed-content.mjs
 The seed is idempotent (services, six concept studies with their preview
 images, three insights). D1.6 adds two modes: `--rewrite-copy` republishes
 the plain-English wording of the seed sources as a new content revision of
-each existing record, and `--heroes` registers the rendered hero loop under
+each existing record, `--galleries` (D1.7) creates the six Rwanda-context
+studies and brings every study to its category, context wording, evidence
+class and seven-piece gallery (idempotent), and `--heroes` registers the rendered hero loop under
 `public/media/renz/heroes` as a concept video and attaches it to the Home
 opening (both idempotent; the local `db:reset` path applies migrations
 `20260920100000` and `20260920110000` automatically). If `next dev` was already running, delete

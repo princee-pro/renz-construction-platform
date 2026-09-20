@@ -15,10 +15,18 @@
 .auth-form-zone {
   display: grid;
   grid-template-rows: auto 1fr auto;
+  justify-items: center;
   gap: clamp(2rem, 5vh, 4rem);
-  padding: clamp(1.5rem, 4vw, 3.5rem) clamp(1.5rem, 6vw, 6rem);
+  padding: clamp(1.5rem, 4vw, 3rem) clamp(1.5rem, 5vw, 4.5rem);
   background: #fff;
   border-inline-end: 1px solid var(--admin-rule);
+}
+
+/* D1.7 §39: one centred column for head, form and support. */
+.auth-form-head,
+.auth-form-body,
+.auth-form-foot {
+  width: min(100%, 27rem);
 }
 
 .auth-form-head {
@@ -104,7 +112,6 @@
   display: grid;
   align-content: center;
   gap: 1.25rem;
-  width: min(100%, 26rem);
 }
 
 .auth-kicker {
@@ -129,11 +136,12 @@
 .auth-form-body h1 {
   margin: 0;
   font-family: var(--admin-display);
-  font-size: clamp(1.9rem, 3.2vw, 2.7rem);
+  font-size: clamp(1.8rem, 2.8vw, 2.4rem);
   font-weight: 600;
   letter-spacing: -0.03em;
-  line-height: 1.02;
+  line-height: 1.05;
   color: var(--admin-ink);
+  text-wrap: balance;
 }
 
 .auth-intro {
@@ -353,7 +361,17 @@
   fill: var(--color-gold, #c69a3a);
   stroke: none;
   opacity: 0;
-  animation: auth-fade 400ms ease 1.6s forwards;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation:
+    auth-fade 400ms ease 1.6s forwards,
+    auth-pulse 6s ease-in-out 2.2s infinite;
+}
+.auth-drawing .auth-mark:nth-of-type(2) {
+  animation-delay: 1.8s, 3.4s;
+}
+.auth-drawing .auth-mark:nth-of-type(3) {
+  animation-delay: 2s, 4.6s;
 }
 
 .auth-brand-copy {
@@ -450,6 +468,19 @@
 @keyframes auth-fade {
   to {
     opacity: 1;
+  }
+}
+/* D1.7 §40: point illumination — one survey mark breathes at a time. */
+@keyframes auth-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  8% {
+    transform: scale(2.1);
+  }
+  16% {
+    transform: scale(1);
   }
 }
 @keyframes auth-rise {

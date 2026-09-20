@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 
+import { execFileSync } from "node:child_process";
+import { existsSync } from "node:fs";
 import { readFile, readdir } from "node:fs/promises";
-import { extname, relative, resolve } from "node:path";
+import { basename, extname, relative, resolve } from "node:path";
 
 const repositoryRoot = resolve(process.cwd());
 
@@ -255,8 +257,39 @@ function inspectLine(line, lineNumber, filePath, findings) {
   }
 }
 
+/**
+ * C10: the scan covers what a commit could carry — tracked files plus
+ * untracked files that are not git-ignored (`git ls-files --cached --others
+ * --exclude-standard`). Git-ignored local artefacts (Playwright fixtures,
+ * `.env.local`, build output) never reach a commit; a machine without git
+ * falls back to the full directory walk. Pass `--all` to force the walk.
+ */
+function committableFiles() {
+  try {
+    const output = execFileSync(
+      "git",
+      ["ls-files", "--cached", "--others", "--exclude-standard", "-z"],
+      { cwd: repositoryRoot, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 },
+    );
+    return output
+      .split("\u0000")
+      .filter((entry) => entry.length > 0)
+      .map((entry) => resolve(repositoryRoot, entry))
+      .filter(
+        (file) =>
+          !excludedFiles.has(basename(file)) &&
+          !excludedExtensions.has(extname(file).toLowerCase()) &&
+          existsSync(file),
+      );
+  } catch {
+    return null;
+  }
+}
+
 async function main() {
-  const files = await collectFiles(repositoryRoot);
+  const files =
+    (process.argv.includes("--all") ? null : committableFiles()) ??
+    (await collectFiles(repositoryRoot));
   const findings = [];
 
   for (const filePath of files) {

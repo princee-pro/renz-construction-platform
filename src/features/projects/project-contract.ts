@@ -189,15 +189,20 @@ export const stageDeleteSchema = z
 
 export const mediaRoles = [
   "hero",
-  "listing",
+  "context",
+  "exterior",
+  "interior",
+  "detail",
+  "process",
+  "drawing",
+  "dusk",
   "gallery",
   "before",
   "during",
   "after",
-  "detail",
-  "drawing",
   "video",
   "video_poster",
+  "listing",
   "background",
   "social",
 ] as const;

@@ -282,6 +282,24 @@
     linear-gradient(var(--gold), var(--gold)) bottom right / 1px 1.25rem no-repeat,
     rgb(13 33 52 / 0.35);
 }
+.landing-plane-photo {
+  overflow: hidden;
+}
+.landing-plane-photo .landing-plane-image {
+  object-fit: cover;
+  opacity: 0.55;
+  filter: saturate(0.75);
+}
+.landing-plane-photo::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgb(7 21 35 / 0.15), rgb(7 21 35 / 0.55));
+  pointer-events: none;
+}
+.landing-plane-photo .scene {
+  z-index: 1;
+}
 .landing-plane .scene {
   inset: 6% 5%;
   width: 90%;

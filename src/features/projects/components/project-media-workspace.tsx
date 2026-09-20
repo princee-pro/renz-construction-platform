@@ -22,19 +22,38 @@ import {
 } from "@/features/projects/project-contract";
 
 const roleLabels: Readonly<Record<(typeof mediaRoles)[number], string>> = {
-  hero: "Hero",
-  listing: "Project listing",
-  gallery: "Gallery",
+  hero: "01 Hero (main image)",
+  context: "02 Exterior / context",
+  exterior: "03 Secondary exterior",
+  interior: "04 Interior / space",
+  detail: "05 Detail / material",
+  process: "06 Construction / process",
+  drawing: "07 Drawing / diagram",
+  dusk: "08 Dusk / night",
+  gallery: "Gallery (general)",
   before: "Before",
   during: "During",
   after: "After",
-  detail: "Detail",
-  drawing: "Drawing",
   video: "Video",
   video_poster: "Video poster",
+  listing: "Listing image",
   background: "Background",
-  social: "Social",
+  social: "Social sharing image",
 };
+
+const provenanceLabels: Readonly<Record<string, string>> = {
+  client_original: "Client photo (original)",
+  client_derivative: "Client photo (edited)",
+  production_asset: "RENZ record",
+  production: "RENZ record",
+  generated_reference: "Generated concept visual",
+  concept_demo: "Concept visual",
+  synthetic_test: "Test image",
+};
+
+function provenanceLabel(value: string | null): string {
+  return (value && provenanceLabels[value]) ?? (value ?? "").replaceAll("_", " ");
+}
 
 function rightsTone(rightsStatus: string | null): "ready" | "blocked" | "review" {
   if (rightsStatus === "expired" || rightsStatus === "rejected") return "blocked";
@@ -46,6 +65,8 @@ function MediaCard({
   item,
   projectId,
   stages,
+  studyProject,
+  position,
   canWrite,
   onMove,
   isFirst,
@@ -56,6 +77,9 @@ function MediaCard({
   stages: readonly ProjectStage[];
   canWrite: boolean;
   onMove: (direction: "up" | "down") => void;
+  /** The project is a concept / context study (generated visuals may be confirmed). */
+  studyProject: boolean;
+  position: number;
   isFirst: boolean;
   isLast: boolean;
 }>) {
@@ -69,32 +93,39 @@ function MediaCard({
     initialProjectActionState,
   );
   const isEligible = item.public_status === "eligible";
+  const generated =
+    item.provenance_class === "concept_demo" || item.provenance_class === "generated_reference";
+  // CR1 relaxed the S5C rule: a concept / context study may confirm generated
+  // visuals (they stay labelled); a real project never can.
   const canPromote =
-    item.provenance_class !== "concept_demo" &&
-    item.provenance_class !== "generated_reference" &&
     item.provenance_class !== "synthetic_test" &&
+    (!generated || studyProject) &&
     (item.storage_state === "ready_private" ||
       item.storage_state === "promotion_pending" ||
       item.storage_state === "public_eligible");
+  const preview = `/api/media/project/${item.id}?size=thumb`;
 
   return (
     <li className="media-card">
-      <div className="media-card-preview" aria-hidden="true">
-        <span>{item.mime_type ?? "image"}</span>
-        {item.width && item.height ? (
-          <span>
-            {item.width}×{item.height}
-          </span>
-        ) : null}
+      <div className="media-card-preview">
+        {item.mime_type?.startsWith("video/") ? (
+          <span className="media-card-preview-note">Video</span>
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element -- private signed redirect; not optimised
+          <img alt="" loading="lazy" src={preview} />
+        )}
+        <span className="media-card-preview-note">
+          {String(position + 1).padStart(2, "0")} ·{" "}
+          {roleLabels[item.role as (typeof mediaRoles)[number]] ?? item.role}
+          {item.width && item.height ? ` · ${item.width}×${item.height}` : ""}
+        </span>
       </div>
       <div className="media-card-meta">
         <div className="media-card-heading">
           <StatusBadge tone={rightsTone(item.rights_status)}>
             {(item.rights_status ?? "unknown").replaceAll("_", " ")}
           </StatusBadge>
-          <span className="media-provenance">
-            {(item.provenance_class ?? "").replaceAll("_", " ")}
-          </span>
+          <span className="media-provenance">{provenanceLabel(item.provenance_class)}</span>
           {canWrite ? (
             <div className="rail-actions media-order-actions">
               <Button disabled={isFirst} onClick={() => onMove("up")} tone="quiet" type="button">
@@ -103,11 +134,18 @@ function MediaCard({
               <Button disabled={isLast} onClick={() => onMove("down")} tone="quiet" type="button">
                 Move down
               </Button>
+              {item.role === "hero" ? (
+                <StatusBadge tone="ready">Hero</StatusBadge>
+              ) : (
+                <span className="media-hero-hint">
+                  To make this the hero, set its role to 01 Hero.
+                </span>
+              )}
             </div>
           ) : null}
         </div>
         <StatusBadge tone={isEligible ? "ready" : "review"}>
-          {isEligible ? "Eligible for public use" : "Not yet public-eligible"}
+          {isEligible ? "Shown on the website" : "Not on the website yet"}
         </StatusBadge>
         {canWrite && !isEligible ? (
           canPromote ? (
@@ -134,12 +172,17 @@ function MediaCard({
                 </Field>
               </div>
               <p className="section-description">
-                Clearing rights confirms RENZ holds permission to use this image publicly and marks
-                it eligible for the role assigned below.
+                {generated
+                  ? 'This is a generated concept visual. Confirming it shows it on the website with a "generated concept" label. It never counts as project evidence.'
+                  : "Confirming rights means RENZ has permission to show this image publicly. It then appears on the website in the role chosen below."}
               </p>
               <div className="rail-actions">
                 <Button disabled={promotePending} tone="secondary" type="submit">
-                  {promotePending ? "Clearing…" : "Clear rights & mark eligible"}
+                  {promotePending
+                    ? "Confirming…"
+                    : generated
+                      ? "Confirm as generated concept visual"
+                      : "Confirm rights & show on website"}
                 </Button>
               </div>
               {promoteState.status !== "idle" && promoteState.status !== "success" ? (
@@ -150,11 +193,11 @@ function MediaCard({
             </form>
           ) : (
             <p className="quiet-empty">
-              {item.provenance_class === "concept_demo" ||
-              item.provenance_class === "generated_reference" ||
-              item.provenance_class === "synthetic_test"
-                ? "Concept, generated, or synthetic media can never be used as completed-project evidence."
-                : "This asset is still finalizing upload; try again shortly."}
+              {generated
+                ? "A real RENZ project cannot show generated or concept visuals. Replace it with a RENZ photograph, or change the project to a concept study."
+                : item.provenance_class === "synthetic_test"
+                  ? "Test images are never shown on the website."
+                  : "This file is still being prepared; try again shortly."}
             </p>
           )
         ) : null}
@@ -188,7 +231,7 @@ function MediaCard({
               </select>
             </Field>
           </div>
-          <Field id={`alt-${item.id}`} label="Contextual alt text">
+          <Field id={`alt-${item.id}`} label="Alt text (describe the image)">
             <input
               defaultValue={item.alt_text ?? ""}
               id={`alt-${item.id}`}
@@ -217,7 +260,7 @@ function MediaCard({
           </Field>
           <label className="check-field">
             <input defaultChecked={item.decorative} name="decorative" type="checkbox" />
-            <span>Decorative (no alt text required)</span>
+            <span>Decorative only (no description needed)</span>
           </label>
           {canWrite ? (
             <div className="rail-actions">
@@ -258,12 +301,15 @@ export function ProjectMediaWorkspace({
   media,
   stages,
   canWrite,
+  studyProject = false,
 }: Readonly<{
   projectId: string;
   projectVersion: number;
   media: readonly ProjectMedia[];
   stages: readonly ProjectStage[];
   canWrite: boolean;
+  /** D1.7: concept / context studies may confirm generated concept visuals. */
+  studyProject?: boolean;
 }>) {
   const router = useRouter();
   const [order, setOrder] = useState(() => media.map((item) => item.id).slice());
@@ -323,6 +369,9 @@ export function ProjectMediaWorkspace({
       }
       const mediaAssetId = (result as { id: string }).id;
       const attachForm = new FormData(form);
+      // The file already went to the upload route; the attach action carries
+      // only the small fields (server actions refuse bodies over 1 MB).
+      attachForm.delete("file");
       attachForm.set("mediaAssetId", mediaAssetId);
       attachForm.set("projectId", projectId);
       attachForm.set("expectedVersion", String(projectVersion));
@@ -353,89 +402,10 @@ export function ProjectMediaWorkspace({
   return (
     <div className="project-media-workspace">
       <p className="section-description">
-        Media stays private until its rights are cleared and it is assigned a public role. Concept,
-        generated, or synthetic assets can never satisfy completed-project evidence.
+        The gallery in order, top to bottom. Upload an image, give it a role (01 Hero is the main
+        image), a short caption and a description, then confirm it to show it on the website. Use
+        Move up / Move down to change the order.
       </p>
-
-      {canWrite ? (
-        <form
-          className="media-upload-form"
-          noValidate
-          onSubmit={(event) => {
-            void handleUpload(event);
-          }}
-          ref={formRef}
-        >
-          <Field hint="JPEG, PNG, WebP, or AVIF. Up to 20MB." id="media-file" label="Image file">
-            <input
-              accept="image/jpeg,image/png,image/webp,image/avif"
-              id="media-file"
-              name="file"
-              type="file"
-            />
-          </Field>
-          <div className="field-grid field-grid-two">
-            <Field id="media-provenance" label="Provenance">
-              <select defaultValue="production_asset" id="media-provenance" name="provenance">
-                <option value="production_asset">Production asset</option>
-                <option value="client_original">Client original</option>
-                <option value="client_derivative">Client derivative</option>
-              </select>
-            </Field>
-            <Field id="media-role" label="Role">
-              <select defaultValue="gallery" id="media-role" name="role">
-                {mediaRoles.map((role) => (
-                  <option key={role} value={role}>
-                    {roleLabels[role]}
-                  </option>
-                ))}
-              </select>
-            </Field>
-          </div>
-          <div className="field-grid field-grid-two">
-            <Field id="media-stage" label="Story chapter">
-              <select defaultValue="" id="media-stage" name="stageId">
-                <option value="">None</option>
-                {stages.map((stage) => (
-                  <option key={stage.id} value={stage.id}>
-                    {stage.title}
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <Field id="media-phase" label="Phase (optional)">
-              <input id="media-phase" maxLength={40} name="phase" type="text" />
-            </Field>
-          </div>
-          <Field
-            hint="Required unless marked decorative."
-            id="media-alt"
-            label="Contextual alt text"
-          >
-            <input id="media-alt" maxLength={300} name="altText" type="text" />
-          </Field>
-          <Field id="media-caption" label="Caption">
-            <input id="media-caption" maxLength={600} name="caption" type="text" />
-          </Field>
-          <Field id="media-credit" label="Credit">
-            <input id="media-credit" maxLength={200} name="credit" type="text" />
-          </Field>
-          <label className="check-field">
-            <input name="decorative" type="checkbox" />
-            <span>Decorative (no alt text required)</span>
-          </label>
-          <div className="form-actions">
-            <Button disabled={uploading} tone="primary" type="submit">
-              {uploading ? "Uploading…" : "Upload & attach"}
-            </Button>
-          </div>
-          {uploadError ? (
-            <Alert live tone="danger">
-              <p>{uploadError}</p>
-            </Alert>
-          ) : null}
-        </form>
-      ) : null}
 
       <ol className="media-card-list">
         {ordered.map((item, index) => (
@@ -446,13 +416,104 @@ export function ProjectMediaWorkspace({
             item={item}
             key={item.id}
             onMove={(direction) => move(item.id, direction)}
+            position={index}
             projectId={projectId}
             stages={stages}
+            studyProject={studyProject}
           />
         ))}
       </ol>
       {ordered.length === 0 ? (
-        <p className="quiet-empty">No media attached to this project yet.</p>
+        <p className="quiet-empty">No images yet. Add the first one below.</p>
+      ) : null}
+      {canWrite ? (
+        <details className="media-upload-details" open={ordered.length === 0}>
+          <summary>Add an image</summary>
+          <form
+            className="media-upload-form"
+            noValidate
+            onSubmit={(event) => {
+              void handleUpload(event);
+            }}
+            ref={formRef}
+          >
+            <Field hint="JPEG, PNG, WebP, or AVIF. Up to 20MB." id="media-file" label="Image file">
+              <input
+                accept="image/jpeg,image/png,image/webp,image/avif"
+                id="media-file"
+                name="file"
+                type="file"
+              />
+            </Field>
+            <div className="field-grid field-grid-two">
+              <Field id="media-provenance" label="Where this image comes from">
+                <select
+                  defaultValue={studyProject ? "generated_reference" : "production_asset"}
+                  id="media-provenance"
+                  name="provenance"
+                >
+                  <option value="production_asset">RENZ record (our own photo or drawing)</option>
+                  <option value="client_original">Client photo (original)</option>
+                  <option value="client_derivative">Client photo (edited)</option>
+                  <option value="generated_reference">
+                    Generated concept visual (never evidence)
+                  </option>
+                </select>
+              </Field>
+              <Field id="media-role" label="Role in the gallery">
+                <select defaultValue="context" id="media-role" name="role">
+                  {mediaRoles.map((role) => (
+                    <option key={role} value={role}>
+                      {roleLabels[role]}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            </div>
+            <div className="field-grid field-grid-two">
+              <Field id="media-stage" label="Story chapter">
+                <select defaultValue="" id="media-stage" name="stageId">
+                  <option value="">None</option>
+                  {stages.map((stage) => (
+                    <option key={stage.id} value={stage.id}>
+                      {stage.title}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <Field id="media-phase" label="Stage of work (optional)">
+                <input id="media-phase" maxLength={40} name="phase" type="text" />
+              </Field>
+            </div>
+            <Field
+              hint="One sentence that describes the image for people who cannot see it."
+              id="media-alt"
+              label="Alt text (describe the image)"
+            >
+              <input id="media-alt" maxLength={300} name="altText" type="text" />
+            </Field>
+            <Field id="media-caption" label="Caption">
+              <input id="media-caption" maxLength={600} name="caption" type="text" />
+            </Field>
+            <Field id="media-credit" label="Photo credit (optional)">
+              <input id="media-credit" maxLength={200} name="credit" type="text" />
+            </Field>
+            <label className="check-field">
+              <input name="decorative" type="checkbox" />
+              <span>Decorative only (no description needed)</span>
+            </label>
+            <div className="form-actions">
+              <Button disabled={uploading} tone="primary" type="submit">
+                {uploading ? "Uploading…" : "Upload & attach"}
+              </Button>
+            </div>
+            {uploadError ? (
+              <Alert live tone="danger">
+                <p>{uploadError}</p>
+              </Alert>
+            ) : null}
+          </form>
+        </details>
       ) : null}
     </div>
   );

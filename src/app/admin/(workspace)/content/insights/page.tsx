@@ -79,7 +79,7 @@ export default async function InsightsPage({ searchParams }: PageProps<"/admin/c
           Apply
         </button>
       </form>
-      <section aria-label="Insights register" className="register-section">
+      <section aria-label="Insights" className="register-section">
         <InsightListView list={list} />
       </section>
     </main>

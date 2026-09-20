@@ -85,12 +85,13 @@ test.describe.serial("RENZ C4 control room", () => {
     // Clients register (empty state or populated) and navigation IA.
     await expect(page.getByRole("heading", { name: "Clients", level: 1 })).toBeVisible();
     const navigation = page.getByRole("navigation", { name: "Administration" }).first();
-    await expect(navigation.getByText("Operations")).toBeVisible();
+    // D1.7 owner IA: Work / Delivery / Money / Website / Business / System.
+    await expect(navigation.getByText("Work", { exact: true })).toBeVisible();
     // CR1: the content register is "Projects" under Website (alongside operational Projects).
     await expect(navigation.getByRole("link", { name: "Projects", exact: true })).toHaveCount(2);
     await expect(navigation.getByRole("link", { name: "Website", exact: true })).toBeVisible();
     await expect(navigation.getByRole("link", { name: /Payments/u })).toHaveCount(0);
-    // Leads (C8) sits above Clients in Operations; Analytics (C9) lives in the Overview group.
+    // Leads (C8) sits above Clients in Work; Analytics (C9) lives in the Business group.
     await expect(navigation.getByRole("link", { name: /Leads/u })).toBeVisible();
     await expect(navigation.getByRole("link", { name: /Analytics/u })).toHaveCount(1);
     await expectNoSeriousAxeViolations(page);

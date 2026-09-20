@@ -19,6 +19,8 @@ export const MAX_UPLOAD_BYTES = 20 * 1024 * 1024;
 export const MAX_VIDEO_UPLOAD_BYTES = 12 * 1024 * 1024;
 const ORIGINALS_BUCKET = "editorial-originals";
 const DERIVATIVES_BUCKET = "editorial-derivatives";
+/** D1.7: width of the thumbnail child derivative served for cards and grids. */
+export const THUMB_MAX_WIDTH = 960;
 const DERIVATIVE_MAX_DIMENSION = 2400;
 
 type Signature = Readonly<{ mime: string; matches: (bytes: Buffer) => boolean }>;
@@ -200,6 +202,46 @@ export async function uploadEditorialImage(
   });
   if (finalizeOriginal.error || finalizeDerivative.error) {
     return { ok: false, reason: "finalization_failed", status: 502 };
+  }
+
+  // D1.7 §101: a 960px WebP thumbnail registered as a child of the derivative
+  // (source_asset_id). Cards, strips and gallery grids ask the media route
+  // for it with `?size=thumb`; the full derivative is fetched on demand.
+  // A thumbnail failure never fails the upload — the route falls back.
+  if (!isVideo) {
+    try {
+      const thumb = await sharp(derivativeBytes)
+        .resize({ width: THUMB_MAX_WIDTH, withoutEnlargement: true })
+        .webp({ quality: 78 })
+        .toBuffer({ resolveWithObject: true });
+      const thumbId = randomUUID();
+      const thumbName = `thumb-${safeFilename.replace(/\.[a-z0-9]+$/iu, "")}.webp`;
+      const thumbPath = `${thumbId}/${thumbName}`;
+      const thumbUpload = await client.storage
+        .from(DERIVATIVES_BUCKET)
+        .upload(thumbPath, thumb.data, { contentType: "image/webp", upsert: false });
+      if (!thumbUpload.error) {
+        const thumbRegistration = await client.rpc("register_media_asset", {
+          target_id: thumbId,
+          target_bucket_id: DERIVATIVES_BUCKET,
+          target_object_path: thumbPath,
+          target_mime_type: "image/webp",
+          target_byte_size: thumb.data.byteLength,
+          target_checksum_sha256: createHash("sha256").update(thumb.data).digest("hex"),
+          target_media_kind: mediaKind,
+          target_provenance_class: provenance.derivative,
+          target_original_filename: thumbName,
+          target_source_asset_id: derivativeId,
+          target_width: thumb.info.width,
+          target_height: thumb.info.height,
+        });
+        if (!thumbRegistration.error) {
+          await client.rpc("finalize_media_upload", { target_id: thumbId, expected_version: 1 });
+        }
+      }
+    } catch {
+      // thumbnail is optional
+    }
   }
 
   return {

@@ -876,6 +876,25 @@ li[data-focused="true"] .mobile-route-row > a strong {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
 }
+.public-menu-staff {
+  justify-self: start;
+  margin-block-start: 0.5rem;
+  font-family: var(--public-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--public-on-ink-muted);
+  text-decoration: none;
+  border-block-end: 1px solid color-mix(in srgb, var(--paper) 25%, transparent);
+  padding-block-end: 0.15rem;
+}
+.public-menu-staff:hover {
+  color: var(--paper);
+}
+.public-menu-staff:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
 .public-menu-footer {
   position: sticky;
   bottom: 0;
@@ -1022,119 +1041,127 @@ li[data-focused="true"] .mobile-route-row > a strong {
   }
 }
 
-/* ---------- Footer ---------- */
+/* ---------- Footer (D1.7 classic) ---------- */
 
 .site-footer {
   position: relative;
-  overflow: hidden;
-  padding-block: clamp(4rem, 8vw, 7rem) 2rem;
-}
-.site-footer-field {
-  opacity: 0.45;
+  padding-block: clamp(3.5rem, 6vw, 5.5rem) 0;
+  border-block-start: 1px solid color-mix(in srgb, var(--gold) 55%, transparent);
 }
 .site-footer-inner {
-  position: relative;
   display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  gap: clamp(2rem, 4vw, 4rem) var(--col-gap);
+  grid-template-columns: minmax(0, 5fr) repeat(3, minmax(0, 2.4fr));
+  gap: clamp(2rem, 4vw, 3.5rem) clamp(1.5rem, 3vw, 3rem);
+  padding-block-end: clamp(2.5rem, 4vw, 3.5rem);
 }
-.site-footer-statement {
-  grid-column: 1 / span 7;
+.site-footer-brand {
   display: grid;
-  gap: 1.25rem;
+  gap: 1.1rem;
   justify-items: start;
+  align-content: start;
+  padding-inline-end: clamp(0rem, 4vw, 3rem);
 }
-.site-footer-statement h2 {
-  margin: 0;
-  font-size: var(--step-4);
-  max-width: 14ch;
+.site-footer-headline {
+  margin: 0.4rem 0 0;
+  font-size: var(--step-3);
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  max-width: 16ch;
 }
 .site-footer-lede {
-  max-width: 48ch;
+  margin: 0;
+  max-width: 40ch;
   color: var(--public-on-ink-soft);
 }
-.site-footer-index {
-  grid-column: 8 / span 5;
+.site-footer-column {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1.5rem;
+  gap: 0.75rem;
+  align-content: start;
+  min-width: 0;
 }
-.site-footer-index .datum-label {
+.site-footer-column .datum-label {
   display: block;
-  margin: 0 0 0.85rem;
+  margin: 0 0 0.35rem;
+  padding-block-end: 0.6rem;
+  border-block-end: 1px solid color-mix(in srgb, var(--paper) 14%, transparent);
   color: var(--ochre);
 }
-.site-footer-index ul {
+.site-footer-column ul {
   display: grid;
-  gap: 0.35rem;
+  gap: 0.55rem;
   margin: 0;
   padding: 0;
   list-style: none;
 }
-.site-footer-index a {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6rem;
-  min-height: 2rem;
-  color: var(--public-on-ink-soft);
+.site-footer-column a {
+  color: var(--paper);
+  font-size: 0.98rem;
   text-decoration: none;
-  font-size: 0.95rem;
   transition: color var(--t-micro) var(--ease-out);
 }
-.site-footer-index a:hover {
-  color: var(--paper);
+.site-footer-column a:hover {
+  color: var(--gold);
 }
-.site-footer-index .index-mark {
-  color: var(--ochre);
+.site-footer-column a:focus-visible,
+.site-footer-legal a:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
 }
-.site-footer-contact {
-  display: grid;
-  align-content: start;
-  gap: 0.55rem;
-  font-size: 0.95rem;
-}
-.site-footer-contact a {
-  color: var(--paper);
-  text-decoration: none;
-  overflow-wrap: anywhere;
-}
-.site-footer-contact p {
+.site-footer-contact > a,
+.site-footer-contact > p {
   margin: 0;
-  color: var(--public-on-ink-muted);
+}
+.site-footer-email {
+  overflow-wrap: anywhere;
 }
 .site-footer-whatsapp {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.6rem;
+  justify-self: start;
+  margin-block-start: 0.25rem;
+  padding: 0.55rem 0.95rem 0.55rem 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--whatsapp) 70%, transparent);
+  border-radius: 999px;
+  color: var(--paper);
+  font-size: 0.92rem;
+  text-decoration: none;
+  transition:
+    background-color var(--t-micro) var(--ease-out),
+    border-color var(--t-micro) var(--ease-out);
 }
 .site-footer-whatsapp .whatsapp-glyph {
-  color: var(--ochre);
+  width: 1.15rem;
+  height: 1.15rem;
+  color: var(--whatsapp);
+}
+.site-footer-whatsapp:hover {
+  background: color-mix(in srgb, var(--whatsapp) 14%, transparent);
+  border-color: var(--whatsapp);
+}
+.site-footer-note,
+.site-footer-hours {
+  font-size: 0.82rem;
+  color: var(--public-on-ink-muted);
 }
 .site-footer-social {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  gap: 0.5rem 1rem;
   margin: 0.25rem 0 0;
   padding: 0;
   list-style: none;
 }
-.site-footer-mark {
-  grid-column: 1 / -1;
-  display: flex;
-  justify-content: flex-end;
-  opacity: 0.16;
-  margin-block: -3rem -2rem;
-  pointer-events: none;
-}
 .site-footer-legal {
-  grid-column: 1 / -1;
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  align-items: center;
+  gap: 0.75rem 1.5rem;
+  padding-block: 1.1rem 1.4rem;
+  /* keeps Staff Login and Back to top clear of the floating WhatsApp pill */
+  padding-inline-end: clamp(0rem, 12vw, 14rem);
   border-block-start: 1px solid color-mix(in srgb, var(--paper) 14%, transparent);
-  padding-block-start: 1.25rem;
   font-size: 0.82rem;
   color: var(--public-on-ink-muted);
 }
@@ -1144,82 +1171,59 @@ li[data-focused="true"] .mobile-route-row > a strong {
 .site-footer-legal ul {
   display: flex;
   flex-wrap: wrap;
-  gap: 1.25rem;
+  align-items: center;
+  gap: 0.5rem 1.5rem;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 .site-footer-legal a {
-  color: var(--public-on-ink-soft);
+  color: var(--paper);
   text-decoration: none;
 }
 .site-footer-legal a:hover {
-  color: var(--paper);
+  color: var(--gold);
+}
+.site-footer-staff {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+.site-footer-staff span {
+  font-family: var(--public-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--public-on-ink-muted);
+}
+.site-footer-top {
+  white-space: nowrap;
 }
 
 /* ---------- Footer responsive ---------- */
 
-@media (max-width: 63.99rem) {
-  .site-footer-statement,
-  .site-footer-index {
+@media (max-width: 64rem) {
+  .site-footer-inner {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .site-footer-brand {
     grid-column: 1 / -1;
-  }
-  .site-footer-mark {
-    justify-content: flex-start;
-    margin-block: -1rem 0;
-  }
-  .site-footer-mark .preview-renz-symbol {
-    width: 8rem;
-    height: 8rem;
+    padding-inline-end: 0;
   }
 }
-@media (max-width: 47.99rem) {
-  .site-footer-index {
-    grid-template-columns: 1fr 1fr;
+@media (max-width: 40rem) {
+  .site-footer-inner {
+    grid-template-columns: 1fr;
+    gap: 2rem;
   }
-  .site-footer-contact {
-    grid-column: 1 / -1;
-  }
-}
-
-/* Floating WhatsApp (texting only): squared datum pill in the site register. */
-.public-site .floating-whatsapp {
-  gap: 0.7rem;
-  padding: 0.8rem 0.9rem;
-  border: 1px solid color-mix(in srgb, var(--gold) 55%, transparent);
-  border-radius: 999px;
-  background: var(--ink);
-  color: var(--paper);
-  box-shadow: 0 0.75rem 1.75rem rgb(7 25 35 / 0.28);
-  transition:
-    transform var(--t-micro) var(--ease-out),
-    border-color var(--t-micro) var(--ease-out),
-    box-shadow var(--t-micro) var(--ease-out);
-}
-.public-site .floating-whatsapp svg {
-  color: var(--gold);
-}
-.public-site .floating-whatsapp span {
-  font-weight: 600;
-  letter-spacing: 0.01em;
-}
-.public-site .floating-whatsapp:hover,
-.public-site .floating-whatsapp:focus-visible {
-  border-color: var(--gold);
-  transform: translateY(-0.15rem);
-}
-.public-site .floating-whatsapp:focus-visible {
-  outline: 2px solid var(--gold);
-  outline-offset: 3px;
-}
-/* Keep the footer's legal row clear of the pill. */
-.site-footer-legal {
-  padding-block-end: 3.75rem;
-}
-@media (min-width: 61.99rem) {
   .site-footer-legal {
-    padding-block-end: 0;
-    padding-inline-end: 15rem;
+    flex-direction: column;
+    align-items: flex-start;
+    padding-inline-end: 0;
+    padding-block-end: 5rem;
+  }
+  .site-footer-legal ul {
+    gap: 0.6rem 1.25rem;
   }
 }
 

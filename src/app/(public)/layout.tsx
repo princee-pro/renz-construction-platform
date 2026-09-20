@@ -48,6 +48,7 @@ export default async function PublicLayout({ children }: PublicLayoutProps) {
           whatsappLabel: globals.copy.whatsapp_cta_label,
           menuTagline: globals.copy.menu_tagline,
           allServicesLabel: globals.copy.all_services_label,
+          staffLoginLabel: globals.copy.staff_signin_label,
           whatsappMessage,
         }}
         identity={identity}

@@ -226,7 +226,7 @@ export async function saveProjectAction(
     if (code === "version_conflict") {
       return actionState(
         "conflict",
-        "A newer version was saved by another editor. Your values are preserved; reload the authoritative version before making a new save.",
+        "Someone else updated this record while you were editing. Your entries are kept — load the latest version, then save again.",
         {
           projectVersion: commandVersion(data, "current_version"),
           localizationVersion: commandVersion(data, "current_localization_version"),

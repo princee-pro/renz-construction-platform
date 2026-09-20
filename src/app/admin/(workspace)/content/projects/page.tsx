@@ -90,7 +90,7 @@ export default async function ProjectsPage({ searchParams }: PageProps<"/admin/c
         ) : null}
       </form>
 
-      <section aria-label="Case studies register" className="register-section">
+      <section aria-label="Website projects" className="register-section">
         <ProjectList
           canCreate={access.permissions.includes("content.write")}
           filters={filters}

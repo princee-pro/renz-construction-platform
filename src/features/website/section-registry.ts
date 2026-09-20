@@ -1152,10 +1152,11 @@ export const sectionTypes: readonly SectionTypeDefinition[] = [
       {
         kind: "text",
         key: "staff_signin_label",
-        label: "Staff sign-in label",
+        label: "Staff Login link label",
         max: 40,
         required: true,
       },
+      { kind: "text", key: "staff_signin_note", label: "Staff Login note (footer)", max: 60 },
       {
         kind: "text",
         key: "back_to_top_label",

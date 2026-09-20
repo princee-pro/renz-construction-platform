@@ -108,6 +108,7 @@ export default async function ProjectEditorPage({
         </aside>
       ) : null}
       <ProjectEditor
+        studyProject={presentation ? presentation.evidence_class !== "real_project" : false}
         availableServices={availableServices}
         canArchive={access.permissions.includes("content.archive")}
         canPublish={access.permissions.includes("content.publish")}

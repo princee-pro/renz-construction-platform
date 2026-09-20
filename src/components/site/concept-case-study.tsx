@@ -1,13 +1,19 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import { Reveal, Stagger, StaggerItem } from "@/components/motion/primitives";
+import { Reveal } from "@/components/motion/primitives";
 import { ArrowMark } from "@/components/site/arrow-mark";
-import { ChapterNarrative, type NarrativeChapter } from "@/components/site/chapter-narrative";
+import {
+  ChapterNarrative,
+  type NarrativeChapter,
+  type NarrativePlane,
+} from "@/components/site/chapter-narrative";
 import { DrawingReality } from "@/components/site/drawing-reality";
+import { ProjectGallery, type GalleryMedia } from "@/components/site/project-gallery";
+import { ProjectTile } from "@/components/site/project-cards";
 import { StudyDrawing } from "@/components/site/study-drawing";
-
-import { isApiMediaSrc } from "@/lib/media/public-src";
+import type { ProjectCardData } from "@/features/public-content/data";
+import { isApiMediaSrc, projectMediaSrc } from "@/lib/media/public-src";
 
 /** Everything the concept case study renders, built from the published project (CR1). */
 export type ConceptStudyView = Readonly<{
@@ -24,6 +30,12 @@ export type ConceptStudyView = Readonly<{
   chapters: readonly Readonly<{ title: string; copy: string }>[];
   services: readonly Readonly<{ index: string; slug: string; name: string; positioning: string }>[];
   ctaLabel: string;
+  /** D1.7: the whole gallery in display order (hero first). */
+  gallery: readonly GalleryMedia[];
+  /** D1.7: up to three related studies (same category or service). */
+  related: readonly ProjectCardData[];
+  /** Evidence wording for this study's visuals. */
+  evidence: string;
 }>;
 
 export type ConceptStudyNext = Readonly<{
@@ -35,8 +47,6 @@ export type ConceptStudyNext = Readonly<{
   alt: string;
   badge: string;
 }>;
-
-const provenance = "Generated visual / not RENZ project evidence";
 
 /** Chapter → how the sticky media plane frames the single concept image. */
 const framing = [
@@ -62,30 +72,49 @@ export function ConceptCaseStudy({
   nextProject,
 }: Readonly<{ project: ConceptStudyView; nextProject: ConceptStudyNext | null }>) {
   const relatedServices = project.services;
+  const gallery = project.gallery;
+  const byRole = (...roles: string[]) =>
+    gallery.filter((item) => roles.includes(item.role) && item.role !== "hero");
+  const spaces = byRole("context", "exterior", "interior", "dusk", "video");
+  const drawings = byRole("drawing");
+  const details = byRole("detail", "process");
+  const plane = (item: GalleryMedia | undefined): NarrativePlane | null =>
+    item && item.kind === "image"
+      ? {
+          src: projectMediaSrc(item.id, "thumb"),
+          alt: item.alt,
+          caption: item.caption,
+          fit: item.role === "drawing" || item.role === "process" ? "contain" : "cover",
+        }
+      : null;
+  // Which gallery image the sticky plane shows while each chapter is read:
+  // brief → hero · site → context/exterior · challenge → hero · approach →
+  // interior · design → interior/exterior · structure → section/plan ·
+  // construction → sequence · materials → detail · final idea → hero.
+  const planes: readonly (NarrativePlane | null)[] = [
+    null,
+    plane(spaces[0]),
+    null,
+    plane(spaces[1] ?? spaces[0]),
+    plane(spaces[1] ?? spaces[0]),
+    plane(drawings.find((item) => /section|plan/iu.test(item.caption ?? "")) ?? drawings[0]),
+    plane(details.find((item) => item.role === "process") ?? drawings[1]),
+    plane(details.find((item) => item.role === "detail") ?? details[0]),
+    null,
+  ];
   const chapters: readonly NarrativeChapter[] = project.chapters.map((chapter, index) => ({
     index: String(index + 1).padStart(2, "0"),
     key: chapter.title.toLowerCase().replace(/[^a-z0-9]+/gu, "-"),
     title: chapter.title,
     copy: chapter.copy,
     moment:
-      index === 2 ? (
-        <figure
-          className="study-detail-crop"
-          style={{ "--crop": "78% 70%" } as React.CSSProperties}
-        >
-          <Image
-            alt={project.alt}
-            fill
-            quality={85}
-            sizes="(max-width: 1024px) 100vw, 50vw"
-            src={project.image}
-            unoptimized={isApiMediaSrc(project.image)}
-          />
-          <figcaption>
-            <span className="concept-badge">Concept detail crop</span>
-            <span>{project.materials}</span>
-          </figcaption>
-        </figure>
+      index === 1 && spaces.length > 0 ? (
+        <ProjectGallery
+          items={spaces.slice(0, 2)}
+          label="Context and spaces"
+          sequence
+          title={project.title}
+        />
       ) : index === 5 ? (
         <DrawingReality
           drawing={<StudyDrawing slug={project.slug} />}
@@ -99,6 +128,13 @@ export function ConceptCaseStudy({
               unoptimized={isApiMediaSrc(project.image)}
             />
           }
+        />
+      ) : index === 7 && details.length > 0 ? (
+        <ProjectGallery
+          items={details.slice(0, 3)}
+          label="Details and process"
+          sequence
+          title={project.title}
         />
       ) : undefined,
   }));
@@ -159,7 +195,7 @@ export function ConceptCaseStudy({
               </div>
             ) : null}
           </dl>
-          <p className="concept-badge study-hero-provenance">{provenance}</p>
+          <p className="concept-badge study-hero-provenance">{project.evidence}</p>
         </div>
       </header>
 
@@ -170,51 +206,35 @@ export function ConceptCaseStudy({
             framing={framing}
             image={project.image}
             imageAlt={project.alt}
-            provenance={provenance}
+            planes={planes}
+            provenance={project.evidence}
           />
         </div>
       </section>
 
-      <section aria-labelledby="study-gallery-title" className="sec tone-limestone study-gallery">
-        <div className="container section-head">
-          <div>
-            <p className="kicker">Close-up details</p>
-            <h2 id="study-gallery-title">Three close-ups of one study.</h2>
+      {gallery.length > 0 ? (
+        <section
+          aria-labelledby="study-gallery-title"
+          className="sec tone-limestone study-gallery"
+          id="gallery"
+        >
+          <div className="container section-head">
+            <div>
+              <p className="kicker">Gallery</p>
+              <h2 id="study-gallery-title">
+                {String(gallery.length).padStart(2, "0")} pieces of one study.
+              </h2>
+            </div>
+            <p>
+              Concept visuals, drawings and a construction sequence for this study. Select any piece
+              to see it large. {project.evidence}.
+            </p>
           </div>
-          <p>
-            Three crops of the same concept image — the edge, the building and the landscape —
-            looked at the way we would look at a site photo during supervision. This is a concept
-            image, not a RENZ project.
-          </p>
-        </div>
-        <Stagger as="ul" className="container study-gallery-grid" gap={0.1}>
-          {[
-            ["Edge", "10% 60%"],
-            ["Building", "50% 45%"],
-            ["Landscape", "88% 55%"],
-          ].map(([label, position], index) => (
-            <StaggerItem as="li" key={label} variant="resolve">
-              <figure
-                className="study-detail-crop study-detail-crop-small"
-                style={{ "--crop": position } as React.CSSProperties}
-              >
-                <Image
-                  alt={project.alt}
-                  fill
-                  quality={85}
-                  sizes="(max-width: 768px) 100vw, 33vw"
-                  src={project.image}
-                  unoptimized={isApiMediaSrc(project.image)}
-                />
-                <figcaption>
-                  <span className="index-mark">{String(index + 1).padStart(2, "0")}</span>
-                  <span>{label}</span>
-                </figcaption>
-              </figure>
-            </StaggerItem>
-          ))}
-        </Stagger>
-      </section>
+          <div className="container">
+            <ProjectGallery items={gallery} title={project.title} />
+          </div>
+        </section>
+      ) : null}
 
       {relatedServices.length > 0 ? (
         <section aria-labelledby="study-services-title" className="sec tone-paper study-services">
@@ -236,6 +256,22 @@ export function ConceptCaseStudy({
               </li>
             ))}
           </ol>
+        </section>
+      ) : null}
+
+      {project.related.length > 0 ? (
+        <section aria-labelledby="related-studies-title" className="sec tone-paper study-related">
+          <div className="container section-head">
+            <div>
+              <p className="kicker">Related studies</p>
+              <h2 id="related-studies-title">More studies like this one.</h2>
+            </div>
+          </div>
+          <div className="container studies-grid studies-grid-related">
+            {project.related.slice(0, 3).map((card, index) => (
+              <ProjectTile index={index} key={card.id} project={card} shape="third" />
+            ))}
+          </div>
         </section>
       ) : null}
 

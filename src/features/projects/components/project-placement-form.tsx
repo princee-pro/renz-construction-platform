@@ -96,16 +96,21 @@ export function ProjectPlacementForm({
                 Real RENZ project (needs reviewed evidence and rights-cleared photographs)
               </option>
               <option value="concept_study">
-                Concept study (generated study of approach — always labelled)
+                Concept study (a generated study of approach — always labelled)
+              </option>
+              <option value="context_study">
+                Rwanda context concept study (designed for a named Rwandan place, never claimed as
+                built — always labelled)
               </option>
               <option value="experience_study">
                 Experience study (illustrative, always labelled)
               </option>
             </select>
             <p className="field-help">
-              A real project requires reviewed evidence, a public-safe location and RENZ-provided
-              media before it can be published. Studies are labelled on every card and page and
-              never count as delivered work.
+              A real project needs reviewed evidence, a public-safe location and RENZ-supplied
+              photographs before it can be published. Studies are labelled on every card and page
+              and never count as completed work. To promote a study, add the evidence and the real
+              photographs first, then change this setting.
             </p>
             {state.fieldErrors["evidenceClass"] ? (
               <p className="field-error">{state.fieldErrors["evidenceClass"]}</p>

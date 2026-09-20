@@ -291,6 +291,40 @@ async function uploadImage(session, filePath, provenance) {
     await rpc(session, "finalize_media_upload", { target_id: derivativeId, expected_version: 1 }),
     "finalize derivative",
   );
+  // D1.7 §101: 960px WebP thumbnail as a child of the derivative (see
+  // src/lib/media/upload-image.ts); the media route serves it for `?size=thumb`.
+  const thumb = await sharp(resized.data)
+    .resize({ width: 960, withoutEnlargement: true })
+    .webp({ quality: 78 })
+    .toBuffer({ resolveWithObject: true });
+  const thumbId = crypto.randomUUID();
+  const thumbName = `thumb-${filename.replace(/\.[a-z0-9]+$/iu, "")}.webp`;
+  const thumbPath = `${thumbId}/${thumbName}`;
+  const thumbUpload = await session.storage
+    .from(DERIVATIVES_BUCKET)
+    .upload(thumbPath, thumb.data, { contentType: "image/webp", upsert: false });
+  if (thumbUpload.error) throw new Error(`Thumb upload failed: ${thumbUpload.error.message}`);
+  ok(
+    await rpc(session, "register_media_asset", {
+      target_id: thumbId,
+      target_bucket_id: DERIVATIVES_BUCKET,
+      target_object_path: thumbPath,
+      target_mime_type: "image/webp",
+      target_byte_size: thumb.data.byteLength,
+      target_checksum_sha256: crypto.createHash("sha256").update(thumb.data).digest("hex"),
+      target_media_kind: "image",
+      target_provenance_class: provenance,
+      target_original_filename: thumbName,
+      target_source_asset_id: derivativeId,
+      target_width: thumb.info.width ?? null,
+      target_height: thumb.info.height ?? null,
+    }),
+    "register thumb",
+  );
+  ok(
+    await rpc(session, "finalize_media_upload", { target_id: thumbId, expected_version: 1 }),
+    "finalize thumb",
+  );
   return derivativeId;
 }
 
@@ -298,13 +332,83 @@ async function uploadImage(session, filePath, provenance) {
 // Concept studies → Projects register
 // ---------------------------------------------------------------------
 
-async function seedConceptStudies(session, admin, serviceIds) {
+async function loadStudies() {
   const { previewProjects } = await loadModule("src/features/client-preview/projects.ts");
+  const { contextStudies, studyMeta } = await loadModule(
+    "src/features/client-preview/project-galleries.ts",
+  );
+  return { studies: [...previewProjects, ...contextStudies], studyMeta };
+}
+
+/** D1.7: the seed's own wording for how a gallery file was made (rights source). */
+function gallerySource(item) {
+  if (item.source === "generated") {
+    return "Generated concept visual (Higgsfield, Seedream 5.0 Lite, 2026-09-20; see public/media/renz-preview/projects/d17-generation-manifest.json). Not project evidence.";
+  }
+  if (item.source === "diagram") {
+    return "Concept diagram drawn by the RENZ website team (scripts/d17-diagrams.mjs). Not project evidence.";
+  }
+  return "Detail crop of the generated concept visual. Not project evidence.";
+}
+
+async function attachGalleryItem(session, admin, projectId, item) {
+  const filePath = join(root, "public", "media", "renz-preview", "projects", item.file);
+  const mediaAssetId = await uploadImage(session, filePath, "generated_reference");
+  const version = (await admin.from("projects").select("version").eq("id", projectId).single()).data
+    .version;
+  const attached = ok(
+    await rpc(session, "admin_attach_project_media", {
+      target_project_id: projectId,
+      expected_version: version,
+      target_media_asset_id: mediaAssetId,
+      target_role: item.role,
+      target_decorative: false,
+      target_alt_text: item.alt,
+      target_caption: item.caption,
+    }),
+    `attach ${item.file}`,
+  );
+  const usage = await admin.from("project_media").select("version").eq("id", attached.id).single();
+  ok(
+    await rpc(session, "admin_clear_and_promote_project_media", {
+      target_project_media_id: attached.id,
+      expected_media_version: usage.data.version,
+      target_rights_holder: "RENZ Construction Services Ltd (generated concept visual)",
+      target_rights_source: gallerySource(item),
+      target_credit: null,
+    }),
+    `promote ${item.file}`,
+  );
+  ok(
+    await rpc(session, "admin_update_media_metadata", {
+      target_id: mediaAssetId,
+      expected_version: (
+        await admin.from("media_assets").select("version").eq("id", mediaAssetId).single()
+      ).data.version,
+      target_alt_text: item.alt,
+      target_caption: item.caption,
+      target_focal_x: 0.5,
+      target_focal_y: 0.5,
+    }),
+    `media metadata ${item.file}`,
+  );
+  return attached.id;
+}
+
+async function seedConceptStudies(session, admin, serviceIds) {
+  const { studies, studyMeta } = await loadStudies();
   const { serviceStudyMap } = await loadModule("src/features/client-preview/service-studies.ts");
   const results = [];
   let index = 0;
-  for (const study of previewProjects) {
+  for (const study of studies) {
     index += 1;
+    const meta = studyMeta[study.slug] ?? {
+      category: study.category,
+      location: null,
+      evidenceClass: "concept_study",
+      featured: index <= 4,
+      gallery: [],
+    };
     const existing = await admin
       .from("project_localizations")
       .select("project_id, projects!inner(publication_status)")
@@ -343,18 +447,18 @@ async function seedConceptStudies(session, admin, serviceIds) {
         target_approach: study.chapters[3]?.copy ?? "",
         target_solution: study.chapters[4]?.copy ?? "",
         target_outcomes: study.chapters[8]?.copy ?? "",
-        target_seo_title: `${study.title} — Concept Study | RENZ`,
-        target_seo_description: `${study.category}. A concept study of approach, not RENZ project evidence.`,
-        target_public_location: null,
-        target_public_location_granularity: null,
-        target_project_type: study.category,
+        target_seo_title: `${study.title} — ${studyLabel(meta)} | RENZ`,
+        target_seo_description: `${meta.category}. ${study.atmosphere}. A concept study, not a completed RENZ project.`,
+        target_public_location: meta.location,
+        target_public_location_granularity: meta.location ? "region" : null,
+        target_project_type: meta.category,
         target_project_scope: null,
         target_renz_role: null,
         target_delivery_status: null,
         target_start_year: null,
         target_completion_year: null,
         target_sort_order: index * 10,
-        target_featured: index <= 4,
+        target_featured: meta.featured,
         target_hero_asset_id: null,
       }),
       `update project ${study.slug}`,
@@ -364,7 +468,7 @@ async function seedConceptStudies(session, admin, serviceIds) {
       await rpc(session, "update_admin_project_presentation", {
         target_id: projectId,
         expected_version: version,
-        target_evidence_class: "concept_study",
+        target_evidence_class: meta.evidenceClass,
         target_layout_hint: "auto",
         target_home_featured: index <= 4,
         target_materials: study.materials,
@@ -448,6 +552,9 @@ async function seedConceptStudies(session, admin, serviceIds) {
       }),
       `media metadata ${study.slug}`,
     );
+    for (const item of meta.gallery) {
+      await attachGalleryItem(session, admin, projectId, item);
+    }
     const currentVersion = (
       await admin.from("projects").select("version").eq("id", projectId).single()
     ).data.version;
@@ -614,10 +721,15 @@ async function rewriteServices(session, admin) {
   return results;
 }
 
-async function rewriteStudies(session, admin) {
-  const { previewProjects } = await loadModule("src/features/client-preview/projects.ts");
+function studyLabel(meta) {
+  return meta?.evidenceClass === "context_study" ? "Rwanda context concept study" : "Concept study";
+}
+
+async function rewriteStudies(session, admin, rewriteSummary = "D1.6 plain-English wording") {
+  const { studies, studyMeta } = await loadStudies();
   const results = [];
-  for (const study of previewProjects) {
+  for (const study of studies) {
+    const meta = studyMeta[study.slug];
     const row = await admin
       .from("project_localizations")
       .select(
@@ -645,18 +757,22 @@ async function rewriteStudies(session, admin) {
         target_approach: study.chapters[3]?.copy ?? "",
         target_solution: study.chapters[4]?.copy ?? "",
         target_outcomes: study.chapters[8]?.copy ?? "",
-        target_seo_title: `${study.title} — Concept Study | RENZ`,
-        target_seo_description: `${study.category}. A concept study, not a completed RENZ project.`,
-        target_public_location: project.public_location,
-        target_public_location_granularity: project.public_location_granularity,
-        target_project_type: study.category,
+        target_seo_title: `${study.title} — ${studyLabel(meta)} | RENZ`,
+        target_seo_description: `${meta?.category ?? study.category}. ${study.atmosphere}. A concept study, not a completed RENZ project.`,
+        target_public_location: meta ? meta.location : project.public_location,
+        target_public_location_granularity: meta
+          ? meta.location
+            ? "region"
+            : null
+          : project.public_location_granularity,
+        target_project_type: meta?.category ?? study.category,
         target_project_scope: project.project_scope,
         target_renz_role: project.renz_role,
         target_delivery_status: project.delivery_status,
         target_start_year: project.start_year,
         target_completion_year: project.completion_year,
         target_sort_order: project.sort_order,
-        target_featured: project.featured,
+        target_featured: meta ? meta.featured : project.featured,
         target_hero_asset_id: project.hero_asset_id,
       }),
       `rewrite project ${study.slug}`,
@@ -683,13 +799,45 @@ async function rewriteStudies(session, admin) {
       );
       version = changed.project_version ?? version;
     }
+    if (meta) {
+      const presentationVersion = (
+        await admin.from("projects").select("version").eq("id", projectId).single()
+      ).data.version;
+      ok(
+        await rpc(session, "update_admin_project_presentation", {
+          target_id: projectId,
+          expected_version: presentationVersion,
+          target_evidence_class: meta.evidenceClass,
+          target_layout_hint: "auto",
+          target_home_featured: meta.featured,
+          target_materials: study.materials,
+          target_tags: [],
+        }),
+        `presentation ${study.slug}`,
+      );
+      // D1.7 galleries: attach any planned item the project does not hold yet
+      // (matched by role + caption), so the mode is safe to re-run.
+      const existingMedia = await admin
+        .from("project_media")
+        .select("id, role, project_media_localizations(caption)")
+        .eq("project_id", projectId);
+      const held = new Set(
+        (existingMedia.data ?? []).map(
+          (row) => `${row.role}::${row.project_media_localizations?.[0]?.caption ?? ""}`,
+        ),
+      );
+      for (const item of meta.gallery) {
+        if (held.has(`${item.role}::${item.caption}`)) continue;
+        await attachGalleryItem(session, admin, projectId, item);
+      }
+    }
     const current = await admin.from("projects").select("version").eq("id", projectId).single();
     ok(
       await rpc(session, "republish_content", {
         content_type: "project",
         target_id: projectId,
         expected_version: current.data.version,
-        summary: "D1.6 plain-English wording",
+        summary: rewriteSummary,
       }),
       `republish project ${study.slug}`,
     );
@@ -912,6 +1060,15 @@ async function main() {
   if (only.has("--heroes")) {
     const heroes = await seedHeroLoops(session, admin);
     console.log(JSON.stringify({ ok: true, mode: "heroes", heroes }, null, 2));
+    return;
+  }
+  if (only.has("--galleries")) {
+    // D1.7: create the studies that do not exist yet (07–12), then bring every
+    // study to its category, context wording, evidence class and gallery.
+    const serviceIds = await seedServices(session, admin);
+    const created = await seedConceptStudies(session, admin, serviceIds);
+    const projects = await rewriteStudies(session, admin, "D1.7 galleries and context");
+    console.log(JSON.stringify({ ok: true, mode: "galleries", created, projects }, null, 2));
     return;
   }
   if (only.has("--rewrite-copy")) {

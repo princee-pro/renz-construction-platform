@@ -65,6 +65,7 @@ export default async function WebsitePreviewPage({
           whatsappLabel: context.globals.copy.whatsapp_cta_label,
           menuTagline: context.globals.copy.menu_tagline,
           allServicesLabel: context.globals.copy.all_services_label,
+          staffLoginLabel: context.globals.copy.staff_signin_label,
           whatsappMessage,
         }}
         identity={context.identity}

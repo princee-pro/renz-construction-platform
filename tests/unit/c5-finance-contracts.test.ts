@@ -199,8 +199,8 @@ describe("C5 money and status helpers", () => {
 });
 
 describe("C5 navigation", () => {
-  it("adds a Finance group with only real pages and no future finance items", () => {
-    const finance = adminNavigation.filter((item) => item.group === "Finance");
+  it("adds a Money group with only real pages and no future finance items", () => {
+    const finance = adminNavigation.filter((item) => item.group === "Money");
     expect(finance.map((item) => item.href)).toEqual([
       "/admin/finance",
       "/admin/finance/invoices",

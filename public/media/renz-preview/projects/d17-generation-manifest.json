@@ -1,0 +1,92 @@
+{
+  "kigali-infill-apartments-hero": {
+    "id": "6396f58a-5d04-49e6-880a-a6bfbdf95142",
+    "model": "seedream_v5_lite",
+    "seed": 635685,
+    "width": 2688,
+    "height": 3584,
+    "generated_at": "2026-09-20T08:23:23.952954Z",
+    "prompt": "Architectural visualisation, photorealistic, eye-level view from across a narrow sloping city street in a dense hillside neighbourhood in Kigali, Rwanda. A compact five-storey infill apartment building with a mixed-use ground floor: warm brick and board-marked concrete, deep shaded balconies with slim steel screens, urban planting in concrete troughs, a small shop front at street level. Neighbouring buildings tight on both sides, red-brown soil verges, motorcycle taxis and pedestrians blurred in the foreground, terraced hills with dense houses in the background. Bright overcast late-morning daylight, soft shadows, neutral colour temperature. No signage text, no flags, no logos, no visible lettering."
+  },
+  "musanze-highlands-lodge-hero": {
+    "id": "ebefc4f7-ccd2-475a-85cc-3c9782a50afa",
+    "model": "seedream_v5_lite",
+    "seed": 899936,
+    "width": 4096,
+    "height": 2304,
+    "prompt": "Architectural visualisation, photorealistic, early morning in the cool northern highlands near Musanze, Rwanda. A low-rise hospitality lodge: a base of dark volcanic stone walls, timber-clad upper volumes, controlled pitched roofs with deep overhangs, two courtyards, covered walkways between pavilions. Mist hanging over dense green mountain vegetation and eucalyptus, a volcano silhouette far behind in haze, wet stone paths, warm interior light glowing through timber screens while the exterior stays cool and blue-grey. Camera slightly elevated, wide shot. No signage, no flags, no logos, no text.",
+    "generated_at": "2026-09-20T08:25:32.116006Z"
+  },
+  "bugesera-logistics-hub-hero": {
+    "id": "d25b085a-e3c5-4961-a713-47f3bf002cdd",
+    "model": "seedream_v5_lite",
+    "seed": 180549,
+    "width": 4096,
+    "height": 2304,
+    "prompt": "Architectural visualisation, photorealistic, high drone view at midday in strong equatorial daylight over an open, low-slope site in Bugesera district, eastern Rwanda. A large logistics hub: long precast concrete and steel warehouse halls with deep loading canopies, a row of loading bays with trucks, ridge ventilation, a small concrete administration block at the entrance, wide asphalt yard circulation with clear painted lanes, rain drainage channels, a landscape buffer of acacia trees and dry grass, red-brown earth at the edges, big flat-bottomed clouds. Hot, bright, high-contrast light, hard short shadows. No signage, no flags, no logos, no text.",
+    "generated_at": "2026-09-20T08:26:50.912179Z"
+  },
+  "huye-learning-courtyard-hero": {
+    "id": "9b3e8db1-23e4-481b-a67d-207be3da8763",
+    "model": "seedream_v5_lite",
+    "seed": 532080,
+    "width": 4096,
+    "height": 2304,
+    "prompt": "Architectural visualisation, photorealistic, view from inside a shaded brick arcade looking across a central courtyard of a school in Huye, southern Rwanda. Simple durable single- and two-storey classroom wings in local clay brick with covered walkways, exposed timber roof structure, wide overhangs, louvred openings for natural ventilation, a large shade tree and a rain garden in the courtyard, benches, red-brown gravel paths. Bright daylight with dappled shade, warm brick against a deep blue sky, human scale, no people faces visible, only distant silhouettes. No signage, no flags, no logos, no text.",
+    "generated_at": "2026-09-20T08:27:55.819127Z"
+  },
+  "rubavu-lakeside-residences-hero": {
+    "id": "257f494a-5c19-4ed6-9eb7-f097ef63569e",
+    "model": "seedream_v5_lite",
+    "seed": 781160,
+    "width": 4096,
+    "height": 2304,
+    "prompt": "Architectural visualisation, photorealistic, late afternoon in soft golden-blue light on the shore of Lake Kivu near Rubavu, Rwanda. Terraced residences stepping down a gentle slope towards the water: pale lime-plaster walls, low grey stone retaining walls, timber screens and pergolas, generous lake-facing terraces with planting, a stone path down to the shore, calm water with distant hazy hills of the far shore, light palette, lush tropical planting, cool-blue water and warm-cream walls. Camera at terrace level looking along the buildings towards the lake. No signage, no flags, no logos, no text.",
+    "generated_at": "2026-09-20T08:29:01.467614Z"
+  },
+  "rwamagana-production-yard-hero": {
+    "id": "bcd9e090-4a9d-4d07-a360-da49a31d2ba2",
+    "model": "seedream_v5_lite",
+    "seed": 392590,
+    "width": 4096,
+    "height": 2304,
+    "prompt": "Architectural visualisation, photorealistic, blue hour just after sunset in the eastern Rwanda production landscape near Rwamagana. A light-industrial agro-processing yard: repeated modular workshop halls with sawtooth roofs and clerestory glazing glowing from inside, a two-storey admin block in concrete and brick at the gate, a wide loading yard with a parked truck, a landscape buffer of banana plants and grass, low rolling hills behind, cool blue sky with the last orange band at the horizon, wet ground reflecting the lit halls. Camera low and wide from the yard. No signage, no flags, no logos, no text.",
+    "generated_at": "2026-09-20T08:30:11.713171Z"
+  },
+  "musanze-highlands-lodge-interior": {
+    "id": "baf086af-98ab-4999-bad7-93765e6b83f5",
+    "model": "seedream_v5_lite",
+    "seed": 872772,
+    "width": 3584,
+    "height": 2688,
+    "prompt": "Architectural interior visualisation, photorealistic, the lounge of a highland lodge near Musanze, Rwanda, seen from inside on a cool misty morning. Warm timber ceiling and exposed rafters, a wall of dark volcanic stone with a lit fireplace, a long timber window seat, simple woven textiles in natural tones, floor-to-ceiling glazing with timber screens looking out to a wet courtyard, mist and dense green mountain vegetation. Soft grey daylight from outside, warm lamplight inside. No people, no signage, no logos, no text.",
+    "generated_at": "2026-09-20T08:32:15.166134Z"
+  },
+  "bugesera-logistics-hub-process": {
+    "id": "a9e126d6-047a-44a6-9a8e-9a1b7d1853f8",
+    "model": "seedream_v5_lite",
+    "seed": 833408,
+    "width": 4096,
+    "height": 2304,
+    "prompt": "Construction-stage architectural visualisation, photorealistic, a logistics warehouse under construction on a flat open site in Bugesera, eastern Rwanda, at midday in hard bright sunlight. A partially erected galvanised steel portal frame, precast concrete wall panels being craned into place by a mobile crane, a finished concrete floor slab with control joints, stacked panels and rebar in the foreground, red-brown compacted earth, surveying tripod, safety barriers, a few workers in high-visibility vests seen from behind at a distance, acacia trees and dry grass beyond. No signage boards, no company names, no flags, no logos, no text.",
+    "generated_at": "2026-09-20T08:33:20.805022Z"
+  },
+  "huye-learning-courtyard-detail": {
+    "id": "ab4d7699-df9b-4878-8651-cf18b4d1c123",
+    "model": "seedream_v5_lite",
+    "seed": 847607,
+    "width": 2688,
+    "height": 3584,
+    "prompt": "Architectural detail photograph style, photorealistic, close view of a classroom wall at a school in Huye, southern Rwanda: local clay brick laid in a perforated ventilation screen pattern with deep shadows in each opening, a timber louvre window with a concrete lintel, a rainwater downpipe into a gravel drain, a brick bench at the base, bright afternoon sun raking across the texture, warm red-brown brick against a clear blue sky. No people, no signage, no logos, no text.",
+    "generated_at": "2026-09-20T08:34:25.834128Z"
+  },
+  "kigali-infill-apartments-interior": {
+    "id": "d049e776-69b1-4cfc-ace6-31e2f5c9229e",
+    "model": "seedream_v5_lite",
+    "seed": 862539,
+    "width": 3584,
+    "height": 2688,
+    "prompt": "Architectural interior visualisation, photorealistic, a compact apartment living room opening onto a deep shaded balcony in a hillside infill building in Kigali, Rwanda, on an overcast day. Board-marked concrete ceiling, warm brick end wall, polished concrete floor, a slim steel balcony screen with planting in concrete troughs, the balcony looking out over dense terraced hillside houses and green hills under a soft grey sky. Simple furniture in natural timber and neutral fabric. No people, no signage, no logos, no text.",
+    "generated_at": "2026-09-20T08:35:31.03771Z"
+  }
+}

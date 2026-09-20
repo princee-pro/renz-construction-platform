@@ -16,7 +16,7 @@ type AuthShellProps = Readonly<{
 }>;
 
 const modules = [
-  ["01", "Projects", "Operational workspace"],
+  ["01", "Projects", "Sites and progress"],
   ["02", "Clients", "CRM and 360 view"],
   ["03", "Finance", "Invoices and payments"],
   ["04", "Delivery", "Contractors and procurement"],

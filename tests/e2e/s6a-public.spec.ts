@@ -4,7 +4,7 @@ import { expect, test, type Page } from "@playwright/test";
 const publicRoutes = [
   ["/", "From land to landmark"],
   ["/services", "Services for every stage of your project."],
-  ["/projects", "Explore project studies."],
+  ["/projects", "Explore 12 project studies."],
   ["/about", "One team from planning to handover."],
   ["/insights", "Simple guides for planning and building."],
   ["/contact", "Tell us about your project."],
@@ -57,12 +57,15 @@ test.describe.serial("RENZ S6A public experience", () => {
 
   test("renders labelled preview studies without fabricating proof", async ({ page }) => {
     await page.goto("/projects");
-    await expect(page.getByRole("heading", { name: "Six sites, six ideas." })).toBeVisible();
-    // Every study card carries the concept label; none reads as delivered work.
-    await expect(page.locator(".study-card")).toHaveCount(6);
-    for (const card of await page.locator(".study-card").all()) {
-      await expect(card.getByText(/Concept study/iu).first()).toBeAttached();
+    // D1.7: twelve studies, the count is data-driven, every tile is labelled.
+    await expect(
+      page.getByRole("heading", { name: "Twelve places, twelve different answers." }),
+    ).toBeVisible();
+    await expect(page.locator(".study-tile")).toHaveCount(12);
+    for (const tile of await page.locator(".study-tile").all()) {
+      await expect(tile.getByText(/concept study/iu).first()).toBeAttached();
     }
+    await expect(page.getByText("Rwanda context concept study").first()).toBeVisible();
     await expect(
       page.getByRole("status").filter({ hasText: /none is a completed RENZ project/iu }),
     ).toBeVisible();

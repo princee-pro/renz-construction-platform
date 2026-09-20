@@ -22,12 +22,21 @@ export type NarrativeChapter = Readonly<{
  * authoritative; the observer only records which chapter is being read so
  * the index and the media framing follow. No scroll hijack.
  */
+export type NarrativePlane = Readonly<{
+  src: string;
+  alt: string;
+  caption: string | null;
+  /** Diagrams are shown whole (contain); photographs fill the plane (cover). */
+  fit?: "cover" | "contain";
+}>;
+
 export function ChapterNarrative({
   chapters,
   image,
   imageAlt,
   provenance,
   framing,
+  planes,
 }: Readonly<{
   chapters: readonly NarrativeChapter[];
   image: string;
@@ -35,9 +44,17 @@ export function ChapterNarrative({
   provenance: string;
   /** object-position per chapter so the sticky plane "reads" the image. */
   framing: readonly string[];
+  /** D1.7: an optional gallery image per chapter for the sticky plane (null → the hero). */
+  planes?: readonly (NarrativePlane | null)[];
 }>) {
   const [active, setActive] = useState(0);
   const refs = useRef<(HTMLElement | null)[]>([]);
+  const hero: NarrativePlane = { src: image, alt: imageAlt, caption: null };
+  const activePlane = planes?.[active] ?? hero;
+  const distinctPlanes = [
+    hero,
+    ...(planes ?? []).filter((plane): plane is NarrativePlane => plane !== null),
+  ].filter((plane, index, list) => list.findIndex((other) => other.src === plane.src) === index);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -108,19 +125,29 @@ export function ChapterNarrative({
 
       <figure className="narrative-media" data-active={active}>
         <div className="narrative-media-frame">
-          <Image
-            alt={imageAlt}
-            fill
-            quality={86}
-            sizes="(max-width: 1024px) 100vw, 40vw"
-            src={image}
-            unoptimized={isApiMediaSrc(image)}
-            style={{ objectPosition: framing[active] ?? "50% 50%" }}
-          />
+          {distinctPlanes.map((plane) => (
+            <Image
+              alt={plane.alt}
+              className="narrative-plane"
+              data-active={plane.src === activePlane.src ? "true" : "false"}
+              data-fit={plane.fit ?? "cover"}
+              fill
+              key={plane.src}
+              loading={plane.src === image ? "eager" : "lazy"}
+              quality={86}
+              sizes="(max-width: 1024px) 100vw, 40vw"
+              src={plane.src}
+              unoptimized={isApiMediaSrc(plane.src)}
+              style={{
+                objectPosition: plane.src === image ? (framing[active] ?? "50% 50%") : "50% 50%",
+              }}
+            />
+          ))}
         </div>
         <figcaption>
           <span className="datum-label">
             {chapters[active]?.index} / {chapters[active]?.title}
+            {activePlane.caption ? ` · ${activePlane.caption}` : ""}
           </span>
           <span className="concept-badge">{provenance}</span>
         </figcaption>

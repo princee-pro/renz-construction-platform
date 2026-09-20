@@ -148,8 +148,8 @@ describe("S5A administration states", () => {
     const { rerender } = render(
       <ServiceList canCreate filters={defaultFilters} result={emptyResult} />,
     );
-    expect(screen.getByRole("heading", { name: "No service drafts yet" })).toBeTruthy();
-    expect(screen.getByRole("link", { name: "Create first draft" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "No services yet" })).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Create the first service" })).toBeTruthy();
 
     rerender(
       <ServiceList

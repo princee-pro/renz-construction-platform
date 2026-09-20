@@ -149,8 +149,8 @@ export default async function AdminOverviewPage() {
   return (
     <main className="workspace-page" id="main-content">
       <PageHeader
-        description="Live position across leads, projects, finance and delivery — what needs attention first, then the detail."
-        eyebrow="Restricted workspace"
+        description="Where things stand across leads, projects, money and site work — what needs attention first, then the detail."
+        eyebrow="Your business today"
         status={
           canReadOperations || canReadClients || canReadDelivery || canReadLeads ? (
             <RealtimeRefresh
@@ -526,7 +526,7 @@ export default async function AdminOverviewPage() {
       <section aria-labelledby="service-status-heading" className="overview-section">
         <div className="section-heading-row">
           <div>
-            <p className="eyebrow">Services register</p>
+            <p className="eyebrow">Services</p>
             <h2 id="service-status-heading">Editorial state</h2>
           </div>
           <Link className="text-link" href="/admin/content/services">

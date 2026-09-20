@@ -240,16 +240,17 @@ describe("C4 shared action helpers", () => {
 });
 
 describe("C4 admin information architecture", () => {
-  it("groups Operations apart from Website and hides items the actor cannot read", () => {
+  it("groups Work apart from Website and hides items the actor cannot read", () => {
     const groups = new Set(adminNavigation.map((item) => item.group));
+    // D1.7 owner IA: Overview, Work, Delivery, Money, Website, Business, System.
     expect([...groups]).toEqual([
       "Overview",
-      "Operations",
-      "Procurement",
-      "Finance",
+      "Work",
+      "Delivery",
+      "Money",
       "Website",
-      "Settings",
-      "Security",
+      "Business",
+      "System",
     ]);
     // Invoices (C5), Contractors / Procurement (C6) and Leads (C8) are real pages;
     // Leads sits above Clients because it comes first in the customer lifecycle.

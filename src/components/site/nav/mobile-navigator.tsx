@@ -323,6 +323,9 @@ export function MobileNavigator({
                 </span>
                 <span>{contact.email}</span>
               </a>
+              <Link className="public-menu-staff" href="/admin/sign-in" onClick={closeMenu}>
+                {copy.staffLoginLabel}
+              </Link>
             </aside>
           </div>
           <footer className="public-menu-footer">

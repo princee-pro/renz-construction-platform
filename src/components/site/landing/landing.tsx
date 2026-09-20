@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { Fragment, type ReactNode } from "react";
 
@@ -10,6 +11,7 @@ import {
   type CinematicVideo,
 } from "@/components/site/landing/cinematic-media";
 import { FilmStrip, type FilmFrame } from "@/components/site/landing/film-strip";
+import { isApiMediaSrc } from "@/lib/media/public-src";
 import {
   landingSpecs,
   type LandingConcept,
@@ -178,9 +180,28 @@ export function Landing({
           ) : null}
         </Reveal>
 
-        {/* Split concepts: the scene sits in its own plane beside the copy. */}
+        {/* Split concepts: the scene sits in its own plane beside the copy. With a
+            poster (D1.7 §63–64) the photograph sits muted under the drawing. */}
         {!spec.overlay && layout === "split" ? (
-          <div aria-hidden="true" className="landing-plane">
+          <div
+            aria-hidden="true"
+            className={`landing-plane${poster ? " landing-plane-photo" : ""}`}
+          >
+            {poster ? (
+              <Image
+                alt=""
+                className="landing-plane-image"
+                fill
+                priority
+                quality={80}
+                sizes="(max-width: 64rem) 100vw, 50vw"
+                src={poster.src}
+                style={{
+                  objectPosition: `${Math.round((poster.focalX ?? 0.5) * 100)}% ${Math.round((poster.focalY ?? 0.5) * 100)}%`,
+                }}
+                unoptimized={isApiMediaSrc(poster.src)}
+              />
+            ) : null}
             {aside ?? <LandingScene concept={concept} />}
           </div>
         ) : null}
@@ -200,7 +221,7 @@ export function Landing({
             ))}
           </dl>
         ) : null}
-        {provenance && hasMedia ? (
+        {provenance && (hasMedia || (layout === "split" && poster)) ? (
           <p className="landing-provenance concept-badge">{provenance}</p>
         ) : null}
       </div>

@@ -213,3 +213,27 @@ records where the boundary currently sits.
     the vocabulary becomes CMS-driven.
 46. **Typography licence record**: Manrope (OFL) is self-hosted; add the
     licence text to the repository's third-party notices before release.
+
+## D1.7 carry-forward (hardening only)
+
+47. **Thumbnail backfill**: register a 960 px child for every pre-D1.7
+    editorial derivative (script over `media_assets` without a
+    `source_asset_id` child) so `?size=thumb` never falls back to 2400 px.
+48. **Gallery image weight**: `/projects` loads twelve thumbnails plus the
+    large tile's full derivative; consider `sizes`-driven variants (480 /
+    960 / 1600) once the thumbnail child pipeline is proven in production.
+49. **Storage image transforms**: if the production plan includes Supabase
+    image transformation, prefer `createSignedUrl(..., { transform })` over
+    stored children and delete item 47.
+50. **Admin project list / editor tests**: the S5C project editor and list had
+    no styles until D1.7; add a component test that renders the editor tabs and
+    the gallery workspace so a stylesheet regression is caught.
+51. **Owner workflow E2E**: promote `scripts/d17-owner-test.mjs` (create →
+    gallery → publish → archive through the Admin) into
+    `tests/e2e/cr1-owner-cms.spec.ts` as a second scenario.
+52. **Sitemap evidence labels**: `admin_website_sitemap()` now names the
+    `context_study` class; keep the CASE in sync when classes change (single
+    source: a `private.evidence_class_label()` helper).
+53. **Generated-media rights text**: the seed writes the tool and job id into
+    `rights_source`; the Admin form should offer the same structured fields
+    (tool, job / seed) for owner uploads instead of free text.

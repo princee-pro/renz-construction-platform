@@ -30,6 +30,7 @@ import {
 import type { RenderContext, SectionRenderProps } from "@/components/site/sections/types";
 import { richBlocksSchema } from "@/features/website/section-registry";
 import { compactFacts } from "@/features/website/tokens";
+import { projectMediaSrc } from "@/lib/media/public-src";
 import { mailtoHref } from "@/lib/site/contact-details";
 import { whatsappLink } from "@/lib/site/whatsapp";
 import { interpolate } from "@/features/website/tokens";
@@ -130,9 +131,16 @@ function landingVideo(config: Record<string, unknown>, context: RenderContext) {
   return { sources: [{ src: websiteMediaSrc(media.id), type: mime }] } as const;
 }
 
+/**
+ * Film-archive frames (D1.7 §68–69): the owner's featured studies first (at
+ * most six); when nothing is featured, the first six in display order. The
+ * full index below the landing lists every project.
+ */
 function landingFrames(context: RenderContext): readonly FilmFrame[] {
-  return context.projects
-    .filter((project) => project.media !== null)
+  const withMedia = context.projects.filter((project) => project.media !== null);
+  const featured = withMedia.filter((project) => project.featured);
+  return (featured.length > 0 ? featured : withMedia)
+    .slice(0, 6)
     .map((project) => {
       const media = project.media;
       if (!media) return null;
@@ -141,7 +149,7 @@ function landingFrames(context: RenderContext): readonly FilmFrame[] {
         href: `/projects/${project.slug}`,
         title: project.title,
         category: project.projectType,
-        src: `/api/media/project/${media.projectMediaId}`,
+        src: projectMediaSrc(media.projectMediaId, "thumb"),
         alt: media.alt,
         focalX: media.focalX,
         focalY: media.focalY,

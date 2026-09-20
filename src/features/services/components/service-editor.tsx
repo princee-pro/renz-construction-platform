@@ -339,9 +339,9 @@ export function ServiceEditor({
                   />
                 </Field>
                 <Field
-                  hint="This localization key is fixed after draft creation."
+                  hint="The language is fixed once the draft exists."
                   id="locale-display"
-                  label="Locale"
+                  label="Language"
                 >
                   <input
                     aria-describedby="locale-display-hint"
@@ -351,7 +351,7 @@ export function ServiceEditor({
                     value={values.locale}
                   />
                 </Field>
-                <Field id="sortOrder" label="Sort order" error={errorFor("sortOrder")}>
+                <Field id="sortOrder" label="Order on the website" error={errorFor("sortOrder")}>
                   <input
                     aria-describedby={describedBy("sortOrder")}
                     aria-invalid={Boolean(errorFor("sortOrder"))}
@@ -505,11 +505,11 @@ export function ServiceEditor({
                 <dd>{statusLabel(detail.service.publication_status)}</dd>
               </div>
               <div>
-                <dt>Locale</dt>
+                <dt>Language</dt>
                 <dd>{values.locale}</dd>
               </div>
               <div>
-                <dt>Schema</dt>
+                <dt>Format</dt>
                 <dd>v{detail.localization.schema_version}</dd>
               </div>
               <div>
@@ -581,11 +581,11 @@ export function ServiceEditor({
 
       <dialog className="confirm-dialog" ref={reloadDialog}>
         <div className="confirm-dialog-panel">
-          <p className="eyebrow">Version conflict</p>
-          <h2>Reload the authoritative version?</h2>
+          <p className="eyebrow">Someone else saved first</p>
+          <h2>Load the latest version?</h2>
           <p>
-            Reloading will discard your preserved local values. Copy any needed text before
-            continuing.
+            This record changed while you were editing. Loading the latest version will replace what
+            you typed here — copy any text you want to keep first.
           </p>
           <div className="confirm-actions">
             <Button onClick={() => reloadDialog.current?.close()} tone="primary" type="button">

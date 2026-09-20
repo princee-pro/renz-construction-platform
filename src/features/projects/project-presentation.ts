@@ -6,7 +6,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export const projectPresentationSchema = z.object({
   evidence_class: z
-    .enum(["real_project", "concept_study", "experience_study"])
+    .enum(["real_project", "concept_study", "context_study", "experience_study"])
     .catch("real_project"),
   layout_hint: z
     .enum(["auto", "monument", "portrait", "landscape", "technical", "strip", "wide"])

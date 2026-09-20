@@ -20,6 +20,7 @@ type PublicHeaderProps = Readonly<{
     menuTagline: string;
     whatsappMessage: string;
     allServicesLabel: string;
+    staffLoginLabel: string;
   }>;
 }>;
 
@@ -97,6 +98,7 @@ export function PublicHeader({
         whatsappLabel: copy.whatsappLabel,
         menuTagline: copy.menuTagline,
         allServicesLabel: copy.allServicesLabel,
+        staffLoginLabel: copy.staffLoginLabel,
       }}
       cta={identity.cta}
       navigation={identity.navigation}

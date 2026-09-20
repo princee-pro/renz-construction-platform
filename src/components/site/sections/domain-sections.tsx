@@ -180,7 +180,10 @@ export function ProjectShowcaseSection({ section, context }: SectionRenderProps)
               {rest.map(({ project, composition }, index) => (
                 <ProjectStudyCard
                   composition={
-                    composition === "monument" || composition === "wide" ? "landscape" : composition
+                    // a single follower reads as a wide landscape, never a lone portrait (D1.7 §52)
+                    rest.length === 1 || composition === "monument" || composition === "wide"
+                      ? "landscape"
+                      : composition
                   }
                   delay={0.05 * (index + 1)}
                   index={index + 1}

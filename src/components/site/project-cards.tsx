@@ -8,13 +8,8 @@ import { ImageReveal, Reveal } from "@/components/motion/primitives";
 import { ArrowMark } from "@/components/site/arrow-mark";
 import { StudyDrawing } from "@/components/site/study-drawing";
 import type { ProjectCardData } from "@/features/public-content/data";
-import {
-  deriveProjectFilters,
-  placeProjects,
-  type ProjectComposition,
-} from "@/features/website/project-layout";
-
-import { isApiMediaSrc } from "@/lib/media/public-src";
+import { deriveProjectFilters, type ProjectComposition } from "@/features/website/project-layout";
+import { isApiMediaSrc, projectMediaSrc } from "@/lib/media/public-src";
 
 /**
  * One card family for every published project (CR1 §39–41). Real RENZ
@@ -25,6 +20,7 @@ import { isApiMediaSrc } from "@/lib/media/public-src";
  */
 export function projectBadge(project: ProjectCardData): string | null {
   if (project.evidenceClass === "concept_study") return "Concept study";
+  if (project.evidenceClass === "context_study") return "Rwanda context concept study";
   if (project.evidenceClass === "experience_study") return "Experience study";
   return null;
 }
@@ -219,7 +215,120 @@ export function ProjectStudyCard({
   );
 }
 
-/** The projects index: filters derived from published project types; placement is automatic. */
+/**
+ * Rhythm of the projects index (D1.7 §70): an eight-tile cycle on a
+ * twelve-column grid — one large, two halves, one wide beside one portrait,
+ * three thirds — repeated for any count, so twelve studies never read as
+ * twelve identical cards and a thirteenth simply continues the rhythm.
+ */
+export type TileShape = "large" | "half" | "wide" | "portrait" | "third";
+export const tileCycle: readonly TileShape[] = [
+  "large",
+  "half",
+  "half",
+  "wide",
+  "portrait",
+  "third",
+  "third",
+  "third",
+];
+
+export function tileShape(index: number): TileShape {
+  return tileCycle[index % tileCycle.length] ?? "half";
+}
+
+const tileSizes: Readonly<Record<TileShape, string>> = {
+  large: "(max-width: 768px) 100vw, min(92rem, 100vw)",
+  half: "(max-width: 768px) 100vw, 46vw",
+  wide: "(max-width: 768px) 100vw, 60vw",
+  portrait: "(max-width: 768px) 100vw, 32vw",
+  third: "(max-width: 768px) 100vw, 30vw",
+};
+
+/** One tile of the index: thumbnail, evidence label, index, title and the study's facts. */
+export function ProjectTile({
+  project,
+  index,
+  shape,
+  priority = false,
+}: Readonly<{
+  project: ProjectCardData;
+  index: number;
+  shape: TileShape;
+  priority?: boolean;
+}>) {
+  const href = `/projects/${project.slug}`;
+  const badge = projectBadge(project);
+  const label = `Open ${project.title}${badge ? ` ${badge.toLowerCase()}` : ""}`;
+  const indexMark = String(index + 1).padStart(2, "0");
+  const src = project.media
+    ? projectMediaSrc(project.media.projectMediaId, shape === "large" ? "full" : "thumb")
+    : null;
+  return (
+    <Reveal
+      as="article"
+      className={`study-tile study-tile-${shape}`}
+      delay={Math.min(index % 3, 2) * 0.05}
+      variant="assemble"
+    >
+      <Link aria-label={label} className="study-tile-link" href={href}>
+        <div className="study-tile-media card-hover-media">
+          {src && shape === "large" && project.media ? (
+            // The large tile is the one full-size image of the index; phones and
+            // tablets get its 960px thumbnail instead (D1.7 §101–102).
+            <picture>
+              <source
+                media="(max-width: 64rem)"
+                srcSet={projectMediaSrc(project.media.projectMediaId, "thumb")}
+              />
+              <img
+                alt={project.media.alt}
+                decoding="async"
+                fetchPriority={priority ? "high" : "auto"}
+                loading={priority ? "eager" : "lazy"}
+                src={src}
+                style={focal(project)}
+              />
+            </picture>
+          ) : src ? (
+            <Image
+              alt={project.media?.alt ?? ""}
+              fill
+              loading={priority ? "eager" : "lazy"}
+              priority={priority}
+              quality={82}
+              sizes={tileSizes[shape]}
+              src={src}
+              unoptimized={isApiMediaSrc(src)}
+              style={focal(project)}
+            />
+          ) : (
+            <span aria-hidden="true" className="study-tile-drawing">
+              <StudyDrawing animate={false} slug={project.slug} />
+            </span>
+          )}
+          {badge ? (
+            <span className="media-tag">{badge}</span>
+          ) : (
+            <span className="media-tag media-tag-real">Case study</span>
+          )}
+        </div>
+        <div className="study-tile-copy">
+          <span className="index-mark">{indexMark}</span>
+          <h3>{project.title}</h3>
+          <p className="study-tile-meta">
+            {[project.projectType, project.publicLocation, project.materials]
+              .filter(Boolean)
+              .join(" · ")}
+          </p>
+          <ArrowMark />
+        </div>
+      </Link>
+    </Reveal>
+  );
+}
+
+/** The projects index: category filters from the published project types; placement is the tile rhythm. */
 export function ProjectsIndex({
   projects,
   filtersLabel = "Filter projects",
@@ -239,7 +348,6 @@ export function ProjectsIndex({
       filter === "all" ||
       (project.projectType ?? "").toLowerCase().replace(/[^a-z0-9]+/gu, "-") === filter,
   );
-  const placed = placeProjects(visible);
   const conceptOnly = projects.every((project) => project.evidenceClass !== "real_project");
 
   return (
@@ -263,39 +371,18 @@ export function ProjectsIndex({
       <p className="container studies-count" role="status">
         {countLabel
           ? countLabel(visible.length, projects.length)
-          : `${visible.length} of ${projects.length} ${conceptOnly ? "concept studies · none is a completed RENZ project" : "projects"}`}
+          : `${visible.length} of ${projects.length} ${conceptOnly ? "project studies · none is a completed RENZ project" : "projects"}`}
       </p>
-      <div className="studies-compositions">
-        {placed.map(({ project, composition, index }) => {
-          const full = composition === "monument" || composition === "wide";
-          return (
-            <div className={`studies-slot studies-slot-${composition}`} key={project.id}>
-              {full ? (
-                <ProjectStudyCard
-                  composition={composition}
-                  index={index}
-                  priority={index === 0}
-                  project={project}
-                />
-              ) : (
-                <div className="container">
-                  <ProjectStudyCard
-                    composition={composition}
-                    delay={0.05}
-                    index={index}
-                    priority={index === 0}
-                    project={project}
-                    sizes={
-                      composition === "portrait"
-                        ? "(max-width: 768px) 100vw, 40vw"
-                        : "(max-width: 768px) 100vw, 60vw"
-                    }
-                  />
-                </div>
-              )}
-            </div>
-          );
-        })}
+      <div className="container studies-grid">
+        {visible.map((project, index) => (
+          <ProjectTile
+            index={projects.indexOf(project)}
+            key={project.id}
+            priority={index === 0}
+            project={project}
+            shape={tileShape(index)}
+          />
+        ))}
       </div>
     </section>
   );

@@ -281,6 +281,65 @@ connected; real footage replaces it through the CMS without a code change.
 `final-motion.css` (motion + microinteractions). The legacy header /
 navigation / menu rules were removed from `public.css`.
 
+## 7d. D1.7 — owner experience + portfolio completion (frozen)
+
+**Public composition rule (§49–52).** Every section sits inside the shared
+centred shell (`.container`: `min(100% - 2 × gutter, 92rem)`, `margin-inline:
+auto`); asymmetric editorial grids live inside it. A companion class may not
+reset `margin` (it must use `margin-block`), because that broke centring in
+D1.6 (`service-lines`, `insight-grid`, `people-register`, `service-sequence`,
+`study-gallery-grid`, `testimonial-list`). The process section is the
+**ledger** (`process-story.tsx`, `final-pages.css`): sticky index rail (3/12)
++ stacked two-column panels (9/12); the horizontal scroll-story is retired.
+
+**Footer (§53–60).** Classic four-column footer (`public-footer.tsx`,
+`final-nav.css`): brand + "From land to landmark." + statement + Start a
+Project · Services (dynamic) · Company (dynamic navigation) · Contact (email,
+green WhatsApp pill, note); utility row: © · Privacy · Terms · Cookies ·
+**Staff Login** (+ "RENZ team access" note) · Back to top. No large mark, no
+field drawing. Still owner-managed through Website → Footer / Globals
+(`staff_signin_label`, `staff_signin_note`).
+
+**Staff Login (§35–37).** System navigation, wording "Staff Login": footer
+utility row and the bottom of the mobile navigator, both to `/admin/sign-in`.
+Security is unchanged (auth, MFA, RBAC, RLS; no sign-up).
+
+**Auth (§38–42).** The two-zone sign-in / MFA composition stays; head, form
+and support share one centred 27 rem column; the heading balances; the
+survey marks on the drawing breathe one at a time (`auth-pulse`, off under
+reduced motion).
+
+**Admin (§43–48, §82–88).** Owner navigation groups: Overview · Work (Leads,
+Clients, Projects) · Delivery (Contractors, Materials, Suppliers, Purchase
+Orders) · Money (Finance, Invoices, Contractor Payables) · Website (Website,
+Services, Projects, Insights, Media) · Business (Notifications, Analytics) ·
+System (Settings, Launch Readiness, Security). Plain wording rules from
+`RENZ_PLAIN_ENGLISH_GUIDE.md` apply to the Admin (no "register", "locale",
+"schema", "version conflict", "restricted workspace"). The project editor and
+the content projects list now have styles (tabs, chapters, services
+checklist, gallery workspace with thumbnails and Move up / Move down).
+
+**Portfolio (§7–34, §68–81).** Twelve project studies: the original six plus
+six Rwanda-context studies (evidence class `context_study`, label "Rwanda
+context concept study", location wording "<District> context study"). Public
+category vocabulary: Residential · Hospitality · Workplace · Industrial ·
+Community · Education · Mixed Use. Projects index: featured film strip
+(owner `featured`, at most six) + the **tile rhythm** (`project-cards.tsx`
+`tileCycle`: large · half · half · wide · portrait · third · third · third,
+repeated). Project detail: hero → identity / evidence → story with per-chapter
+sticky planes and inline sequences → drawing ↔ built → full gallery
+(`project-gallery.tsx`, feature 4/6 + small 2/6, dense) → lightbox (native
+dialog; ←/→/Esc; swipe; `#gallery-N`) → related services → related studies →
+next → CTA. Gallery roles: hero, context, exterior, interior, detail,
+process, drawing, dusk, video (+ the S5C ones).
+
+**Media (§28–31, §77, §101).** Generated visuals are `generated_reference`
+with a rights source naming the tool and job; diagrams are drawn by
+`scripts/d17-diagrams.mjs`; every asset gets a 960 px WebP thumbnail child
+at ingestion (`upload-image.ts`, seed) served by
+`/api/media/project/[id]?size=thumb`; the full derivative loads only in the
+lightbox and hero planes.
+
 ## 8. What is explicitly NOT in the freeze
 
 - Real project imagery, testimonials, credentials, partner logos, team
@@ -288,7 +347,9 @@ navigation / menu rules were removed from `public.css`.
 - Generated or real *footage* for every route: the video **system** is
   frozen; the hero media queue (`RENZ_HERO_MEDIA_CONTACT_SHEET.md`) is
   production work for when a generative tool or photography is available.
-- A seventh concept study (queued in `RENZ_FINAL_MEDIA_QUEUE.md`).
+- Photographic secondaries for every gallery role (D1.7 shipped six generated
+  heroes, four generated secondaries and sixty drawn diagrams; the rest of
+  the queue is in `RENZ_HERO_MEDIA_CONTACT_SHEET.md`).
 - Any change to intake, leads, procurement, finance, auth, analytics or
   notification behaviour — D1 touched presentation only, and the C4–C9
   suites plus pgTAP prove it.

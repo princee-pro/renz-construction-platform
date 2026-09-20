@@ -98,8 +98,11 @@ export function ProjectEditor({
   canVerify,
   placementPanel = null,
   revisionsPanel = null,
+  studyProject = false,
 }: Readonly<{
   detail: ProjectDetail & { localization: NonNullable<ProjectDetail["localization"]> };
+  /** D1.7: the project is a concept / context study (from Website placement). */
+  studyProject?: boolean;
   availableServices: readonly { id: string; name: string }[];
   canWrite: boolean;
   canPublish: boolean;
@@ -406,7 +409,11 @@ export function ProjectEditor({
               </div>
 
               <div className="field-grid field-grid-two">
-                <Field error={saveState.fieldErrors["sortOrder"]} id="sortOrder" label="Sort order">
+                <Field
+                  error={saveState.fieldErrors["sortOrder"]}
+                  id="sortOrder"
+                  label="Order on the website"
+                >
                   <input
                     defaultValue={detail.project.sort_order}
                     id="sortOrder"
@@ -627,6 +634,7 @@ export function ProjectEditor({
               projectId={detail.project.id}
               projectVersion={projectVersion}
               stages={detail.stages}
+              studyProject={studyProject}
             />
           ) : null}
 

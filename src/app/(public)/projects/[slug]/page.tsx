@@ -10,12 +10,15 @@ import {
   RealProjectCaseStudy,
   type RealProjectMediaView,
 } from "@/components/site/real-project-case-study";
+import type { GalleryMedia } from "@/components/site/project-gallery";
+import type { PublicProjectMedia } from "@/features/public-content/contracts";
 import {
   getPublishedProjectBySlug,
   getPublishedProjectCards,
   getPublishedProjectClaims,
   getPublishedProjectMedia,
   getPublishedProjectServiceLinks,
+  getAllPublishedProjectServiceLinks,
 } from "@/features/public-content/data";
 import { getPublicServiceCategories } from "@/features/services/service-source";
 import { resolveRouteAlias } from "@/features/website/data";
@@ -33,7 +36,61 @@ const chapterOrder: readonly [string, string][] = [
 ];
 
 function studyBadge(evidenceClass: string): string {
-  return evidenceClass === "experience_study" ? "Experience study" : "Concept study";
+  if (evidenceClass === "experience_study") return "Experience study";
+  if (evidenceClass === "context_study") return "Rwanda context concept study";
+  return "Concept study";
+}
+
+/** Evidence wording for a media item (D1.7 §31): generated concept, client photo or RENZ record. */
+function mediaEvidence(provenanceClass: string | null): string {
+  switch (provenanceClass) {
+    case "client_original":
+    case "client_derivative":
+      return "Client supplied";
+    case "production":
+      return "RENZ project record";
+    default:
+      return "Generated concept visual / not RENZ project evidence";
+  }
+}
+
+const galleryRoleOrder = [
+  "hero",
+  "context",
+  "exterior",
+  "interior",
+  "detail",
+  "process",
+  "drawing",
+  "dusk",
+  "video",
+];
+
+/** The published media as gallery pieces (D1.7 §19–20): role order, then the owner's order. */
+function galleryItems(media: readonly PublicProjectMedia[]): readonly GalleryMedia[] {
+  const posters = new Map(
+    media.filter((item) => item.role === "video_poster").map((item) => [item.projectId, item.id]),
+  );
+  return media
+    .filter((item) => item.role !== "video_poster")
+    .map((item) => ({
+      id: item.id,
+      role: item.role,
+      kind: item.mimeType?.startsWith("video/") ? ("video" as const) : ("image" as const),
+      alt: item.decorative ? "" : (item.altText ?? ""),
+      caption: item.caption,
+      evidence: mediaEvidence(item.provenanceClass),
+      width: item.width,
+      height: item.height,
+      focalX: item.focalX,
+      focalY: item.focalY,
+      posterId: item.mimeType?.startsWith("video/") ? (posters.get(item.projectId) ?? null) : null,
+    }))
+    .sort((a, b) => {
+      const ra = galleryRoleOrder.indexOf(a.role);
+      const rb = galleryRoleOrder.indexOf(b.role);
+      return (ra < 0 ? 99 : ra) - (rb < 0 ? 99 : rb);
+    });
 }
 
 export async function generateMetadata({
@@ -66,13 +123,14 @@ export default async function ProjectDetailPage({ params }: PageProps<"/projects
     notFound();
   }
 
-  const [claims, media, serviceLinks, allServices, cards, identity] = await Promise.all([
+  const [claims, media, serviceLinks, allServices, cards, identity, allLinks] = await Promise.all([
     getPublishedProjectClaims(project.id),
     getPublishedProjectMedia(project.id),
     getPublishedProjectServiceLinks(project.id),
     getPublicServiceCategories(),
     getPublishedProjectCards(),
     getSiteIdentity(),
+    getAllPublishedProjectServiceLinks(),
   ]);
   const serviceById = new Map(allServices.map((service) => [service.id, service]));
   const relatedServices = serviceLinks
@@ -95,6 +153,22 @@ export default async function ProjectDetailPage({ params }: PageProps<"/projects
               copy: (project as unknown as Record<string, string | null>)[key] ?? "",
             }))
             .filter((chapter) => chapter.copy);
+    // Related studies (D1.7 §22): same category first, then studies sharing a
+    // service, in display order; never the study itself.
+    const sharedServiceIds = new Set(serviceLinks.map((link) => link.serviceId));
+    const related = [
+      ...siblings.filter(
+        (card) => card.id !== project.id && card.projectType === project.projectType,
+      ),
+      ...siblings.filter(
+        (card) =>
+          card.id !== project.id &&
+          card.projectType !== project.projectType &&
+          allLinks.some(
+            (link) => link.projectId === card.id && sharedServiceIds.has(link.serviceId),
+          ),
+      ),
+    ].slice(0, 3);
     const view: ConceptStudyView = {
       index: String((position >= 0 ? position : 0) + 1).padStart(2, "0"),
       slug: project.slug,
@@ -114,6 +188,9 @@ export default async function ProjectDetailPage({ params }: PageProps<"/projects
         positioning: service.positioning,
       })),
       ctaLabel: identity.cta.label,
+      gallery: galleryItems(media),
+      related,
+      evidence: mediaEvidence(hero.provenanceClass),
     };
     const next: ConceptStudyNext | null = nextCard
       ? {

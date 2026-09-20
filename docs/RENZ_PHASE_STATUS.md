@@ -3,7 +3,7 @@
 Single source of truth for where the RENZ Construction Services Ltd build is.
 Update this file at the end of every phase; do not let it drift.
 
-Last updated: 2026-09-19 (end of D1.6 — client final art direction; C10 next).
+Last updated: 2026-09-20 (end of D1.7 — owner experience + portfolio completion; FINAL PRODUCT FREEZE; C10 next).
 
 ## DONE
 
@@ -36,9 +36,11 @@ domain changes require a bug or security justification.
 
 | D1.6 | Client final art direction (presentation + content, one function-only migration): plain-English rewrite of every public page (website_pages revision 2 via migration `20260920100000`, services / studies / insights as content revision 2 via `website-seed-content.mjs --rewrite-copy`, JSX form / label / error wording, public intake labels split from staff labels), bounded audit `scripts/d16-copy-audit.mjs`; typography audition (Poppins / Manrope / Plus Jakarta Sans) → **Manrope** as the one public family; **RENZ Measured Track** navigation (moving plate + preview mark, services mega panel with related study, "More" overflow for owner-added pages, full-screen mobile navigator with travelling rail); landing system with sixteen route concepts and procedural scenes, film-archive Projects opening, poster-first video engine with save-data / reduced-motion / offscreen rules, CMS video ingestion (media library, picker, hero video field; gate widened by migration `20260920110000`), one rendered concept loop for Home (`scripts/d16-render-loop.mjs`), motion sheet (button wipe, card blueprint hover, scroll-driven section datums, reading progress); useful 404; legacy nav CSS removed from `public.css`; CMS stress fixtures (`scripts/d16-cms-stress.mjs`: 8 nav links, Service #6, 12 studies); docs: `RENZ_PLAIN_ENGLISH_GUIDE.md`, `RENZ_CINEMATIC_MEDIA_GUIDE.md`, `RENZ_NAVIGATION_SYSTEM.md`, `RENZ_HERO_MEDIA_CONTACT_SHEET.md`, freeze §7c | `docs/RENZ_D16_CLIENT_ART_DIRECTION_REPORT.md`, `src/components/site/nav/*`, `src/components/site/landing/*`, `src/styles/final-landing.css` + `final-motion.css`, `.playwright/screenshots/d1-6/` |
 
+| D1.7 | Owner experience + portfolio expansion + public completion (presentation, content, one evidence-class migration): git checkpoint `f69790b`; public composition repair (process ledger replaces the horizontal story, `margin-block` rule for container companions, balanced showcases); classic four-column footer; **Staff Login** in the footer and mobile navigator; centred sign-in / MFA column with a breathing survey mark; owner Admin IA (Work / Delivery / Money / Website / Business / System), plain wording, styled project editor + gallery workspace (thumbnails, Move up / down, generated-concept confirmation, `>1 MB` attach bug fixed); evidence class `context_study` (migration `20260921100000`); six Rwanda-context studies (07–12) generated with Higgsfield Seedream 5.0 Lite + four secondaries + sixty locally drawn diagrams; galleries (7 pieces each) for all twelve; tile-rhythm index with category filters and featured strip; project detail with per-chapter planes, sequences, full gallery and accessible lightbox; thumbnail derivatives (`?size=thumb`); split-plane posters; owner Project #13 + archive test through the Admin only; docs `RENZ_PROJECT_GALLERY_GUIDE.md`, freeze §7d | `docs/RENZ_D17_OWNER_PORTFOLIO_REPORT.md`, `src/components/site/project-gallery.tsx`, `src/features/client-preview/project-galleries.ts`, `scripts/d17-*.mjs`, `.playwright/screenshots/d1-7/` |
+
 ## DESIGN: FINAL VISUAL FREEZE
 
-D1, D1.5 and D1.6 complete — **public art direction frozen** (`docs/RENZ_DESIGN_FREEZE.md` §7c). Visual changes after this
+D1, D1.5, D1.6 and D1.7 complete — **FINAL PRODUCT FREEZE** (public art direction `docs/RENZ_DESIGN_FREEZE.md` §7c–§7d; functional freeze `docs/RENZ_FUNCTIONAL_FREEZE.md`). D1.7 was the last client-requested product/design revision. Visual changes after this
 point follow the freeze's change control (screenshot round + axe census +
 `d1-visual` capture + a line here). CR1 added one controlled exception under
 that change control: the WhatsApp green system (`RENZ_DESIGN_FREEZE.md` §7b).
@@ -56,6 +58,16 @@ retirement, forced-colours and screen-reader passes.
 - Release
 
 ## Known open items carried forward (not blockers)
+
+- D1.7: the Higgsfield free plan had 10 credits — six heroes and four
+  secondaries were generated; the remaining gallery roles are drawn diagrams
+  and labelled detail crops. Photographic secondaries for every study, MP4 /
+  mobile video and any real footage remain media production (contact sheet).
+- D1.7: media uploaded before 2026-09-20 has no thumbnail child; the media
+  route falls back to the 2400 px derivative for `?size=thumb` until the
+  assets are re-ingested (C10 backlog item 49).
+- D1.7: the original six hero visuals are 1586 × 992 px; their labelled detail
+  crops are soft at lightbox size until higher-resolution renders exist.
 
 - D1.6: no generative video/image tool (Higgsfield) was connected, so the
   hero footage queue in `docs/RENZ_HERO_MEDIA_CONTACT_SHEET.md` is open; the

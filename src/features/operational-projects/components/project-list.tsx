@@ -79,7 +79,7 @@ export function ProjectList({
             </Link>
           )
         }
-        title={filtered ? "No projects match these filters" : "No operational projects yet"}
+        title={filtered ? "No projects match these filters" : "No projects yet"}
       >
         <p>
           {filtered

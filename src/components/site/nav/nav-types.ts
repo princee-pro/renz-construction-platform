@@ -32,6 +32,8 @@ export type NavCopy = Readonly<{
   menuTagline: string;
   /** Owner wording for the mega panel's "all services" cue. */
   allServicesLabel: string;
+  /** "Staff Login" — system navigation to /admin/sign-in (D1.7 §35–36). */
+  staffLoginLabel: string;
 }>;
 
 export function isCurrentPath(pathname: string, href: string): boolean {

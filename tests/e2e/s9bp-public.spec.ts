@@ -14,13 +14,21 @@ const publicRoutes = [
   "/brand-study",
 ] as const;
 
+// D1.7: twelve studies in display order — the six concept studies and the six
+// Rwanda-context studies (their card label differs).
 const conceptProjects = [
-  ["ridge-residence", "Ridge Residence"],
-  ["courtyard-house", "Courtyard House"],
-  ["urban-workspace", "Urban Workspace"],
-  ["lake-retreat", "Lake Retreat"],
-  ["community-pavilion", "Community Pavilion"],
-  ["industrial-campus", "Industrial Campus"],
+  ["ridge-residence", "Ridge Residence", "concept study"],
+  ["courtyard-house", "Courtyard House", "concept study"],
+  ["urban-workspace", "Urban Workspace", "concept study"],
+  ["lake-retreat", "Lake Retreat", "concept study"],
+  ["community-pavilion", "Community Pavilion", "concept study"],
+  ["industrial-campus", "Industrial Campus", "concept study"],
+  ["kigali-infill-apartments", "Kigali Infill Apartments", "rwanda context concept study"],
+  ["musanze-highlands-lodge", "Musanze Highlands Lodge", "rwanda context concept study"],
+  ["bugesera-logistics-hub", "Bugesera Logistics Hub", "rwanda context concept study"],
+  ["huye-learning-courtyard", "Huye Learning Courtyard", "rwanda context concept study"],
+  ["rubavu-lakeside-residences", "Rubavu Lakeside Residences", "rwanda context concept study"],
+  ["rwamagana-production-yard", "Rwamagana Production Yard", "rwanda context concept study"],
 ] as const;
 
 async function visit(page: Page, route: string): Promise<void> {
@@ -102,14 +110,14 @@ test("public routes retain document semantics, noindex, and local media delivery
   }
 });
 
-test("all six labelled concept studies have working details and next-study navigation", async ({
+test("all twelve labelled project studies have working details and next-study navigation", async ({
   page,
 }) => {
-  test.setTimeout(240_000);
+  test.setTimeout(480_000);
   await visit(page, "/projects");
   // CR1: the studies index is rendered from the published projects register.
   const collection = page.getByRole("region", { name: "Concept project studies" });
-  await expect(collection.locator("article")).toHaveCount(6);
+  await expect(collection.locator("article")).toHaveCount(12);
   await expect(
     page.getByRole("status").filter({ hasText: /none is a completed RENZ project/iu }),
   ).toBeVisible();
@@ -118,9 +126,9 @@ test("all six labelled concept studies have working details and next-study navig
     const project = conceptProjects[index];
     const nextProject = conceptProjects[(index + 1) % conceptProjects.length];
     if (!project || !nextProject) throw new Error("The concept verification matrix is incomplete.");
-    const [slug, title] = project;
+    const [slug, title, badge] = project;
     await visit(page, "/projects");
-    const link = page.getByRole("link", { name: `Open ${title} concept study` });
+    const link = page.getByRole("link", { name: `Open ${title} ${badge}` });
     await expect(link).toHaveAttribute("href", `/projects/${slug}`);
     await link.click();
     await expect(page).toHaveURL(new RegExp(`/projects/${slug}$`, "u"));
@@ -128,8 +136,10 @@ test("all six labelled concept studies have working details and next-study navig
     await expect(page.locator(".project-story-chapter")).toHaveCount(9);
     // D1 repeats the provenance line through the study (hero, media plane, gallery).
     await expect(
-      page.getByText("Generated visual / not RENZ project evidence").first(),
+      page.getByText("Generated concept visual / not RENZ project evidence").first(),
     ).toBeVisible();
+    // D1.7: a seven-piece gallery and its lightbox.
+    await expect(page.locator(".gallery-grid .gallery-frame")).toHaveCount(7);
     await expect(
       page.getByRole("navigation", { name: "Case-study chapters" }).getByRole("link"),
     ).toHaveCount(9);

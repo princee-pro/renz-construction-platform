@@ -15,7 +15,12 @@ import { formNumber, formText, type AdminActionState } from "@/features/admin-sh
 import type { Json } from "@/lib/database/database.types";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
-const evidenceClasses = ["real_project", "concept_study", "experience_study"] as const;
+const evidenceClasses = [
+  "real_project",
+  "concept_study",
+  "context_study",
+  "experience_study",
+] as const;
 const layoutHints = [
   "auto",
   "monument",

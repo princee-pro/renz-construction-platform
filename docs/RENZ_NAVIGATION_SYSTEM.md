@@ -101,3 +101,20 @@ Services, More and Menu; arrow keys, Home/End across the track; visible
 focus (gold ring); WCAG AA contrast on both header states; reduced motion
 removes gliding, panel fades and rail travel. Axe serious/critical = 0 with
 the panel and the navigator open.
+
+## Staff Login (D1.7 §35–37)
+
+System navigation, not owner rich text. Wording "Staff Login" (global copy
+`staff_signin_label`), optional note "RENZ team access" (`staff_signin_note`).
+Placement: the footer utility row on every public page and the bottom of the
+mobile navigator's contact block. Destination `/admin/sign-in`; the existing
+redirect, MFA and permission behaviour is unchanged. It never sits next to
+the public conversion actions in the track.
+
+## Footer (D1.7 §53–60)
+
+Classic four-column footer: brand + statement + Start a Project · Services
+(published register) · Company (owner navigation minus Services / Start) ·
+Contact (email, green WhatsApp pill, "messages only" note, location and hours
+only when real); utility row with legal links, Staff Login and Back to top,
+kept clear of the floating WhatsApp pill. Mobile: two columns, then one.

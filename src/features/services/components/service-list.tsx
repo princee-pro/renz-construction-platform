@@ -46,16 +46,16 @@ export function ServiceList({
             </Link>
           ) : canCreate ? (
             <Link className="button button-primary" href="/admin/content/services/new">
-              Create first draft
+              Create the first service
             </Link>
           ) : null
         }
-        title={filtered ? "No services match these filters" : "No service drafts yet"}
+        title={filtered ? "No services match these filters" : "No services yet"}
       >
         <p>
           {filtered
             ? "Adjust or clear the current search and filters."
-            : "The Services register is empty. Create a synthetic draft only for approved engineering verification."}
+            : "Create the first service. It appears on the website once you publish it."}
         </p>
       </EmptyState>
     );

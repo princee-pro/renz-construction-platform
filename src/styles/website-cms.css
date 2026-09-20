@@ -723,3 +723,208 @@
   max-width: 100%;
   border-radius: 0.5rem;
 }
+
+/* ---------- D1.7 Project gallery workspace (Website → Projects → Media) ---------- */
+.project-media-workspace {
+  display: grid;
+  gap: 1.5rem;
+}
+.project-media-workspace .media-upload-form {
+  padding: 1.25rem;
+  border: 1px solid var(--admin-rule);
+  background: var(--admin-surface);
+}
+.media-card-list {
+  display: grid;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: media;
+}
+.media-card-list > .media-card {
+  display: grid;
+  grid-template-columns: 14rem minmax(0, 1fr);
+  gap: 1.25rem;
+  padding: 1rem;
+  border: 1px solid var(--admin-rule);
+  background: #fff;
+}
+.media-card-list .media-card-preview {
+  display: grid;
+  gap: 0.5rem;
+  align-content: start;
+}
+.media-card-list .media-card-preview img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border: 1px solid var(--admin-rule);
+  background: var(--admin-surface);
+}
+.media-card-preview-note {
+  font-size: 0.78rem;
+  color: var(--admin-muted);
+}
+.media-card-list .media-card-meta {
+  display: grid;
+  gap: 0.9rem;
+  min-width: 0;
+}
+.media-card-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.9rem;
+}
+.media-provenance {
+  font-size: 0.8rem;
+  color: var(--admin-muted);
+}
+.media-order-actions {
+  margin-inline-start: auto;
+  align-items: center;
+}
+.media-hero-hint {
+  font-size: 0.75rem;
+  color: var(--admin-muted);
+}
+.media-edit-form,
+.media-rights-form {
+  display: grid;
+  gap: 0.9rem;
+}
+@media (max-width: 48rem) {
+  .media-card-list > .media-card {
+    grid-template-columns: 1fr;
+  }
+  .media-order-actions {
+    margin-inline-start: 0;
+  }
+}
+
+/* ---------- D1.7 Project editor (Website → Projects) ---------- */
+.project-editor {
+  display: grid;
+  gap: 1.5rem;
+}
+.editor-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  padding-block-end: 0.75rem;
+  border-block-end: 1px solid var(--admin-rule);
+}
+.editor-tab {
+  min-height: 2.5rem;
+  padding: 0.45rem 0.9rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--admin-muted);
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    color 160ms ease-out,
+    background-color 160ms ease-out,
+    border-color 160ms ease-out;
+}
+.editor-tab:hover {
+  color: var(--admin-ink);
+  background: var(--admin-surface);
+}
+.editor-tab[aria-current="true"] {
+  color: var(--admin-ink);
+  border-color: var(--admin-accent);
+  background: var(--admin-warning-soft);
+}
+.editor-tab:focus-visible {
+  outline: 2px solid var(--admin-accent);
+  outline-offset: 2px;
+}
+.editor-layout {
+  display: grid;
+  gap: 1.5rem;
+}
+.editor-main {
+  display: grid;
+  gap: 1.5rem;
+  min-width: 0;
+  max-width: 64rem;
+}
+.project-overview-form,
+.project-services-form,
+.project-story-editor,
+.stage-create-form,
+.stage-edit-form {
+  display: grid;
+  gap: 1rem;
+}
+.stage-list {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: stage;
+}
+.stage-list > li {
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--admin-rule);
+  background: #fff;
+}
+.stage-list > li::before {
+  counter-increment: stage;
+  content: "Chapter " counter(stage, decimal-leading-zero);
+  display: block;
+  margin-block-end: 0.5rem;
+  font-family: var(--admin-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--admin-accent-deep);
+}
+.stage-create-form {
+  padding: 1rem 1.1rem;
+  border: 1px dashed var(--admin-rule-strong);
+  background: var(--admin-surface);
+}
+.service-checklist {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  gap: 0.5rem 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.service-checklist li label,
+.service-checklist .check-field {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 2.5rem;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--admin-rule);
+  background: #fff;
+}
+.media-upload-details > summary {
+  cursor: pointer;
+  font-weight: 700;
+  padding: 0.75rem 0;
+  list-style: none;
+}
+.media-upload-details > summary::before {
+  content: "+";
+  display: inline-block;
+  width: 1.5rem;
+  color: var(--admin-accent-deep);
+}
+.media-upload-details[open] > summary::before {
+  content: "–";
+}
+.media-upload-details > summary:focus-visible {
+  outline: 2px solid var(--admin-accent);
+  outline-offset: 2px;
+}

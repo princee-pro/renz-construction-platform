@@ -96,9 +96,9 @@ export function CreateProjectForm() {
           </Field>
           <Field
             error={errorFor("locale")}
-            hint="BCP 47 code; English is the current launch baseline."
+            hint="Language of the text. English (en) for now."
             id="locale"
-            label="Locale"
+            label="Language"
           >
             <input
               aria-describedby={describedBy("locale", true)}
