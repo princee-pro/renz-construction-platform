@@ -8,6 +8,7 @@ import { Alert } from "@/components/admin/ui/alert";
 import { Button } from "@/components/admin/ui/button";
 import { StatusBadge } from "@/components/admin/ui/status-badge";
 import {
+  guardAction,
   initialAdminActionState,
   type AdminActionState,
 } from "@/features/admin-shared/action-state";
@@ -616,7 +617,7 @@ function SectionEditor({
     setSeenClean(clean);
   }
   const [state, formAction, pending] = useActionState(
-    saveWebsiteSectionAction,
+    guardAction(saveWebsiteSectionAction),
     initialAdminActionState,
   );
   const lastHandled = useRef<AdminActionState | null>(null);
@@ -797,7 +798,7 @@ function PageSettingsForm({
 }>) {
   const { page, permissions } = detail;
   const [state, formAction, pending] = useActionState(
-    updateWebsitePageAction,
+    guardAction(updateWebsitePageAction),
     initialAdminActionState,
   );
   const [ogMediaId, setOgMediaId] = useState<string | null>(page.og_media_id);

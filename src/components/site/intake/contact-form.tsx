@@ -13,7 +13,7 @@ import {
 } from "@/components/site/intake/intake-fields";
 import { TurnstileWidget } from "@/components/site/intake/turnstile-widget";
 import { submitContactAction } from "@/features/intake/intake-actions";
-import { initialIntakeActionState } from "@/features/intake/intake-contract";
+import { guardIntakeAction, initialIntakeActionState } from "@/features/intake/intake-contract";
 
 export type IntakeFormContext = Readonly<{
   formToken: string;
@@ -39,7 +39,7 @@ const labels: Readonly<Record<string, string>> = {
  */
 export function ContactForm({ context }: Readonly<{ context: IntakeFormContext }>) {
   const [state, formAction, pending] = useActionState(
-    submitContactAction,
+    guardIntakeAction(submitContactAction),
     initialIntakeActionState,
   );
   const formRef = useRef<HTMLFormElement>(null);

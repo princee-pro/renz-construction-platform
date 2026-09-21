@@ -10,6 +10,7 @@ import { CopyButton } from "@/components/admin/ui/copy-button";
 import { Field } from "@/components/admin/ui/field";
 import { StatusBadge } from "@/components/admin/ui/status-badge";
 import {
+  guardAction,
   initialAdminActionState,
   type AdminActionState,
 } from "@/features/admin-shared/action-state";
@@ -124,35 +125,35 @@ export function InvoiceCommandCenter({
   const [shareUrl, setShareUrl] = useState<string | null>(null);
 
   const [issueState, issueAction, issuePending] = useActionState(
-    issueInvoiceAction,
+    guardAction(issueInvoiceAction),
     initialAdminActionState,
   );
   const [voidState, voidAction, voidPending] = useActionState(
-    voidInvoiceAction,
+    guardAction(voidInvoiceAction),
     initialAdminActionState,
   );
   const [archiveState, archiveAction, archivePending] = useActionState(
-    archiveInvoiceAction,
+    guardAction(archiveInvoiceAction),
     initialAdminActionState,
   );
   const [duplicateState, duplicateAction, duplicatePending] = useActionState(
-    duplicateInvoiceAction,
+    guardAction(duplicateInvoiceAction),
     initialAdminActionState,
   );
   const [paymentState, paymentAction, paymentPending] = useActionState(
-    recordPaymentAction,
+    guardAction(recordPaymentAction),
     initialAdminActionState,
   );
   const [reverseState, reverseAction, reversePending] = useActionState(
-    reversePaymentAction,
+    guardAction(reversePaymentAction),
     initialAdminActionState,
   );
   const [shareState, shareAction, sharePending] = useActionState(
-    createShareLinkAction,
+    guardAction(createShareLinkAction),
     initialAdminActionState,
   );
   const [revokeState, revokeAction, revokePending] = useActionState(
-    revokeShareLinkAction,
+    guardAction(revokeShareLinkAction),
     initialAdminActionState,
   );
 

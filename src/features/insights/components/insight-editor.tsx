@@ -8,6 +8,7 @@ import { Alert } from "@/components/admin/ui/alert";
 import { Button } from "@/components/admin/ui/button";
 import { StatusBadge } from "@/components/admin/ui/status-badge";
 import {
+  guardAction,
   initialAdminActionState,
   type AdminActionState,
 } from "@/features/admin-shared/action-state";
@@ -43,7 +44,7 @@ export function InsightEditor({
   const [dirty, setDirty] = useState(false);
   const [state, formAction, pending] = useActionState(
     async (previous: AdminActionState, formData: FormData) => {
-      const result = await saveInsightAction(previous, formData);
+      const result = await guardAction(saveInsightAction)(previous, formData);
       // Reset the dirty flag inside the action (not in an effect) once the save lands.
       if (result.status === "success") setDirty(false);
       return result;

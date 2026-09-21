@@ -14,7 +14,7 @@ import {
 } from "@/components/site/intake/intake-fields";
 import { TurnstileWidget } from "@/components/site/intake/turnstile-widget";
 import { submitMaterialEnquiryAction } from "@/features/intake/intake-actions";
-import { initialIntakeActionState } from "@/features/intake/intake-contract";
+import { guardIntakeAction, initialIntakeActionState } from "@/features/intake/intake-contract";
 
 const labels: Readonly<Record<string, string>> = {
   fullName: "Name",
@@ -33,7 +33,7 @@ const labels: Readonly<Record<string, string>> = {
  */
 export function MaterialEnquiryForm({ context }: Readonly<{ context: IntakeFormContext }>) {
   const [state, formAction, pending] = useActionState(
-    submitMaterialEnquiryAction,
+    guardIntakeAction(submitMaterialEnquiryAction),
     initialIntakeActionState,
   );
   const [rows, setRows] = useState<number[]>([0, 1]);

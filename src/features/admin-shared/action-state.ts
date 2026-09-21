@@ -67,3 +67,29 @@ export const requiredText = (minimum: number, maximum: number) =>
 
 export const optionalText = (maximum: number) =>
   safePlainText(maximum).transform((value) => (value === "" ? null : value));
+
+/**
+ * R1 §49: a server action that cannot reach the server (offline, dropped
+ * connection, deploy in progress) rejects with a network error; React then
+ * surfaces it to the route error boundary and the operator's unsaved edits
+ * disappear. Wrapped through this guard the failure becomes an ordinary
+ * error state on the form: nothing was sent, every value stays, and the
+ * operator can press the button again once the connection is back.
+ */
+const unreachableMessage =
+  "The server could not be reached, so nothing was saved. Check your connection and try again.";
+
+export function guardAction<
+  State extends { status: "idle" | "error" | "success" | "conflict" | "reauth"; message: string },
+  Payload = FormData,
+>(
+  action: (previous: State, payload: Payload) => Promise<State>,
+): (previous: State, payload: Payload) => Promise<State> {
+  return async (previous, payload) => {
+    try {
+      return await action(previous, payload);
+    } catch {
+      return { ...previous, status: "error", message: unreachableMessage, fieldErrors: {} };
+    }
+  };
+}

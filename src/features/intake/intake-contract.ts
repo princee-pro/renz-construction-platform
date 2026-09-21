@@ -356,3 +356,28 @@ export function intakeState(
 ): IntakeActionState {
   return { ...initialIntakeActionState, status, message, ...extra };
 }
+
+/**
+ * R1 §49: an enquiry submitted while offline must not fall into the page
+ * error boundary (which would discard the visitor's message). The network
+ * failure becomes an inline error; every field keeps its value and the
+ * visitor can send again once connected.
+ */
+export function guardIntakeAction(
+  action: (previous: IntakeActionState, formData: FormData) => Promise<IntakeActionState>,
+): (previous: IntakeActionState, formData: FormData) => Promise<IntakeActionState> {
+  return async (previous, formData) => {
+    try {
+      return await action(previous, formData);
+    } catch {
+      // "unavailable" (not "error"): every form shows the message and the
+      // WhatsApp / email fallback for it; the wizard shows "error" only as
+      // field problems.
+      return intakeState(
+        "unavailable",
+        "We could not reach RENZ right now, so nothing was sent. Check your connection and try again, or use WhatsApp or email.",
+        { fallback: true },
+      );
+    }
+  };
+}

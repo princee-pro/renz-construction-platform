@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState } from "react";
+import { guardAction } from "@/features/admin-shared/action-state";
 import { useRouter } from "next/navigation";
 
 import { Alert } from "@/components/admin/ui/alert";
@@ -72,7 +73,10 @@ function SubmitEvidenceControl({
   serviceId,
   evidence,
 }: Readonly<{ serviceId: string; evidence: ServiceEvidence }>) {
-  const [state, action, pending] = useActionState(submitEvidenceAction, initialServiceActionState);
+  const [state, action, pending] = useActionState(
+    guardAction(submitEvidenceAction),
+    initialServiceActionState,
+  );
   const feedbackRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -101,7 +105,10 @@ function EvidenceDecisionControls({
   serviceId,
   evidence,
 }: Readonly<{ serviceId: string; evidence: ServiceEvidence }>) {
-  const [state, action, pending] = useActionState(reviewEvidenceAction, initialServiceActionState);
+  const [state, action, pending] = useActionState(
+    guardAction(reviewEvidenceAction),
+    initialServiceActionState,
+  );
   const [decision, setDecision] = useState<"verified" | "rejected">("verified");
   const dialogRef = useRef<HTMLDialogElement>(null);
   const feedbackRef = useRef<HTMLDivElement>(null);
@@ -207,7 +214,10 @@ export function EvidenceWorkspace({
   canWrite: boolean;
   canVerify: boolean;
 }>) {
-  const [state, action, pending] = useActionState(createEvidenceAction, initialServiceActionState);
+  const [state, action, pending] = useActionState(
+    guardAction(createEvidenceAction),
+    initialServiceActionState,
+  );
   const [showForm, setShowForm] = useState(false);
   const [values, setValues] = useState({
     factClaim: "",

@@ -8,6 +8,7 @@ import { Alert } from "@/components/admin/ui/alert";
 import { Button } from "@/components/admin/ui/button";
 import { StatusBadge } from "@/components/admin/ui/status-badge";
 import {
+  guardAction,
   initialAdminActionState,
   type AdminActionState,
 } from "@/features/admin-shared/action-state";
@@ -53,11 +54,11 @@ export function MediaDetailView({
 }: Readonly<{ media: MediaDetail; canManage: boolean; canReplace: boolean }>) {
   const router = useRouter();
   const [metaState, metaAction, metaPending] = useActionState(
-    updateMediaMetadataAction,
+    guardAction(updateMediaMetadataAction),
     initialAdminActionState,
   );
   const [rightsState, rightsAction, rightsPending] = useActionState(
-    confirmMediaRightsAction,
+    guardAction(confirmMediaRightsAction),
     initialAdminActionState,
   );
   const [focal, setFocal] = useState({ x: media.focal_x, y: media.focal_y });

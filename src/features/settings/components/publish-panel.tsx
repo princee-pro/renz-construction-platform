@@ -6,7 +6,7 @@ import { Alert } from "@/components/admin/ui/alert";
 import { Button } from "@/components/admin/ui/button";
 import { Field } from "@/components/admin/ui/field";
 import { StatusBadge } from "@/components/admin/ui/status-badge";
-import { initialAdminActionState } from "@/features/admin-shared/action-state";
+import { guardAction, initialAdminActionState } from "@/features/admin-shared/action-state";
 import { publishPublicConfigurationAction } from "@/features/settings/settings-actions";
 
 function formatDateTime(value: string | null): string {
@@ -35,7 +35,7 @@ export function PublishPanel({
   changedDomains?: readonly string[] | undefined;
 }>) {
   const [state, action, pending] = useActionState(
-    publishPublicConfigurationAction,
+    guardAction(publishPublicConfigurationAction),
     initialAdminActionState,
   );
   const [confirming, setConfirming] = useState(false);

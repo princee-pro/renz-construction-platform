@@ -352,7 +352,9 @@ export const helpEntries: readonly HelpEntry[] = [
     actions: ["Change your password.", "See your access in plain English."],
     nextSteps: [],
     publicEffect: null,
-    cautions: [],
+    cautions: [
+      "Lost your password? The owner issues a temporary one from Staff & Access — nothing is emailed. Lost your authenticator? Ask the owner: the platform operator removes the old one and you set up a new one at your next sign-in.",
+    ],
     permissionNotes: [],
   },
   {

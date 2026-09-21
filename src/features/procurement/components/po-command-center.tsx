@@ -10,6 +10,7 @@ import { CopyButton } from "@/components/admin/ui/copy-button";
 import { Field } from "@/components/admin/ui/field";
 import { StatusBadge } from "@/components/admin/ui/status-badge";
 import {
+  guardAction,
   initialAdminActionState,
   type AdminActionState,
 } from "@/features/admin-shared/action-state";
@@ -116,35 +117,35 @@ export function PurchaseOrderCommandCenter({
   const [shareUrl, setShareUrl] = useState<string | null>(null);
 
   const [issueState, issueAction, issuePending] = useActionState(
-    issuePurchaseOrderAction,
+    guardAction(issuePurchaseOrderAction),
     initialAdminActionState,
   );
   const [cancelState, cancelAction, cancelPending] = useActionState(
-    cancelPurchaseOrderAction,
+    guardAction(cancelPurchaseOrderAction),
     initialAdminActionState,
   );
   const [closeState, closeAction, closePending] = useActionState(
-    closePurchaseOrderAction,
+    guardAction(closePurchaseOrderAction),
     initialAdminActionState,
   );
   const [duplicateState, duplicateAction, duplicatePending] = useActionState(
-    duplicatePurchaseOrderAction,
+    guardAction(duplicatePurchaseOrderAction),
     initialAdminActionState,
   );
   const [receiptState, receiptAction, receiptPending] = useActionState(
-    recordGoodsReceiptAction,
+    guardAction(recordGoodsReceiptAction),
     initialAdminActionState,
   );
   const [reverseState, reverseAction, reversePending] = useActionState(
-    reverseGoodsReceiptAction,
+    guardAction(reverseGoodsReceiptAction),
     initialAdminActionState,
   );
   const [shareState, shareAction, sharePending] = useActionState(
-    createPoShareLinkAction,
+    guardAction(createPoShareLinkAction),
     initialAdminActionState,
   );
   const [revokeState, revokeAction, revokePending] = useActionState(
-    revokePoShareLinkAction,
+    guardAction(revokePoShareLinkAction),
     initialAdminActionState,
   );
 

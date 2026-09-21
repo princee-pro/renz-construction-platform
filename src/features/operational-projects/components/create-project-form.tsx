@@ -19,13 +19,17 @@ import {
   projectStatuses,
 } from "@/features/operational-projects/project-contract";
 import { ClientPickerField } from "@/features/operational-projects/components/client-picker-field";
+import { guardAction } from "@/features/admin-shared/action-state";
 
 export function CreateProjectForm({
   initialClientId,
   initialClientLabel,
 }: Readonly<{ initialClientId?: string | undefined; initialClientLabel?: string | undefined }>) {
   const router = useRouter();
-  const [state, action, pending] = useActionState(createProjectAction, initialAdminActionState);
+  const [state, action, pending] = useActionState(
+    guardAction(createProjectAction),
+    initialAdminActionState,
+  );
   const guard = useSingleSubmit(pending);
 
   useEffect(() => {

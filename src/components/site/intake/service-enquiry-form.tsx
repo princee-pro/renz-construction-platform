@@ -14,7 +14,7 @@ import {
 } from "@/components/site/intake/intake-fields";
 import { TurnstileWidget } from "@/components/site/intake/turnstile-widget";
 import { submitServiceEnquiryAction } from "@/features/intake/intake-actions";
-import { initialIntakeActionState } from "@/features/intake/intake-contract";
+import { guardIntakeAction, initialIntakeActionState } from "@/features/intake/intake-contract";
 import { needLabels, serviceKeys } from "@/features/intake/intake-policy";
 
 const labels: Readonly<Record<string, string>> = {
@@ -34,7 +34,7 @@ export function ServiceEnquiryForm({
   preselected,
 }: Readonly<{ context: IntakeFormContext; preselected: string | null }>) {
   const [state, formAction, pending] = useActionState(
-    submitServiceEnquiryAction,
+    guardIntakeAction(submitServiceEnquiryAction),
     initialIntakeActionState,
   );
   if (state.status === "success" && state.reference) {

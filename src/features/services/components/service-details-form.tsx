@@ -4,7 +4,7 @@ import { useActionState, useState } from "react";
 
 import { Alert } from "@/components/admin/ui/alert";
 import { Button } from "@/components/admin/ui/button";
-import { initialAdminActionState } from "@/features/admin-shared/action-state";
+import { guardAction, initialAdminActionState } from "@/features/admin-shared/action-state";
 import { saveServiceDetailsAction } from "@/features/services/service-details-actions";
 import type { ServiceDetails } from "@/features/services/service-details";
 
@@ -29,7 +29,7 @@ export function ServiceDetailsForm({
   canWrite,
 }: Readonly<{ serviceId: string; details: ServiceDetails; canWrite: boolean }>) {
   const [state, action, pending] = useActionState(
-    saveServiceDetailsAction,
+    guardAction(saveServiceDetailsAction),
     initialAdminActionState,
   );
   // Controlled fields: React resets uncontrolled inputs after a form

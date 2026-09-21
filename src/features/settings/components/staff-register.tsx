@@ -6,7 +6,7 @@ import { Alert } from "@/components/admin/ui/alert";
 import { Button } from "@/components/admin/ui/button";
 import { Field } from "@/components/admin/ui/field";
 import { StatusBadge } from "@/components/admin/ui/status-badge";
-import { initialAdminActionState } from "@/features/admin-shared/action-state";
+import { guardAction, initialAdminActionState } from "@/features/admin-shared/action-state";
 import { useSingleSubmit } from "@/features/admin-shared/single-submit";
 import { useAdminRealtimeInvalidation } from "@/features/admin-shared/use-realtime-invalidation";
 import { createStaffAction, staffAction } from "@/features/settings/settings-actions";
@@ -61,9 +61,12 @@ function memberCapabilities(member: StaffRegister["staff"][number], roles: Staff
  */
 export function StaffRegisterView({ data }: Readonly<{ data: StaffRegister }>) {
   const { connectionState } = useAdminRealtimeInvalidation(["settings"]);
-  const [state, action, pending] = useActionState(staffAction, initialAdminActionState);
+  const [state, action, pending] = useActionState(
+    guardAction(staffAction),
+    initialAdminActionState,
+  );
   const [createState, createSubmit, creating] = useActionState(
-    createStaffAction,
+    guardAction(createStaffAction),
     initialAdminActionState,
   );
   const createGuard = useSingleSubmit(creating);

@@ -70,8 +70,8 @@ export function AuthShell({
         <footer className="auth-form-foot">
           {aside}
           <p className="auth-support">
-            Invited staff only. Access is granted by the RENZ owner; public visitors never need an
-            account.
+            Staff only. Access is granted by the RENZ owner; public visitors never need an account.
+            Forgotten your password? The owner can issue you a temporary one.
           </p>
         </footer>
       </section>

@@ -7,7 +7,7 @@ import { Alert } from "@/components/admin/ui/alert";
 import { Button } from "@/components/admin/ui/button";
 import { Field } from "@/components/admin/ui/field";
 import { StatusBadge } from "@/components/admin/ui/status-badge";
-import { initialAdminActionState } from "@/features/admin-shared/action-state";
+import { guardAction, initialAdminActionState } from "@/features/admin-shared/action-state";
 import { useAdminRealtimeInvalidation } from "@/features/admin-shared/use-realtime-invalidation";
 import {
   adjustAssignmentAmountAction,
@@ -77,23 +77,23 @@ export function AssignmentCommandView({
   const [reversing, setReversing] = useState<string | null>(null);
 
   const [statusState, statusAction, statusPending] = useActionState(
-    changeAssignmentStatusAction,
+    guardAction(changeAssignmentStatusAction),
     initialAdminActionState,
   );
   const [adjustState, adjustAction, adjustPending] = useActionState(
-    adjustAssignmentAmountAction,
+    guardAction(adjustAssignmentAmountAction),
     initialAdminActionState,
   );
   const [rateState, rateAction, ratePending] = useActionState(
-    rateAssignmentAction,
+    guardAction(rateAssignmentAction),
     initialAdminActionState,
   );
   const [paymentState, paymentAction, paymentPending] = useActionState(
-    recordContractorPaymentAction,
+    guardAction(recordContractorPaymentAction),
     initialAdminActionState,
   );
   const [reverseState, reverseAction, reversePending] = useActionState(
-    reverseContractorPaymentAction,
+    guardAction(reverseContractorPaymentAction),
     initialAdminActionState,
   );
 

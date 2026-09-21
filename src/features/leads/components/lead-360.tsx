@@ -9,6 +9,7 @@ import { CopyButton } from "@/components/admin/ui/copy-button";
 import { Field } from "@/components/admin/ui/field";
 import { StatusBadge } from "@/components/admin/ui/status-badge";
 import {
+  guardAction,
   initialAdminActionState,
   type AdminActionState,
 } from "@/features/admin-shared/action-state";
@@ -122,43 +123,43 @@ export function Lead360({
   );
 
   const [updateState, updateAction, updatePending] = useActionState(
-    updateLeadAction,
+    guardAction(updateLeadAction),
     initialAdminActionState,
   );
   const [assignState, assignAction, assignPending] = useActionState(
-    assignLeadAction,
+    guardAction(assignLeadAction),
     initialAdminActionState,
   );
   const [statusState, statusAction, statusPending] = useActionState(
-    changeLeadStatusAction,
+    guardAction(changeLeadStatusAction),
     initialAdminActionState,
   );
   const [contactState, contactAction, contactPending] = useActionState(
-    logLeadContactAction,
+    guardAction(logLeadContactAction),
     initialAdminActionState,
   );
   const [noteState, noteAction, notePending] = useActionState(
-    createLeadNoteAction,
+    guardAction(createLeadNoteAction),
     initialAdminActionState,
   );
   const [convertState, convertAction, convertPending] = useActionState(
-    convertLeadToClientAction,
+    guardAction(convertLeadToClientAction),
     initialAdminActionState,
   );
   const [projectState, projectAction, projectPending] = useActionState(
-    createProjectFromLeadAction,
+    guardAction(createProjectFromLeadAction),
     initialAdminActionState,
   );
   const [requirementsState, requirementsAction, requirementsPending] = useActionState(
-    createRequirementsFromLeadAction,
+    guardAction(createRequirementsFromLeadAction),
     initialAdminActionState,
   );
   const [reviewState, reviewAction, reviewPending] = useActionState(
-    reviewLeadAttachmentAction,
+    guardAction(reviewLeadAttachmentAction),
     initialAdminActionState,
   );
   const [archiveState, archiveAction, archivePending] = useActionState(
-    archiveLeadAction,
+    guardAction(archiveLeadAction),
     initialAdminActionState,
   );
 

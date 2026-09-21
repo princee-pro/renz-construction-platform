@@ -6,6 +6,7 @@ import { useActionState } from "react";
 import { Alert } from "@/components/admin/ui/alert";
 import { Button } from "@/components/admin/ui/button";
 import {
+  guardAction,
   initialAdminActionState,
   type AdminActionState,
 } from "@/features/admin-shared/action-state";
@@ -53,11 +54,11 @@ export function NotificationPreferencesForm({
   timeZone,
 }: Readonly<{ preferences: NotificationPreferences; timeZone: string }>) {
   const [state, formAction, pending] = useActionState(
-    updateNotificationPreferencesAction,
+    guardAction(updateNotificationPreferencesAction),
     initialAdminActionState,
   );
   const [sweepState, sweepAction, sweepPending] = useActionState(
-    runNotificationSweepAction,
+    guardAction(runNotificationSweepAction),
     initialAdminActionState,
   );
 

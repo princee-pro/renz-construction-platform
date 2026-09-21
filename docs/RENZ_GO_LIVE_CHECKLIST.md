@@ -13,8 +13,9 @@ done — no hosting exists.
 - [x] Secret scan on committable files clean; `pnpm audit --prod` no known vulnerabilities
 - [x] Backup → reset → restore rehearsed locally with identical counts
 - [x] Release candidate committed locally: `chore: prepare renz production release candidate` (not pushed)
+- [x] R1 (2026-09-21): CR1 hydration flake root-caused and fixed (`Button` waits for hydration); offline submits keep the form and never false-succeed (network-failure suite 3/3); forced-colours focus rings and opener bypass; bundle scan, public audit (crawl, robots, sitemap, 404s, WhatsApp, content), cross-browser smoke (Chromium/Firefox/WebKit), web vitals, slow-network, log audit — all green locally (`pnpm r1:local`)
 
-## Decisions (owner) — all DECISION REQUIRED
+## Decisions (owner) — all DECISION REQUIRED (full table: `RENZ_R1_PRODUCTION_DECISIONS.md`)
 
 - [ ] Hosting provider + billing owner; region; production domain
 - [ ] Owner email for the first Super Admin (taken exactly as written by the client)
@@ -32,13 +33,15 @@ done — no hosting exists.
 - [ ] App deployed from the release-candidate commit with the environment table in `RENZ_PRODUCTION_DEPLOYMENT.md`; `RENZ_CLIENT_PREVIEW` and `RENZ_INTAKE_ALLOW_DEV_BYPASS` absent
 - [ ] DNS: apex + www → host; TLS active; `node scripts/c10-headers.mjs https://<domain>` passes
 - [ ] `/api/health` → `ok` (migrations, storage, signing all ok)
+- [ ] `pnpm r1:cloud https://<candidate>` green (read-only: health, headers, crawl, robots/sitemap, 404s, WhatsApp, content, three browsers, vitals, slow network, forced colours)
+- [ ] Cloud rehearsals from the R1 brief (§12–§48) executed against the candidate with a STAGING Supabase project for destructive steps; results appended to `RENZ_R1_PRODUCTION_PROVISIONING_REPORT.md`
 - [ ] Notification sweep scheduler wired and `Timed notification task endpoint armed` green
 - [ ] First database backup taken and stored off-site; restore procedure tested against the cloud project once
 
 ## Product configuration (owner)
 
 - [ ] Signed in; authenticator enrolled; password changed
-- [ ] Settings → Business: identity, public email (`renzconstruuction@gmail.com` as supplied), WhatsApp, location, hours
+- [ ] Settings → Business: identity, public email (`renzconstruuction@gmail.com` as supplied — **OWNER CONFIRMATION REQUIRED** that the double-u spelling is right), WhatsApp, location, hours
 - [ ] Settings → Legal: privacy notice + terms published (privacy covers online enquiries and analytics)
 - [ ] Settings → Website: canonical URL, SEO name/title template, share image, logo — Published
 - [ ] Website pages reviewed and published; navigation and footer checked on a phone
@@ -67,5 +70,5 @@ Copied from the C10 report §118; kept here so the list has one home.
 
 1. Every DECISION REQUIRED line above.
 2. Cloud rehearsal of backup/restore and of the app rollback (both are only local-proven).
-3. A scheduler adapter if Vercel Cron is chosen (it sends `CRON_SECRET`, the endpoint expects a bearer token).
+3. Vercel Cron: set `CRON_SECRET` = `RENZ_TASK_TOKEN` and observe the first provider run (GET vs POST — `RENZ_R1_SCHEDULED_TASKS.md`).
 4. Optional: Turnstile keys; third-party analytics adapter for the chosen provider.

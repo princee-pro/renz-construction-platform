@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { Alert } from "@/components/admin/ui/alert";
 import { Button } from "@/components/admin/ui/button";
 import {
+  guardAction,
   initialAdminActionState,
   type AdminActionState,
 } from "@/features/admin-shared/action-state";
@@ -40,7 +41,7 @@ export function SettingsForm({
   hidden?: Readonly<Record<string, string>> | undefined;
 }>) {
   const router = useRouter();
-  const [state, formAction, pending] = useActionState(action, initialAdminActionState);
+  const [state, formAction, pending] = useActionState(guardAction(action), initialAdminActionState);
   const [dirty, setDirty] = useState(false);
   const [formKey, setFormKey] = useState(0);
   const [reloading, setReloading] = useState(false);

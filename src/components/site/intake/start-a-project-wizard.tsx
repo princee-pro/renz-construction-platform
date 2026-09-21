@@ -25,7 +25,7 @@ import type {
 } from "@/components/site/intake/intake-upload-field";
 import { TurnstileWidget } from "@/components/site/intake/turnstile-widget";
 import { submitProjectIntakeAction } from "@/features/intake/intake-actions";
-import { initialIntakeActionState } from "@/features/intake/intake-contract";
+import { guardIntakeAction, initialIntakeActionState } from "@/features/intake/intake-contract";
 import {
   budgetCurrencies,
   budgetPreferenceLabels,
@@ -204,7 +204,7 @@ export function StartAProjectWizard({
 }>) {
   const router = useRouter();
   const [state, formAction, pending] = useActionState(
-    submitProjectIntakeAction,
+    guardIntakeAction(submitProjectIntakeAction),
     initialIntakeActionState,
   );
   const [values, setValues] = useState<Values>(() => ({

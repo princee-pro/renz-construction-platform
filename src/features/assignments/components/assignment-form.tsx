@@ -7,6 +7,7 @@ import { Alert } from "@/components/admin/ui/alert";
 import { Button } from "@/components/admin/ui/button";
 import { Field } from "@/components/admin/ui/field";
 import {
+  guardAction,
   initialAdminActionState,
   type AdminActionState,
 } from "@/features/admin-shared/action-state";
@@ -62,7 +63,7 @@ export function AssignmentForm({
 }>) {
   const router = useRouter();
   const [state, action, pending] = useActionState(
-    mode === "create" ? createAssignmentAction : updateAssignmentAction,
+    guardAction(mode === "create" ? createAssignmentAction : updateAssignmentAction),
     initialAdminActionState,
   );
   const edit = usePinnedEdit(

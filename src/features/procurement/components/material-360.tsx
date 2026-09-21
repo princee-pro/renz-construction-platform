@@ -6,7 +6,7 @@ import { useActionState, useState } from "react";
 import { Alert } from "@/components/admin/ui/alert";
 import { Button } from "@/components/admin/ui/button";
 import { StatusBadge } from "@/components/admin/ui/status-badge";
-import { initialAdminActionState } from "@/features/admin-shared/action-state";
+import { guardAction, initialAdminActionState } from "@/features/admin-shared/action-state";
 import { useAdminRealtimeInvalidation } from "@/features/admin-shared/use-realtime-invalidation";
 import { useRecordRecentlyViewed } from "@/features/admin-shared/use-record-recently-viewed";
 import { formatMoney, formatQuantity } from "@/features/invoices/invoice-contract";
@@ -39,7 +39,7 @@ export function Material360({
   const { connectionState } = useAdminRealtimeInvalidation(["material"]);
   const [dialog, setDialog] = useState<"archive" | null>(null);
   const [archiveState, archiveAction, archivePending] = useActionState(
-    archiveMaterialAction,
+    guardAction(archiveMaterialAction),
     initialAdminActionState,
   );
   const material = detail.material;

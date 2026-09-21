@@ -6,12 +6,15 @@ import { useActionState, useState } from "react";
 
 import { Alert } from "@/components/admin/ui/alert";
 import { Button } from "@/components/admin/ui/button";
-import { initialAdminActionState } from "@/features/admin-shared/action-state";
+import { guardAction, initialAdminActionState } from "@/features/admin-shared/action-state";
 import { createInsightAction } from "@/features/insights/insight-actions";
 import { slugify } from "@/features/website/routes";
 
 export function CreateInsightForm() {
-  const [state, formAction, pending] = useActionState(createInsightAction, initialAdminActionState);
+  const [state, formAction, pending] = useActionState(
+    guardAction(createInsightAction),
+    initialAdminActionState,
+  );
   const guard = useSingleSubmit(pending);
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");

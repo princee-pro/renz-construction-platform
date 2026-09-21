@@ -4,7 +4,7 @@ import { useActionState, useState } from "react";
 
 import { Alert } from "@/components/admin/ui/alert";
 import { Button } from "@/components/admin/ui/button";
-import { initialAdminActionState } from "@/features/admin-shared/action-state";
+import { guardAction, initialAdminActionState } from "@/features/admin-shared/action-state";
 import { saveProjectPlacementAction } from "@/features/projects/project-presentation-actions";
 import type { ProjectPresentation } from "@/features/projects/project-presentation";
 
@@ -24,7 +24,7 @@ export function ProjectPlacementForm({
   canWrite: boolean;
 }>) {
   const [state, action, pending] = useActionState(
-    saveProjectPlacementAction,
+    guardAction(saveProjectPlacementAction),
     initialAdminActionState,
   );
   // Controlled fields (React resets uncontrolled inputs after a form

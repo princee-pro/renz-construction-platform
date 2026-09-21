@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState, type ReactNode } from "react";
+import { guardAction } from "@/features/admin-shared/action-state";
 import { useRouter } from "next/navigation";
 
 import { Alert } from "@/components/admin/ui/alert";
@@ -29,11 +30,11 @@ function StageRow({
   canWrite,
 }: Readonly<{ stage: ProjectStage; projectId: string; canWrite: boolean }>) {
   const [updateState, updateAction, updatePending] = useActionState(
-    updateStageAction,
+    guardAction(updateStageAction),
     initialProjectActionState,
   );
   const [deleteState, deleteAction, deletePending] = useActionState(
-    deleteStageAction,
+    guardAction(deleteStageAction),
     initialProjectActionState,
   );
 
@@ -136,19 +137,19 @@ export function ProjectEditor({
   const router = useRouter();
 
   const [saveState, saveAction, savePending] = useActionState(
-    saveProjectAction,
+    guardAction(saveProjectAction),
     initialProjectActionState,
   );
   const [reviewState, reviewAction, reviewPending] = useActionState(
-    markProjectReviewedAction,
+    guardAction(markProjectReviewedAction),
     initialProjectActionState,
   );
   const [servicesState, servicesAction, servicesPending] = useActionState(
-    setProjectServicesAction,
+    guardAction(setProjectServicesAction),
     initialProjectActionState,
   );
   const [stageState, stageAction, stagePending] = useActionState(
-    createStageAction,
+    guardAction(createStageAction),
     initialProjectActionState,
   );
 

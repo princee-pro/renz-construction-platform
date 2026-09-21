@@ -4,14 +4,14 @@ import { useActionState, useState } from "react";
 
 import { Alert } from "@/components/admin/ui/alert";
 import { Button } from "@/components/admin/ui/button";
-import { initialAdminActionState } from "@/features/admin-shared/action-state";
+import { guardAction, initialAdminActionState } from "@/features/admin-shared/action-state";
 import { createWebsitePageAction } from "@/features/website/actions";
 import { slugify } from "@/features/website/routes";
 
 /** New custom page (CR1 §11). The address is suggested from the title and checked against the reserved routes. */
 export function CreatePageForm() {
   const [state, formAction, pending] = useActionState(
-    createWebsitePageAction,
+    guardAction(createWebsitePageAction),
     initialAdminActionState,
   );
   const [title, setTitle] = useState("");

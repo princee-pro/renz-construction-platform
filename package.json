@@ -88,6 +88,15 @@
     "backup:dump": "node scripts/backup.mjs dump",
     "backup:restore": "node scripts/backup.mjs restore",
     "backup:counts": "node scripts/backup.mjs counts",
+    "test:e2e:r1": "playwright test tests/e2e/r1-network-failure.spec.ts",
+    "r1:verify": "node scripts/verify-r1.mjs local",
+    "r1:local": "node scripts/verify-r1.mjs local",
+    "r1:cloud": "node scripts/verify-r1.mjs cloud",
+    "r1:smoke": "node scripts/verify-r1.mjs smoke",
+    "r1:bundle-scan": "node scripts/r1-bundle-scan.mjs",
+    "r1:public-audit": "node scripts/r1-public-audit.mjs",
+    "r1:browser-smoke": "node scripts/r1-browser-smoke.mjs",
+    "r1:log-audit": "node scripts/r1-log-audit.mjs",
     "verify": "prettier . --check && eslint . --max-warnings 0 && next typegen && tsc --noEmit && vitest run --project unit && vitest run --project component && designmd lint DESIGN.md && node scripts/design-tokens.mjs check && node scripts/scan-secrets.mjs && next build && node scripts/audit-production.mjs"
   },
   "dependencies": {

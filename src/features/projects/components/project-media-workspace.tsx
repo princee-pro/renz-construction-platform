@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useRef, useState, useTransition } from "react";
+import { guardAction } from "@/features/admin-shared/action-state";
 import { useRouter } from "next/navigation";
 
 import { Alert } from "@/components/admin/ui/alert";
@@ -83,13 +84,16 @@ function MediaCard({
   isFirst: boolean;
   isLast: boolean;
 }>) {
-  const [state, action, pending] = useActionState(updateMediaAction, initialProjectActionState);
+  const [state, action, pending] = useActionState(
+    guardAction(updateMediaAction),
+    initialProjectActionState,
+  );
   const [removeState, removeAction, removePending] = useActionState(
-    removeMediaAction,
+    guardAction(removeMediaAction),
     initialProjectActionState,
   );
   const [promoteState, promoteAction, promotePending] = useActionState(
-    promoteMediaAction,
+    guardAction(promoteMediaAction),
     initialProjectActionState,
   );
   const isEligible = item.public_status === "eligible";

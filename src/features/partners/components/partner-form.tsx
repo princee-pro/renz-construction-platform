@@ -11,6 +11,7 @@ import { Button } from "@/components/admin/ui/button";
 import { Field } from "@/components/admin/ui/field";
 import { StatusBadge } from "@/components/admin/ui/status-badge";
 import {
+  guardAction,
   initialAdminActionState,
   type AdminActionState,
 } from "@/features/admin-shared/action-state";
@@ -78,7 +79,7 @@ export function PartnerForm({
 }>) {
   const router = useRouter();
   const [state, action, pending] = useActionState(
-    mode === "create" ? createPartnerAction : updatePartnerAction,
+    guardAction(mode === "create" ? createPartnerAction : updatePartnerAction),
     initialAdminActionState,
   );
   const edit = usePinnedEdit(

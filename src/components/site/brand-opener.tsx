@@ -11,6 +11,9 @@ type OpenerState = "playing" | "leaving" | "complete";
 
 function shouldBypassOpener(): boolean {
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return true;
+  // R1 §53: under forced colours the drawn mark disappears and the opener
+  // is a blank sheet for a second; go straight to the page.
+  if (window.matchMedia("(forced-colors: active)").matches) return true;
   const connection = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
   if (connection?.saveData) return true;
   const navigationEntry = performance.getEntriesByType("navigation")[0];

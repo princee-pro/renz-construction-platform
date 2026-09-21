@@ -1,6 +1,7 @@
 "use client";
 
 import { useSingleSubmit } from "@/features/admin-shared/single-submit";
+import { guardAction } from "@/features/admin-shared/action-state";
 
 import { useActionState, useEffect, useRef, useState } from "react";
 
@@ -11,7 +12,10 @@ import { createProjectAction } from "@/features/projects/project-actions";
 import { initialProjectActionState } from "@/features/projects/project-contract";
 
 export function CreateProjectForm() {
-  const [state, action, pending] = useActionState(createProjectAction, initialProjectActionState);
+  const [state, action, pending] = useActionState(
+    guardAction(createProjectAction),
+    initialProjectActionState,
+  );
   const guard = useSingleSubmit(pending);
   const [values, setValues] = useState({ title: "", slug: "", locale: "en" });
   const summaryRef = useRef<HTMLDivElement>(null);

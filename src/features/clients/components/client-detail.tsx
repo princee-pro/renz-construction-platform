@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { guardAction } from "@/features/admin-shared/action-state";
 import { useActionState, useState } from "react";
 
 import { Alert } from "@/components/admin/ui/alert";
@@ -63,15 +64,15 @@ export function ClientDetailView({
   const [confirmingArchive, setConfirmingArchive] = useState(false);
 
   const [updateState, updateAction, updatePending] = useActionState(
-    updateClientAction,
+    guardAction(updateClientAction),
     initialAdminActionState,
   );
   const [archiveState, archiveAction, archivePending] = useActionState(
-    archiveClientAction,
+    guardAction(archiveClientAction),
     initialAdminActionState,
   );
   const [noteState, noteAction, notePending] = useActionState(
-    createClientNoteAction,
+    guardAction(createClientNoteAction),
     initialAdminActionState,
   );
 

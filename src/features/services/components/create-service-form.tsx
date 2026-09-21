@@ -1,6 +1,7 @@
 "use client";
 
 import { useSingleSubmit } from "@/features/admin-shared/single-submit";
+import { guardAction } from "@/features/admin-shared/action-state";
 
 import { useActionState, useEffect, useRef, useState } from "react";
 
@@ -11,7 +12,10 @@ import { createServiceAction } from "@/features/services/service-actions";
 import { initialServiceActionState } from "@/features/services/service-contract";
 
 export function CreateServiceForm() {
-  const [state, action, pending] = useActionState(createServiceAction, initialServiceActionState);
+  const [state, action, pending] = useActionState(
+    guardAction(createServiceAction),
+    initialServiceActionState,
+  );
   const guard = useSingleSubmit(pending);
   const [values, setValues] = useState({ name: "", slug: "", locale: "en" });
   const summaryRef = useRef<HTMLDivElement>(null);

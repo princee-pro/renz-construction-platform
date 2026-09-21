@@ -6,7 +6,7 @@ import { Alert } from "@/components/admin/ui/alert";
 import { Button } from "@/components/admin/ui/button";
 import { Field } from "@/components/admin/ui/field";
 import { StatusBadge } from "@/components/admin/ui/status-badge";
-import { initialAdminActionState } from "@/features/admin-shared/action-state";
+import { guardAction, initialAdminActionState } from "@/features/admin-shared/action-state";
 import { useAdminRealtimeInvalidation } from "@/features/admin-shared/use-realtime-invalidation";
 import { SettingsForm } from "@/features/settings/components/settings-form";
 import {
@@ -73,7 +73,7 @@ function LegalPageEditor({
   canPublish,
 }: Readonly<{ page: LegalPage; canWrite: boolean; canPublish: boolean }>) {
   const [publishState, publishAction, publishing] = useActionState(
-    publishLegalPageAction,
+    guardAction(publishLegalPageAction),
     initialAdminActionState,
   );
   const [confirming, setConfirming] = useState(false);

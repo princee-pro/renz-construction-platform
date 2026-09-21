@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState } from "react";
+import { guardAction } from "@/features/admin-shared/action-state";
 import { useRouter } from "next/navigation";
 
 import { Alert } from "@/components/admin/ui/alert";
@@ -33,7 +34,7 @@ export function PublicationControls({
   onVersionChange: (version: number) => void;
 }>) {
   const [state, action, pending] = useActionState(
-    changeProjectPublicationAction,
+    guardAction(changeProjectPublicationAction),
     initialProjectActionState,
   );
   const [operation, setOperation] = useState<PublicationOperation>("publish");

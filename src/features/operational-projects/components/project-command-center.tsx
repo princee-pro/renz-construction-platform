@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { guardAction } from "@/features/admin-shared/action-state";
 import { useActionState, useState } from "react";
 
 import { Alert } from "@/components/admin/ui/alert";
@@ -166,39 +167,39 @@ export function ProjectCommandCenter({
   const [showCaseStudyLinkForm, setShowCaseStudyLinkForm] = useState(false);
 
   const [updateState, updateAction, updatePending] = useActionState(
-    updateProjectAction,
+    guardAction(updateProjectAction),
     initialAdminActionState,
   );
   const [statusState, statusAction, statusPending] = useActionState(
-    changeProjectStatusAction,
+    guardAction(changeProjectStatusAction),
     initialAdminActionState,
   );
   const [phaseState, phaseAction, phasePending] = useActionState(
-    changeProjectPhaseAction,
+    guardAction(changeProjectPhaseAction),
     initialAdminActionState,
   );
   const [priorityState, priorityAction, priorityPending] = useActionState(
-    changeProjectPriorityAction,
+    guardAction(changeProjectPriorityAction),
     initialAdminActionState,
   );
   const [archiveState, archiveAction, archivePending] = useActionState(
-    archiveProjectAction,
+    guardAction(archiveProjectAction),
     initialAdminActionState,
   );
   const [noteState, noteAction, notePending] = useActionState(
-    createProjectNoteAction,
+    guardAction(createProjectNoteAction),
     initialAdminActionState,
   );
   const [linkState, linkAction, linkPending] = useActionState(
-    linkCaseStudyAction,
+    guardAction(linkCaseStudyAction),
     initialAdminActionState,
   );
   const [unlinkState, unlinkAction, unlinkPending] = useActionState(
-    unlinkCaseStudyAction,
+    guardAction(unlinkCaseStudyAction),
     initialAdminActionState,
   );
   const [draftState, draftAction, draftPending] = useActionState(
-    createCaseStudyDraftFromProjectAction,
+    guardAction(createCaseStudyDraftFromProjectAction),
     initialAdminActionState,
   );
 

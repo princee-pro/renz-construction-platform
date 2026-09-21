@@ -16,10 +16,14 @@ import {
   initialAdminActionState,
 } from "@/features/clients/client-contract";
 import { DuplicateClientCheck } from "@/features/clients/components/duplicate-client-check";
+import { guardAction } from "@/features/admin-shared/action-state";
 
 export function CreateClientForm() {
   const router = useRouter();
-  const [state, action, pending] = useActionState(createClientAction, initialAdminActionState);
+  const [state, action, pending] = useActionState(
+    guardAction(createClientAction),
+    initialAdminActionState,
+  );
   const guard = useSingleSubmit(pending);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");

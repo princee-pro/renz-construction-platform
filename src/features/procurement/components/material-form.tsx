@@ -10,6 +10,7 @@ import { Alert } from "@/components/admin/ui/alert";
 import { Button } from "@/components/admin/ui/button";
 import { Field } from "@/components/admin/ui/field";
 import {
+  guardAction,
   initialAdminActionState,
   type AdminActionState,
 } from "@/features/admin-shared/action-state";
@@ -66,7 +67,7 @@ export function MaterialForm({
 }>) {
   const router = useRouter();
   const [state, action, pending] = useActionState(
-    mode === "create" ? createMaterialAction : updateMaterialAction,
+    guardAction(mode === "create" ? createMaterialAction : updateMaterialAction),
     initialAdminActionState,
   );
   const edit = usePinnedEdit(

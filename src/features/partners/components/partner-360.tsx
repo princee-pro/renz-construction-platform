@@ -7,7 +7,7 @@ import { Alert } from "@/components/admin/ui/alert";
 import { Button } from "@/components/admin/ui/button";
 import { CopyButton } from "@/components/admin/ui/copy-button";
 import { StatusBadge } from "@/components/admin/ui/status-badge";
-import { initialAdminActionState } from "@/features/admin-shared/action-state";
+import { guardAction, initialAdminActionState } from "@/features/admin-shared/action-state";
 import { useAdminRealtimeInvalidation } from "@/features/admin-shared/use-realtime-invalidation";
 import { useRecordRecentlyViewed } from "@/features/admin-shared/use-record-recently-viewed";
 import { formatMoney } from "@/features/invoices/invoice-contract";
@@ -66,11 +66,11 @@ export function Partner360({
   const [section, setSection] = useState<Section>("overview");
   const [confirmingArchive, setConfirmingArchive] = useState(false);
   const [archiveState, archiveAction, archivePending] = useActionState(
-    archivePartnerAction,
+    guardAction(archivePartnerAction),
     initialAdminActionState,
   );
   const [capabilityState, capabilityAction, capabilityPending] = useActionState(
-    addPartnerCapabilityAction,
+    guardAction(addPartnerCapabilityAction),
     initialAdminActionState,
   );
   const latestVersion = Math.max(

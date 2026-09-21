@@ -8,7 +8,7 @@ import { useActionState, useEffect } from "react";
 import { Alert } from "@/components/admin/ui/alert";
 import { Button } from "@/components/admin/ui/button";
 import { Field } from "@/components/admin/ui/field";
-import { initialAdminActionState } from "@/features/admin-shared/action-state";
+import { guardAction, initialAdminActionState } from "@/features/admin-shared/action-state";
 import { needLabels } from "@/features/intake/intake-policy";
 import { createLeadAction } from "@/features/leads/lead-actions";
 import { leadSourceLabels, leadTypeLabels, staffSources } from "@/features/leads/lead-contract";
@@ -16,7 +16,10 @@ import { leadSourceLabels, leadTypeLabels, staffSources } from "@/features/leads
 /** Staff-created lead (WhatsApp, walk-in, referral): a legitimate source, never a public one. */
 export function CreateLeadForm() {
   const router = useRouter();
-  const [state, action, pending] = useActionState(createLeadAction, initialAdminActionState);
+  const [state, action, pending] = useActionState(
+    guardAction(createLeadAction),
+    initialAdminActionState,
+  );
   const guard = useSingleSubmit(pending);
   useEffect(() => {
     if (state.status === "success" && state.createdId) {

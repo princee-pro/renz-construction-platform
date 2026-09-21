@@ -7,7 +7,7 @@ import { Alert } from "@/components/admin/ui/alert";
 import { Button } from "@/components/admin/ui/button";
 import { Field } from "@/components/admin/ui/field";
 import { StatusBadge } from "@/components/admin/ui/status-badge";
-import { initialAdminActionState } from "@/features/admin-shared/action-state";
+import { guardAction, initialAdminActionState } from "@/features/admin-shared/action-state";
 import { useAdminRealtimeInvalidation } from "@/features/admin-shared/use-realtime-invalidation";
 import { SettingsForm } from "@/features/settings/components/settings-form";
 import {
@@ -635,7 +635,10 @@ export function SiteModePanel({
   version,
   canSwitch,
 }: Readonly<{ siteMode: "preview" | "live"; version: number; canSwitch: boolean }>) {
-  const [state, action, pending] = useActionState(changeSiteModeAction, initialAdminActionState);
+  const [state, action, pending] = useActionState(
+    guardAction(changeSiteModeAction),
+    initialAdminActionState,
+  );
   const [confirming, setConfirming] = useState(false);
   const next = siteMode === "live" ? "preview" : "live";
   return (

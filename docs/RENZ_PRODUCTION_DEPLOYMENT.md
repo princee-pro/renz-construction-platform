@@ -16,7 +16,7 @@ resource: C10 ends with a local release candidate (`DO NOT DEPLOY`).
 | Region (Supabase: `eu-central-1` or the closest region to Kigali offered; latency was not measured) | DECISION REQUIRED |
 | Production domain and DNS control (`www.` + apex) | DECISION REQUIRED |
 | Owner account email for the first Super Admin | DECISION REQUIRED (the client's mailbox — spelling is taken exactly as the client wrote it) |
-| Transactional email: the platform needs SMTP only for password-reset emails; staff onboarding does NOT use email (temporary passwords are handed over privately) | DECISION REQUIRED (Supabase default SMTP is rate-limited and dev-only) |
+| Transactional email: SMTP is only needed for self-service password reset; staff onboarding does NOT use email (temporary passwords are handed over privately). Default production path (R1): owner/operator-assisted reset — the sign-in screen and the Security help say so; there is no "check your email" flow | DECISION REQUIRED only if the owner wants self-service reset (`RENZ_R1_PRODUCTION_DECISIONS.md` #7) |
 | Backup retention and off-site location | see `RENZ_BACKUP_RESTORE.md` |
 
 ## 1. Create the Supabase project
@@ -116,9 +116,11 @@ Timed notifications (invoice due/overdue, stale drafts, ending
 assignments…) are produced by an idempotent sweep. Wire one of:
 
 - Vercel Cron: `{"crons":[{"path":"/api/tasks/notifications-sweep","schedule":"0 * * * *"}]}`
-  in `vercel.json`, with the cron header/bearer configured to send
-  `Authorization: Bearer $RENZ_TASK_TOKEN` (Vercel Cron sends its own
-  `CRON_SECRET`; a small adapter is DECISION REQUIRED), or
+  in `vercel.json`; set `CRON_SECRET` to the same value as `RENZ_TASK_TOKEN`
+  (Vercel sends it as `Authorization: Bearer …`). Vercel Cron issues GET by
+  default while the route accepts POST — observe the first provider run;
+  if it is refused, add a `GET` export delegating to the same handler
+  (NOT TESTED in R1: no hosting). Details: `RENZ_R1_SCHEDULED_TASKS.md`.
 - any external scheduler calling the endpoint hourly with the bearer token, or
 - the owner's **Run sweep now** button in Notifications (manual fallback).
 
