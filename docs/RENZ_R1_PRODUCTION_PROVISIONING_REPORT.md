@@ -18,7 +18,7 @@ decision is in §80. Nothing was deployed, pushed or switched live.
 ## 2. Current commit
 
 Start of R1: `02e1a54 chore: prepare renz production release candidate`
-(HEAD, clean tree, verified). End of R1: `RC-R1-COMMIT` (see §78).
+(HEAD, clean tree, verified). End of R1: `ca453d3 chore: r1 production provisioning (local half) and cloud rehearsal tooling` (local only; not pushed).
 
 ## 3. C10 verification
 
