@@ -7,13 +7,18 @@ means it could have been attempted but was not, with the reason.
 
 ## 1. Status
 
-**R1 PARTIAL — cloud half BLOCKED.** Every cloud-independent R1 obligation
-is done and green (§3–§7, §22–§23, §27–§30 policy, §31, §50, §53–§57,
-§60–§69, §77–§78). Nothing in §9–§21, §24–§26, §33–§48, §51, §70–§76 could
-be executed: there is no hosting account, no Supabase organisation access
-token, no domain and no production owner email, and `AGENTS.md` forbids
-creating provider accounts without explicit approval. The single blocking
-decision is in §80. Nothing was deployed, pushed or switched live.
+**R1 PARTIAL — cloud half BLOCKED on accounts, decisions now APPROVED.**
+Every cloud-independent R1 obligation is done and green (§3–§7, §22–§23,
+§27–§30 policy, §31, §50, §53–§57, §60–§69, §77–§78). Later the same day
+the owner approved the infrastructure decisions (Netlify Free, Supabase
+Free ×2, Cloudflare for DNS/Turnstile/Web Analytics/Workers/R2, GitHub
+Actions backups, operator-assisted reset, slogan "Brick by Brick."); the
+repository now carries everything those decisions need (§6a). Nothing in
+§9–§21, §24–§26, §33–§48, §51, §70–§76 could be executed: no Netlify site,
+no Supabase organisation access, no Cloudflare account, no Git remote, no
+domain, no production owner email exist on this machine, and `AGENTS.md`
+forbids creating provider accounts without explicit approval. The single
+blocker is in §80. Nothing was deployed, pushed or switched live.
 
 ## 2. Current commit
 
@@ -61,13 +66,38 @@ the first attempt (§78).
 or engineering default), 8 REQUIRED FROM OWNER, 1 NOT APPLICABLE, 1
 follows hosting.
 
+## 6a. Owner-approved architecture — what was prepared
+
+- Slogan: migration `20260923100000` seeds "Brick by Brick." into the
+  owner-editable business profile (Settings → Business → Slogan); the
+  brand opener and the footer read it from the published identity; the
+  hero fallback keeps "From land / to landmark" as the campaign headline
+  and never uses the slogan. pgTAP 021 asserts the seed.
+- Netlify: `netlify.toml` (pnpm via corepack, Node 24.20.0,
+  `@netlify/plugin-nextjs`); `next.config.ts` records app version, build id
+  (`COMMIT_REF`/git) and latest migration at build time so `/api/health`
+  reads no repository files at runtime; the proxy is emitted as Node.js
+  middleware (`functions-config-manifest.json` `/_middleware`, runtime
+  `nodejs`), which the adapter supports since 5.13.0 — to be observed on the
+  first deploy preview; pdfkit's font data is already in the function trace.
+- Scheduler: `infra/cloudflare/notification-sweep/` (Worker cron, bearer
+  token secret, manual `/run`).
+- Backups: `.github/workflows/backup.yml` — daily encrypted (age) data
+  dump, SHA-256, private R2 bucket, 30 daily / 12 monthly retention.
+- Analytics: Cloudflare Web Analytics adapter (`provider = cloudflare`,
+  migration `20260923110000` widens the vocabulary; cookieless → no
+  consent forced, no banner); CSP allows the beacon statically.
+- Turnstile: already supported; keys pending.
+- Not done (needs accounts): everything else in `RENZ_R1_PRODUCTION_DECISIONS.md`
+  § "What still blocks execution".
+
 ## 7. Owner decisions still required
 
-Hosting provider + billing; deployment region; public domain; owner
-production email (and confirmation of `renzconstruuction@gmail.com`);
-backup location and retention; scheduler mechanism (follows hosting);
-data-protection contact / incident roles; optional: Turnstile, SMTP for
-self-service reset, analytics provider, error monitoring.
+After the approval: the domain name; the production region (after the
+staging latency benchmark); the owner's production sign-in email (and
+confirmation of the `renzconstruuction@gmail.com` spelling); who holds the
+operator role and the backup private key; data-protection contact /
+incident roles. Everything else is DECIDED (`RENZ_R1_PRODUCTION_DECISIONS.md`).
 
 ## 8. Hosting environment
 
@@ -82,12 +112,12 @@ to Kigali; latency not measured).
 ## 10. Production database
 
 BLOCKED — no Supabase organisation token (`supabase projects list` →
-"Access token not provided"). Local proof only: 47 migrations apply to an
+"Access token not provided"). Local proof only: 49 migrations (47 + the two R1 owner-decision migrations) apply to an
 empty database, pgTAP 1,313 pass (§78).
 
 ## 11. Migration result
 
-Local: empty → 47 migrations → expected schema → pgTAP 20 files / 1,313
+Local: empty → 49 migrations → expected schema → pgTAP 21 files / 1,319
 assertions → `db lint` clean → generated types identical → owner bootstrap
 path exercised by the S3/C10 suites. Cloud: BLOCKED.
 
@@ -481,9 +511,11 @@ wait for a candidate URL.
 
 ## 80. BLOCKERS
 
-**One:** an application host and a Supabase organisation with credentials
-(access token / project) for STAGING and PRODUCTION, plus the domain and
-the owner email. Every cloud section above unblocks together once these
+**One:** accounts and access for the approved architecture — a Netlify
+site, two Supabase projects (organisation access / `SUPABASE_ACCESS_TOKEN`),
+a Cloudflare account (domain, Turnstile, Web Analytics, Workers, R2), a Git
+remote for the backup workflow — plus the domain name and the owner's
+production email. Every cloud section above unblocks together once these
 exist.
 
 ## 81. OWNER DECISIONS

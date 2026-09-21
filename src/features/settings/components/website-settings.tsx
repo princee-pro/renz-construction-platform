@@ -290,6 +290,7 @@ export function WebsiteSettingsView({
                   >
                     <option value="">Not chosen</option>
                     <option value="none">None</option>
+                    <option value="cloudflare">Cloudflare Web Analytics (cookieless)</option>
                     <option value="plausible">Plausible (cookieless)</option>
                     <option value="umami">Umami (cookieless)</option>
                     <option value="ga4">Google Analytics 4 (consent required)</option>

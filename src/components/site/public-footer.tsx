@@ -75,6 +75,9 @@ export function PublicFooter({ services, identity, globals, copy }: PublicFooter
       <div className="container site-footer-inner">
         <div className="site-footer-brand">
           <PreviewRenzIdentity decorative size={40} tone="dark" wordmark />
+          {identity.tagline ? (
+            <p className="datum-label site-footer-slogan">{identity.tagline}</p>
+          ) : null}
           <h2 className="site-footer-headline" id="site-footer-heading">
             {options.headline}
           </h2>

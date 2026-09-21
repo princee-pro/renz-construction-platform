@@ -1,0 +1,31 @@
+# RENZ — Netlify (owner decision, R1 2026-09-21): Netlify Free hosts the
+# Next.js application; Supabase Free holds database / auth / storage.
+# Nothing here is a secret. Environment variables are set in the Netlify
+# UI (server scope) — see docs/RENZ_ENVIRONMENT_VARIABLES.md.
+
+[build]
+  command = "corepack enable && corepack pnpm@11.25.0 install --frozen-lockfile && corepack pnpm@11.25.0 build"
+  # The Next.js adapter sets the publish directory itself.
+
+[build.environment]
+  NODE_VERSION = "24.20.0"
+  # Netlify's package-manager detection reads package.json#packageManager;
+  # corepack is enabled explicitly above so the pinned pnpm is used.
+  COREPACK_ENABLE_STRICT = "0"
+  NEXT_TELEMETRY_DISABLED = "1"
+  DO_NOT_TRACK = "1"
+
+# OpenNext adapter for Next.js (Netlify keeps it current on every build;
+# pinning is deliberately not done — see docs/RENZ_PRODUCTION_DEPLOYMENT.md).
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# Netlify Image CDN: the app serves its own media through signed Supabase
+# Storage URLs (next/image is `unoptimized` for those), so only static
+# assets are optimised. Remote patterns are listed defensively for the
+# Supabase host in case an optimised remote image is ever used.
+[images]
+  remote_images = ["https://.*\\.supabase\\.co/storage/v1/.*"]
+
+# Security headers are emitted by next.config.ts on every response; nothing
+# is duplicated here so there is one source of truth.

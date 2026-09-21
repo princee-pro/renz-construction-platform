@@ -36,7 +36,7 @@ export default async function PublicLayout({ children }: PublicLayoutProps) {
     <div className="public-site" data-preview={previewEnabled ? "true" : undefined} id="site-top">
       <MotionPreference />
       <GridOverlay />
-      {previewEnabled ? <BrandOpener /> : null}
+      {previewEnabled ? <BrandOpener slogan={identity.tagline} /> : null}
       <OrganizationStructuredData identity={identity} />
       {identity.announcement ? (
         <p className="public-announcement" role="status">

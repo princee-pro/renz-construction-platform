@@ -36,7 +36,7 @@ function recordOpenerSeen(): void {
   }
 }
 
-export function BrandOpener() {
+export function BrandOpener({ slogan }: Readonly<{ slogan: string | null }>) {
   const pathname = usePathname();
   const [state, setState] = useState<OpenerState>("playing");
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -80,7 +80,7 @@ export function BrandOpener() {
             <small>Construction Services Ltd</small>
           </span>
         </div>
-        <span className="brand-opener-caption">From land to landmark</span>
+        {slogan ? <span className="brand-opener-caption">{slogan}</span> : null}
       </div>
       <button className="brand-opener-skip" type="button" onClick={skip}>
         Skip intro

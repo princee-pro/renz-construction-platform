@@ -1,4 +1,51 @@
+import { execSync } from "node:child_process";
+import { readdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
+
 import type { NextConfig } from "next";
+
+/**
+ * R1 (Netlify): the deployed function bundle has no repository on disk, so
+ * the build records what the health endpoint used to read at runtime —
+ * application version, build id and the latest migration version — as
+ * build-time environment values. A host that sets them explicitly wins.
+ */
+function buildMetadata(): Record<string, string> {
+  const values: Record<string, string> = {};
+  try {
+    const pkg = JSON.parse(readFileSync(join(process.cwd(), "package.json"), "utf8")) as {
+      version?: string;
+    };
+    values["RENZ_APP_VERSION"] = process.env["RENZ_APP_VERSION"] ?? pkg.version ?? "0.0.0";
+  } catch {
+    values["RENZ_APP_VERSION"] = process.env["RENZ_APP_VERSION"] ?? "0.0.0";
+  }
+  let commit = process.env["COMMIT_REF"] ?? process.env["VERCEL_GIT_COMMIT_SHA"] ?? "";
+  if (!commit) {
+    try {
+      commit = execSync("git rev-parse HEAD", {
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "ignore"],
+      }).trim();
+    } catch {
+      commit = "";
+    }
+  }
+  values["RENZ_BUILD_ID"] =
+    process.env["RENZ_BUILD_ID"] ?? (commit ? commit.slice(0, 12) : "local");
+  if (!process.env["RENZ_LATEST_MIGRATION"]) {
+    try {
+      const latest = readdirSync(join(process.cwd(), "supabase", "migrations"))
+        .filter((name) => /^\d{14}_.+\.sql$/u.test(name))
+        .sort()
+        .at(-1);
+      if (latest) values["RENZ_LATEST_MIGRATION"] = latest.slice(0, 14);
+    } catch {
+      // No migrations folder in this checkout: the health check reports "not checked".
+    }
+  }
+  return values;
+}
 
 /**
  * C10 §79 security headers. The CSP allows what this app actually uses:
@@ -27,14 +74,19 @@ function securityHeaders(): { key: string; value: string }[] {
   // project. A local production build against the HTTP local stack must not
   // upgrade its own media requests (they would fail).
   const production = process.env.NODE_ENV === "production" && supabaseOrigin.startsWith("https:");
+  // Cloudflare Web Analytics (R1 owner decision): a cookieless beacon the
+  // owner can switch on under Settings → Website; allowed statically so the
+  // switch needs no redeploy. It sends nothing until enabled.
+  const cfInsightsScript = "https://static.cloudflareinsights.com";
+  const cfInsightsConnect = "https://cloudflareinsights.com";
   const csp = [
     "default-src 'self'",
-    `script-src 'self' 'unsafe-inline' ${turnstile}`.trim(),
+    `script-src 'self' 'unsafe-inline' ${cfInsightsScript} ${turnstile}`.trim(),
     "style-src 'self' 'unsafe-inline'",
     `img-src 'self' data: blob: ${supabaseOrigin}`.trim(),
     `media-src 'self' blob: ${supabaseOrigin}`.trim(),
     "font-src 'self' data:",
-    `connect-src 'self' ${supabaseOrigin} ${supabaseSocket} ${turnstile}`.trim(),
+    `connect-src 'self' ${supabaseOrigin} ${supabaseSocket} ${cfInsightsConnect} ${turnstile}`.trim(),
     `frame-src ${turnstile || "'none'"}`,
     "frame-ancestors 'none'",
     "base-uri 'self'",
@@ -59,6 +111,7 @@ function securityHeaders(): { key: string; value: string }[] {
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  env: buildMetadata(),
   headers() {
     return Promise.resolve([{ source: "/(.*)", headers: securityHeaders() }]);
   },

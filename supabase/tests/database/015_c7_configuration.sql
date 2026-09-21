@@ -70,12 +70,13 @@ select throws_ok('select public.admin_get_business_settings()', '42501', null, '
 -- Business profile: edit, conflict, publish -----------------------------
 select pg_temp.as_actor('97000000-0000-4000-8000-0000000000e2', 'aal2');
 select is(public.admin_get_business_settings() #>> '{profile,display_name}', 'RENZ Construction Services Ltd', 'authorized business display name is the seeded RENZ name');
-insert into c7 values ('profile', public.update_business_profile(1, 'RENZ Construction Services Ltd', 'renzconstruuction@gmail.com', 'RENZ', null, 'SYNTHETIC public description', 'SYNTHETIC tagline'));
+-- R1: the slogan seed migration bumped the singleton to version 2.
+insert into c7 values ('profile', public.update_business_profile(2, 'RENZ Construction Services Ltd', 'renzconstruuction@gmail.com', 'RENZ', null, 'SYNTHETIC public description', 'SYNTHETIC tagline'));
 select is(pg_temp.v('profile') ->> 'ok', 'true', 'business profile updated by an admin with settings.business.write');
 select is(public.update_business_profile(1, 'STALE', 'stale@example.test') -> 'reasons' -> 0 ->> 'code', 'version_conflict', 'stale profile save is rejected');
-select is((public.update_business_profile(1, 'STALE', 'stale@example.test') ->> 'current_version')::integer, 2, 'conflict reports the current version');
-select is(public.update_business_profile(2, 'X', 'not-an-email') -> 'reasons' -> 0 ->> 'code', 'invalid_input', 'invalid email is rejected');
-select is(public.update_business_profile(2, 'X', 'x@example.test', 'RENZ', null, null, null, 'javascript:alert(1)') -> 'reasons' -> 0 ->> 'code', 'invalid_input', 'script website URL is rejected');
+select is((public.update_business_profile(1, 'STALE', 'stale@example.test') ->> 'current_version')::integer, 3, 'conflict reports the current version (2 after the R1 slogan seed + 1)');
+select is(public.update_business_profile(3, 'X', 'not-an-email') -> 'reasons' -> 0 ->> 'code', 'invalid_input', 'invalid email is rejected');
+select is(public.update_business_profile(3, 'X', 'x@example.test', 'RENZ', null, null, null, 'javascript:alert(1)') -> 'reasons' -> 0 ->> 'code', 'invalid_input', 'script website URL is rejected');
 select is(public.public_site_configuration() -> 'business', null, 'draft edits are not public before publish');
 
 -- Contact channels: WhatsApp texting only, no tel: unless enabled -------

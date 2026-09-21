@@ -1,0 +1,14 @@
+# RENZ — Cloudflare Workers Free cron trigger for the hourly notification
+# sweep (owner decision, R1). Deploy with `wrangler deploy` from this folder.
+# Secrets: `wrangler secret put RENZ_TASK_TOKEN` (the same value the app
+# host holds). Nothing secret lives in this file.
+name = "renz-notification-sweep"
+main = "worker.mjs"
+compatibility_date = "2026-09-01"
+
+[triggers]
+crons = ["5 * * * *"]
+
+[vars]
+# The application origin (no trailing slash), e.g. https://www.example.com
+RENZ_APP_ORIGIN = "https://CHANGE-ME"

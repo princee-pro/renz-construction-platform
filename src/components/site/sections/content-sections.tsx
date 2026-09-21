@@ -167,8 +167,9 @@ export function HeroSection({ section, context }: SectionRenderProps) {
   const lines = list<string>(config, "headline_lines").filter(
     (line) => typeof line === "string" && line.trim(),
   );
-  const headline =
-    lines.length > 0 ? lines : [context.identity.tagline ?? "From land", "to landmark"];
+  // "From land to landmark" is the homepage campaign headline (owner-editable
+  // page copy); the company slogan lives in the identity and is never used here.
+  const headline = lines.length > 0 ? lines : ["From land", "to landmark"];
   const primary = resolveCta(cta(config, "primary_cta"), context) ?? siteCta(context);
   const secondary = resolveCta(cta(config, "secondary_cta"), context) ?? {
     label: "See our services",

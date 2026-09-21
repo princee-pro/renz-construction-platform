@@ -402,7 +402,7 @@ export const websiteSettingsSchema = z
       .string()
       .trim()
       .transform((v) => (v === "" ? null : v))
-      .pipe(z.enum(["none", "plausible", "umami", "ga4", "other"]).nullable()),
+      .pipe(z.enum(["none", "plausible", "umami", "ga4", "cloudflare", "other"]).nullable()),
     consentRequired: z.boolean(),
     firstPartyAnalyticsEnabled: z.boolean(),
     analyticsSiteId: z

@@ -249,25 +249,22 @@ test.describe.serial("RENZ C7 configuration", () => {
       timeout: 20_000,
     });
     const other = await secondSession(browser, "superB", "/admin/settings/business");
-    await other.page.getByRole("textbox", { name: "Tagline" }).fill("SYNTHETIC tagline B");
+    await other.page.getByRole("textbox", { name: "Slogan" }).fill("SYNTHETIC tagline B");
     await other.page.getByRole("button", { name: "Save draft", exact: true }).click();
     await expect(other.page.getByText(/saved as draft/u)).toBeVisible({ timeout: 15_000 });
     await expect(page.locator(".realtime-status", { hasText: "Updated just now" })).toBeVisible({
       timeout: 20_000,
     });
-    await page.getByRole("textbox", { name: "Tagline" }).fill("SYNTHETIC tagline A stale");
+    await page.getByRole("textbox", { name: "Slogan" }).fill("SYNTHETIC tagline A stale");
     await page.getByRole("button", { name: "Save draft", exact: true }).click();
     await expect(page.getByText(/saved these settings first/u)).toBeVisible({ timeout: 15_000 });
-    await expect(page.getByRole("textbox", { name: "Tagline" })).toHaveValue(
+    await expect(page.getByRole("textbox", { name: "Slogan" })).toHaveValue(
       "SYNTHETIC tagline A stale",
     );
     await page.getByRole("button", { name: "Reload latest", exact: true }).click();
-    await expect(page.getByRole("textbox", { name: "Tagline" })).toHaveValue(
-      "SYNTHETIC tagline B",
-      {
-        timeout: 15_000,
-      },
-    );
+    await expect(page.getByRole("textbox", { name: "Slogan" })).toHaveValue("SYNTHETIC tagline B", {
+      timeout: 15_000,
+    });
     await other.context.close();
   });
 

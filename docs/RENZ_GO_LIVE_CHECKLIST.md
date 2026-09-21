@@ -17,17 +17,19 @@ done — no hosting exists.
 
 ## Decisions (owner) — all DECISION REQUIRED (full table: `RENZ_R1_PRODUCTION_DECISIONS.md`)
 
-- [ ] Hosting provider + billing owner; region; production domain
+- [x] Hosting provider + database provider (Netlify Free + Supabase Free, staging + production projects), Cloudflare for DNS/Turnstile/Analytics/Workers/R2, GitHub Actions backups — OWNER APPROVED 2026-09-21
+- [ ] Production region (after the staging latency benchmark); production domain name
 - [ ] Owner email for the first Super Admin (taken exactly as written by the client)
-- [ ] SMTP for password-reset email (or accept operator-assisted resets)
-- [ ] Backup retention/location; who holds the platform operator role
-- [ ] Cloudflare Turnstile account (recommended for public forms)
-- [ ] Third-party analytics provider, if any (first-party aggregates work without one)
+- [x] Password reset: owner/operator-assisted (no SMTP) — OWNER APPROVED
+- [x] Backup location/retention: private R2 bucket, 30 daily / 12 monthly, encrypted — OWNER APPROVED
+- [ ] Who holds the platform operator role and the age private key
+- [x] Cloudflare Turnstile Free and Cloudflare Web Analytics (cookieless, no banner) — OWNER APPROVED; keys/token still to be created
+- [x] Official slogan "Brick by Brick." (owner-editable, seeded) — OWNER APPROVED
 
 ## Platform (operator)
 
 - [ ] Supabase project created; sign-ups disabled; TOTP enabled; Site URL + redirect list set
-- [ ] `supabase db push` applied 47 migrations; `db lint` clean; buckets provisioned (`storage.mjs provision`)
+- [ ] `supabase db push` applied 49 migrations; `db lint` clean; buckets provisioned (`storage.mjs provision`)
 - [ ] `seed.sql` NOT applied
 - [ ] Owner user created (auto-confirmed), `must_change_password = true`, `private.bootstrap_super_admin` run once
 - [ ] App deployed from the release-candidate commit with the environment table in `RENZ_PRODUCTION_DEPLOYMENT.md`; `RENZ_CLIENT_PREVIEW` and `RENZ_INTAKE_ALLOW_DEV_BYPASS` absent
@@ -70,5 +72,5 @@ Copied from the C10 report §118; kept here so the list has one home.
 
 1. Every DECISION REQUIRED line above.
 2. Cloud rehearsal of backup/restore and of the app rollback (both are only local-proven).
-3. Vercel Cron: set `CRON_SECRET` = `RENZ_TASK_TOKEN` and observe the first provider run (GET vs POST — `RENZ_R1_SCHEDULED_TASKS.md`).
+3. Deploy the Cloudflare Worker cron (`infra/cloudflare/notification-sweep/`) and observe the first hourly run.
 4. Optional: Turnstile keys; third-party analytics adapter for the chosen provider.

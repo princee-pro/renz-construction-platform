@@ -47,6 +47,7 @@ function timeout<T>(work: PromiseLike<T>, ms: number): Promise<T> {
 }
 
 function appVersion(): string {
+  if (process.env["RENZ_APP_VERSION"]) return process.env["RENZ_APP_VERSION"];
   try {
     const raw = readFileSync(join(process.cwd(), "package.json"), "utf8");
     const parsed = JSON.parse(raw) as { version?: string };
@@ -57,6 +58,7 @@ function appVersion(): string {
 }
 
 function buildId(): string {
+  if (process.env["RENZ_BUILD_ID"]) return process.env["RENZ_BUILD_ID"];
   try {
     return readFileSync(join(process.cwd(), ".next", "BUILD_ID"), "utf8")
       .trim()
@@ -280,6 +282,9 @@ export async function runHealthChecks(): Promise<HealthReport> {
  * (set by the deployment runbook), else unknown (reported as a warning).
  */
 function latestLocalMigration(): string | null {
+  // Build-time value (next.config.ts) or the host's explicit setting first:
+  // the deployed function bundle has no migrations folder.
+  if (process.env["RENZ_LATEST_MIGRATION"]) return process.env["RENZ_LATEST_MIGRATION"];
   try {
     const files = readdirSync(join(process.cwd(), "supabase", "migrations"))
       .filter((name) => /^\d{14}_.+\.sql$/u.test(name))

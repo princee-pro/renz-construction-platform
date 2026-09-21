@@ -15,9 +15,9 @@ restore and loses data written after the backup, so it is the last resort.
 
 ## 1. Redeploy the previous build
 
-Vercel: Deployments → previous production deployment → **Promote to
-production** (seconds; no build). Other hosts: deploy the previous Git
-commit (`git log --first-parent main`). Then:
+Netlify (owner-approved host): Deploys → the previous successful deploy →
+**Publish deploy** (seconds; no build; the site stays locked to that deploy
+until unlocked). Then:
 
 - `node scripts/wait-for-server.mjs https://<domain>/api/health`
 - open the public home page and `/admin/sign-in` (the owner signs in)
@@ -60,7 +60,7 @@ Follow `RENZ_BACKUP_RESTORE.md` § Restore. Before starting:
 
 ## Rehearsed / not rehearsed
 
-- App redeploy to a previous build: **NOT TESTED** — no hosting exists.
+- App redeploy to a previous build (Netlify "Publish deploy"): **NOT TESTED** — no Netlify site exists yet.
   Locally the equivalent (`git checkout <prev> && pnpm build && pnpm start`)
   is exercised implicitly by every phase's verification.
 - Forward migration reversing a previous one: exercised in Phase 1 (S4

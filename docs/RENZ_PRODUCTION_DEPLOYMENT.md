@@ -1,20 +1,20 @@
 # RENZ production deployment
 
-C10 §147–148. The exact order in which a first production deployment is
-performed, and how later releases are shipped. Hosting is not yet
-assigned (Decision Register G5); the steps are written for the Phase 0
-recommendation — **Vercel for the Next.js app, Supabase Cloud for the
-database / auth / storage** — and every step that depends on that choice is
-marked. Nothing in this document has been executed against a cloud
-resource: C10 ends with a local release candidate (`DO NOT DEPLOY`).
+C10 §147–148, revised for the owner-approved R1 architecture
+(2026-09-21): **Netlify Free** for the Next.js application, **Supabase
+Free** (two projects: staging, production) for database / auth / MFA /
+realtime / storage, **Cloudflare** for DNS/registrar, Turnstile, Web
+Analytics, Workers cron and R2 backups, **GitHub Actions** for backup
+execution. Target: zero monthly cost. Nothing in this document has yet been
+executed against a cloud resource (R1 report §80).
 
 ## 0. Preconditions (owner decisions)
 
 | Decision | Status |
 | --- | --- |
-| Hosting provider and billing owner (app + database) | DECISION REQUIRED |
-| Region (Supabase: `eu-central-1` or the closest region to Kigali offered; latency was not measured) | DECISION REQUIRED |
-| Production domain and DNS control (`www.` + apex) | DECISION REQUIRED |
+| Hosting provider and billing owner (app + database) | DECIDED — Netlify Free + Supabase Free (owner) |
+| Region | DECIDED for staging — `eu-central-1` Frankfurt; production region chosen only after the staging latency benchmark (Netlify function → Supabase) passes |
+| Production domain and DNS control (`www.` + apex) | DECIDED — Cloudflare DNS (Registrar preferred); the domain name itself is still to be supplied |
 | Owner account email for the first Super Admin | DECISION REQUIRED (the client's mailbox — spelling is taken exactly as the client wrote it) |
 | Transactional email: SMTP is only needed for self-service password reset; staff onboarding does NOT use email (temporary passwords are handed over privately). Default production path (R1): owner/operator-assisted reset — the sign-in screen and the Security help say so; there is no "check your email" flow | DECISION REQUIRED only if the owner wants self-service reset (`RENZ_R1_PRODUCTION_DECISIONS.md` #7) |
 | Backup retention and off-site location | see `RENZ_BACKUP_RESTORE.md` |
@@ -55,8 +55,8 @@ node scripts/storage.mjs status
 ```
 
 Confirm with `select count(*) from supabase_migrations.schema_migrations`
-that the count equals the number of files in `supabase/migrations` (47 at
-the C10 release candidate, latest `20260922120000`).
+that the count equals the number of files in `supabase/migrations` (49 at
+the R1 release candidate, latest `20260923110000`).
 
 Do **not** run `supabase/seed.sql` against production: it holds reviewed
 synthetic content for local development only (C10 §137–141; see the
@@ -85,7 +85,18 @@ production seed audit in the C10 report).
    Access, System Health and Launch Readiness are visible only to the
    owner.
 
-## 4. Deploy the application (Vercel or equivalent Node 24 host)
+## 4. Deploy the application (Netlify)
+
+Netlify site connected to the repository (the repository must first be
+pushed to a Git host — it has never been pushed). `netlify.toml` carries
+the build (`corepack pnpm@11.25.0 build`), Node 24.20.0 and the
+`@netlify/plugin-nextjs` adapter; the adapter is not pinned so Netlify keeps
+it current. Use a **branch/deploy-preview URL first**; do not attach the
+custom domain until R1 passes. First-deploy observations required (never
+proven locally): the `src/proxy.ts` Node.js proxy runs as the adapter's
+Node middleware (the build emits it as `/_middleware`, runtime `nodejs`);
+PDF routes (pdfkit AFM data is in the function trace); Netlify Image CDN
+for static assets; health `ok`.
 
 Environment (server scope unless marked public):
 
@@ -101,30 +112,25 @@ Environment (server scope unless marked public):
 | `RENZ_INTAKE_ALLOW_DEV_BYPASS` | — | **must be absent** (Launch Readiness and `/api/health` warn if set) |
 | `RENZ_PUBLIC_CACHE_SECONDS`, `RENZ_LATEST_MIGRATION` | optional | leave unset when the repository (with `supabase/migrations`) is deployed |
 
-Build settings: framework Next.js, Node 24, package manager pnpm 11.25.0
-(pinned in `package.json` `packageManager`/engines), build command
-`pnpm build`, output default. Security headers (CSP, HSTS, nosniff, frame
-deny, referrer, permissions policy) are emitted by `next.config.ts`; HSTS
-and `upgrade-insecure-requests` switch on automatically when
+Build-time metadata (application version, build id from `COMMIT_REF`,
+latest migration version) is recorded by `next.config.ts` so the health
+endpoint needs no repository files at runtime (Netlify functions have no
+persistent filesystem; nothing stateful may live there). Security headers
+(CSP incl. `static.cloudflareinsights.com`, HSTS, nosniff, frame deny,
+referrer, permissions policy) are emitted by `next.config.ts`; HSTS and
+`upgrade-insecure-requests` switch on automatically when
 `NODE_ENV=production` and the Supabase URL is https.
 
-Deploy the release-candidate commit; the platform builds and runs it.
+Deploy the release-candidate commit; Netlify builds and runs it.
 
-## 5. Scheduler for timed notifications
+## 5. Scheduler for timed notifications (Cloudflare Workers Free)
 
-Timed notifications (invoice due/overdue, stale drafts, ending
-assignments…) are produced by an idempotent sweep. Wire one of:
-
-- Vercel Cron: `{"crons":[{"path":"/api/tasks/notifications-sweep","schedule":"0 * * * *"}]}`
-  in `vercel.json`; set `CRON_SECRET` to the same value as `RENZ_TASK_TOKEN`
-  (Vercel sends it as `Authorization: Bearer …`). Vercel Cron issues GET by
-  default while the route accepts POST — observe the first provider run;
-  if it is refused, add a `GET` export delegating to the same handler
-  (NOT TESTED in R1: no hosting). Details: `RENZ_R1_SCHEDULED_TASKS.md`.
-- any external scheduler calling the endpoint hourly with the bearer token, or
-- the owner's **Run sweep now** button in Notifications (manual fallback).
-
-Launch Readiness shows the "Timed notification task endpoint armed" check.
+`infra/cloudflare/notification-sweep/`: a cron Worker (`5 * * * *`) that
+POSTs `/api/tasks/notifications-sweep` with `Authorization: Bearer
+$RENZ_TASK_TOKEN`. Deploy with `wrangler deploy`; set `RENZ_APP_ORIGIN` in
+`wrangler.toml` and the token with `wrangler secret put RENZ_TASK_TOKEN`.
+The Worker holds no database credential. Manual fallback: the owner's
+**Run sweep now** button. Details: `RENZ_R1_SCHEDULED_TASKS.md`.
 
 ## 6. First-run configuration by the owner (in the product, not by engineers)
 
@@ -155,7 +161,7 @@ node scripts/wait-for-server.mjs https://<domain>/api/health
 
 ## 8. Releasing a later version
 
-1. Branch from `main`; run `pnpm c10:verify` locally (stop on the first failure).
+1. Branch from `main`; run `pnpm r1:verify` locally (stop on the first failure).
 2. Migrations are append-only and forward-only; never edit an applied file.
 3. Deploy order: **database first** (`supabase db push`), then the app.
    Every migration since C4 is written to be compatible with the previous
@@ -165,4 +171,5 @@ node scripts/wait-for-server.mjs https://<domain>/api/health
 4. Publish the public configuration once if the release changed the
    projection (Launch Readiness says "unpublished changes").
 5. Watch `/api/health` and the Notification Center for five minutes.
-6. Roll back per `RENZ_ROLLBACK.md` if anything regresses.
+6. Roll back per `RENZ_ROLLBACK.md` (Netlify: Deploys → previous deploy →
+   **Publish deploy**) if anything regresses.

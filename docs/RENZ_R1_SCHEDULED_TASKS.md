@@ -15,8 +15,8 @@ runtime job.
 | Authorization | `Authorization: Bearer $RENZ_TASK_TOKEN` (32+ chars). Constant-time comparison. 404 when the token is not configured at all, 401 on a missing/forged bearer (proven by the C10 security probe, check 9). Never exposed to the browser; never in `NEXT_PUBLIC_*`. |
 | Idempotency | One row per (recipient, dedupe key): a repeated run creates nothing new (pgTAP 017; c9 E2E "timed sweep … is idempotent"). Each run is recorded in `notification_sweep_runs`. |
 | Failure behaviour | The endpoint returns 500 with `{ ok: false }` and no internals; nothing partial is written (one SQL transaction). Launch Readiness shows the scheduler check as warning after 26 h without a run; the owner can trigger it manually. |
-| Vercel wiring | `vercel.json`: `{ "crons": [{ "path": "/api/tasks/notifications-sweep", "schedule": "0 * * * *" }] }`. Vercel sends `Authorization: Bearer <CRON_SECRET>` when a `CRON_SECRET` environment variable exists — set `CRON_SECRET` to the same value as `RENZ_TASK_TOKEN` and no adapter is required. Vercel Cron issues **GET** requests by default; the route accepts POST only, so the first provider-triggered run must be observed (**NOT TESTED** — no hosting). If the provider cannot POST, add a `GET` export that delegates to the same handler under the same token check (one-line change, not made speculatively). |
-| Other hosts | Any scheduler that can `POST` with a bearer header (GitHub Actions cron, cron on a VPS, Supabase pg_cron + `net.http_post`). |
+| Owner-approved wiring | **Cloudflare Workers Free cron** — `infra/cloudflare/notification-sweep/worker.mjs` (`5 * * * *`) POSTs with the bearer token; secret set with `wrangler secret put RENZ_TASK_TOKEN`; app origin in `wrangler.toml`. The Worker also answers `POST /run` (same bearer) for a manual check. Provider-triggered execution: **NOT TESTED** until the Worker is deployed. |
+| Other hosts | Any scheduler that can `POST` with a bearer header (GitHub Actions cron, Supabase pg_cron + `net.http_post`). |
 
 ## 2. Intake upload-session cleanup
 

@@ -75,7 +75,7 @@ export type SiteIdentity = Readonly<{
   /** C9 website analytics mode (published values only; provider secrets never travel). */
   analytics: Readonly<{
     firstParty: boolean;
-    provider: "plausible" | "umami" | "ga4" | "other" | null;
+    provider: "plausible" | "umami" | "ga4" | "cloudflare" | "other" | null;
     siteId: string | null;
     consentRequired: boolean;
   }>;
@@ -88,7 +88,11 @@ function analyticsMode(config: PublicConfiguration): SiteIdentity["analytics"] {
   const website = config.website ?? {};
   const provider = website.analytics_provider;
   const known =
-    provider === "plausible" || provider === "umami" || provider === "ga4" || provider === "other"
+    provider === "plausible" ||
+    provider === "umami" ||
+    provider === "ga4" ||
+    provider === "cloudflare" ||
+    provider === "other"
       ? provider
       : null;
   const thirdParty = website.analytics_enabled === true && known !== null;

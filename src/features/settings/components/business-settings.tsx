@@ -148,7 +148,12 @@ export function BusinessSettingsView({
                   />
                 </Field>
               </div>
-              <Field error={state.fieldErrors["tagline"]} id="tagline" label="Tagline">
+              <Field
+                error={state.fieldErrors["tagline"]}
+                hint="The official slogan, shown in the site opener and the footer once published."
+                id="tagline"
+                label="Slogan"
+              >
                 <input
                   defaultValue={profile.tagline ?? ""}
                   id="tagline"

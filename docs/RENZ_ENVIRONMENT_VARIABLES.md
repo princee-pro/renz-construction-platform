@@ -18,7 +18,7 @@ or reports.
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | PUBLIC SAFE · OPTIONAL | Cloudflare Turnstile widget on public forms | host env (public) | owner (Cloudflare) | widget absent; server-side controls still apply | yes |
 | `TURNSTILE_SECRET_KEY` | SERVER SECRET · OPTIONAL | Server-side Turnstile verification | host env (server) | operator | verification skipped when the site key is also absent; set only one → Launch Readiness warns | yes |
 | `RENZ_PUBLIC_CACHE_SECONDS` | OPTIONAL | Public content cache window (default 60) | host env | operator | default 60 s | n/a |
-| `RENZ_LATEST_MIGRATION` | OPTIONAL | Latest migration version when `supabase/migrations` is not deployed with the app (health "Database up to date") | host env | operator | health migration check reports "warning: not checked" only if the folder is also absent | n/a |
+| `RENZ_LATEST_MIGRATION`, `RENZ_BUILD_ID`, `RENZ_APP_VERSION` | OPTIONAL (build-time) | Recorded by `next.config.ts` at build time (latest migration file, `COMMIT_REF`/git sha, package version) for the health endpoint; a host may override | computed at build | — | health falls back to filesystem reads, then "not checked" | n/a |
 | `RENZ_CLIENT_PREVIEW` | LOCAL ONLY / TEST ONLY | Labelled client-review experience | never in production | — | if `true` in a production build → health `blocked` (503) | n/a |
 | `RENZ_INTAKE_ALLOW_DEV_BYPASS` | TEST ONLY | Lets the browser-test server accept intake without Turnstile / production posture | Playwright web server only | — | if `true` in a production build → health `blocked` (503); Launch Readiness warning | n/a |
 | `NODE_ENV` | set by the platform | `production` on the host | host | — | — | n/a |

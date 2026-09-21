@@ -1,0 +1,102 @@
+# RENZ — database backup (owner decision, R1 2026-09-21).
+#
+# Daily: `supabase db dump --data-only` from the production project, encrypted
+# with age (public-key encryption; the private key stays offline with the
+# owner/operator), SHA-256 checksum, uploaded to a private Cloudflare R2
+# bucket (S3 API), rolling retention (daily × 30, monthly × 12). Nothing is
+# ever committed; nothing is printed to the log except sizes and checksums.
+#
+# Required repository secrets (GitHub → Settings → Secrets):
+#   SUPABASE_DB_URL        production database connection string (read access is enough)
+#   BACKUP_AGE_PUBLIC_KEY  age recipient (age1…) — the matching private key is NOT stored anywhere online
+#   R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET
+#
+# Restore: docs/RENZ_BACKUP_RESTORE.md (decrypt with the private key, verify the
+# checksum, restore into a SCRATCH project first, then production).
+
+name: backup
+
+on:
+  schedule:
+    - cron: "17 2 * * *" # 02:17 UTC daily
+  workflow_dispatch:
+    inputs:
+      label:
+        description: "Optional label for a manual backup (e.g. pre-release)"
+        required: false
+        default: "manual"
+
+permissions:
+  contents: read
+
+jobs:
+  dump:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install tools
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq age awscli >/dev/null
+          npm install -g supabase@2 >/dev/null
+
+      - name: Dump (data only, COPY format)
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          set -euo pipefail
+          stamp="$(date -u +%Y%m%dT%H%M%SZ)"
+          label="${{ github.event.inputs.label || 'daily' }}"
+          name="renz-${label}-${stamp}"
+          echo "name=${name}" >> "$GITHUB_ENV"
+          supabase db dump --db-url "$SUPABASE_DB_URL" --data-only --use-copy -f "${name}.sql"
+          echo "dump: $(wc -c < "${name}.sql") bytes"
+
+      - name: Encrypt and checksum
+        env:
+          BACKUP_AGE_PUBLIC_KEY: ${{ secrets.BACKUP_AGE_PUBLIC_KEY }}
+        run: |
+          set -euo pipefail
+          age -r "$BACKUP_AGE_PUBLIC_KEY" -o "${name}.sql.age" "${name}.sql"
+          shred -u "${name}.sql"
+          sha256sum "${name}.sql.age" | tee "${name}.sha256"
+
+      - name: Upload to R2
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          R2_ENDPOINT: https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+        run: |
+          set -euo pipefail
+          prefix="daily"
+          if [ "$(date -u +%d)" = "01" ]; then prefix="monthly"; fi
+          aws --endpoint-url "$R2_ENDPOINT" s3 cp "${name}.sql.age" "s3://${R2_BUCKET}/${prefix}/${name}.sql.age" --no-progress
+          aws --endpoint-url "$R2_ENDPOINT" s3 cp "${name}.sha256" "s3://${R2_BUCKET}/${prefix}/${name}.sha256" --no-progress
+
+      - name: Rolling retention (daily 30, monthly 12)
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          R2_ENDPOINT: https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+        run: |
+          set -euo pipefail
+          prune() {
+            local prefix="$1" keep="$2"
+            aws --endpoint-url "$R2_ENDPOINT" s3 ls "s3://${R2_BUCKET}/${prefix}/" \
+              | awk '{print $4}' | grep '\.sql\.age$' | sort \
+              | head -n -"$keep" \
+              | while read -r old; do
+                  [ -n "$old" ] || continue
+                  aws --endpoint-url "$R2_ENDPOINT" s3 rm "s3://${R2_BUCKET}/${prefix}/${old}"
+                  aws --endpoint-url "$R2_ENDPOINT" s3 rm "s3://${R2_BUCKET}/${prefix}/${old%.sql.age}.sha256" || true
+                done
+          }
+          prune daily 30
+          prune monthly 12

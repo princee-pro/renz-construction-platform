@@ -1,38 +1,40 @@
 # RENZ R1 production decisions
 
-R1 §4. Every decision a production deployment needs, with its state on
-2026-09-21. **No owner decision was invented.** Where the repository already
-records a recommendation it is shown as such; a recommendation is not a
-decision. Sources: `docs/PHASE_1_DECISION_REGISTER.md` (G5 SAFE-DEFERRED),
+R1 §4. Every decision a production deployment needs. **Updated 2026-09-21
+after the owner approved the infrastructure decisions** ("RENZ R1
+INFRASTRUCTURE DECISIONS — OWNER APPROVED"); the first version of this
+table (same day, before the approval) listed eight of these as REQUIRED
+FROM OWNER. Sources: `docs/PHASE_1_DECISION_REGISTER.md` (G5 SAFE-DEFERRED),
 `docs/RENZ_PRODUCTION_DEPLOYMENT.md`, `docs/RENZ_GO_LIVE_CHECKLIST.md`,
 `docs/RENZ_C10_HARDENING_BACKLOG.md`.
 
 | # | Decision | State | Detail |
 | --- | --- | --- | --- |
-| 1 | Application hosting provider | **REQUIRED FROM OWNER** | Phase 0 recommendation: Vercel (Node 24, Next.js 16). No account, token or project exists on this machine (`vercel` CLI absent; no `VERCEL_*` environment). Any Node 24 host that can run `next start` is compatible. |
-| 2 | Database / Auth / Storage provider | **DECIDED (architecture)** | Supabase (Postgres, Auth with TOTP, Storage). Fixed by the codebase; not changing. The production **project** does not exist: no `SUPABASE_ACCESS_TOKEN`, `supabase projects list` refuses. |
-| 3 | Deployment region | **REQUIRED FROM OWNER** | Recommendation: the Supabase region closest to Kigali with the lowest measured latency (candidates: `eu-central-1` Frankfurt, `af-south-1` Cape Town if offered for the chosen plan). Latency from Rwanda was never measured (roadmap item). App host region should match. |
-| 4 | Public domain | **REQUIRED FROM OWNER** | None supplied. Nothing in the repository names a domain; the canonical base URL is owner-published configuration (Settings → Website). |
-| 5 | `www` behaviour | **DECIDED (engineering default, owner may override)** | Apex is canonical; `www.` → 308 to apex. Implemented at the host/DNS layer, not in code, so it can be inverted without a release. |
-| 6 | Owner production email (first Super Admin) | **REQUIRED FROM OWNER** | The public business email in configuration is `renzconstruuction@gmail.com` (client-supplied spelling, never auto-corrected). Whether the same mailbox is the owner's sign-in identity is an owner decision — flagged OWNER CONFIRMATION REQUIRED. |
-| 7 | Email / password-reset strategy | **DECIDED (default B, owner may upgrade to A)** | B — owner/operator-assisted: the owner issues a temporary password from Staff & Access; the platform operator resets the owner's own password / removes a lost authenticator from the Supabase dashboard. No SMTP exists; the product shows no "check your email" flow (verified R1). A — transactional email (custom SMTP in Supabase Auth) is optional and only needed if the owner wants self-service reset. |
-| 8 | Backup location | **REQUIRED FROM OWNER** | Proposal: Supabase daily backups (plan-dependent) plus an encrypted off-site copy of `supabase db dump --data-only` and the three buckets in the owner's own cloud drive/object store. |
-| 9 | Backup retention | **REQUIRED FROM OWNER** | Proposal: 30 daily, 12 monthly. |
-| 10 | Scheduler mechanism | **REQUIRED FROM OWNER (follows #1)** | One hourly job: `POST /api/tasks/notifications-sweep` with `Authorization: Bearer $RENZ_TASK_TOKEN`. Vercel Cron needs a small adapter (it sends `CRON_SECRET`, see `docs/RENZ_R1_SCHEDULED_TASKS.md`); any external scheduler works as is. Manual fallback exists in the product ("Run sweep now"). |
-| 11 | Turnstile / anti-abuse | **DECIDED (default: server-side controls only) — owner may add Turnstile** | Proven server-side controls: per-visitor HMAC rate limits, signed form tokens, honeypot, minimum interaction window, idempotency nonce, 10 MB sniffed uploads, origin checks. Cloudflare Turnstile is supported by the code (`NEXT_PUBLIC_TURNSTILE_SITE_KEY` + `TURNSTILE_SECRET_KEY`) and recommended; requires a Cloudflare account (owner). |
-| 12 | Analytics provider | **DECIDED (default: none / first-party only)** | First-party privacy-safe daily counters ship without any provider or cookie. A third-party provider is optional (C9 adapter for the published provider shape) and would introduce the consent layer. |
-| 13 | Error monitoring provider | **DECIDED (default: none)** | Host and Supabase logs plus `/api/health` and the System Health panel are the incident source (`RENZ_INCIDENT_RESPONSE.md`). A vendor (e.g. Sentry) is optional post-launch; not forced for R1. |
-| 14 | Staging / release-rehearsal environment | **DECIDED (engineering)** | Three environments: LOCAL (this machine), STAGING (a separate Supabase project + preview deployment for destructive rehearsals), PRODUCTION. Destructive restore rehearsals only ever target STAGING/scratch. Requires two Supabase projects (free tier allows two). |
-| 15 | Site mode at handover | **DECIDED** | The production candidate stays in **Preview** (noindex) until R2 owner acceptance; only the owner switches to Live. |
+| 1 | Application hosting provider | **DECIDED: Netlify Free** | `netlify.toml` + `@netlify/plugin-nextjs` (OpenNext adapter, Node 24, pnpm via corepack). Not Vercel Hobby (commercial use), not Cloudflare Pages + Render (no split). Persistent state never on the Netlify filesystem (all state is Supabase). Account + site: REQUIRED FROM OWNER to create/grant. |
+| 2 | Database / Auth / MFA / Realtime / Storage | **DECIDED: Supabase Free** | Two projects: project 1 = **staging** (destructive rehearsals), project 2 = **production**. No migration away from Supabase; no Neon. Organisation access: REQUIRED FROM OWNER (invite the operator or provide a `SUPABASE_ACCESS_TOKEN`). |
+| 3 | Deployment region | **DECIDED (staging): eu-central-1 Frankfurt** — production region pending benchmark | Measure real Netlify-function-to-Supabase latency on staging before creating production; only then choose the production region. |
+| 4 | Public domain | **DECIDED: Cloudflare** (Registrar preferred where the TLD is supported); domain name itself REQUIRED FROM OWNER | DNS at Cloudflare; the Netlify custom domain uses Netlify-managed TLS. |
+| 5 | `www` behaviour | **DECIDED (engineering default)** | Apex canonical; `www.` → 308 to apex (Netlify primary-domain redirect); no loops. |
+| 6 | Owner production email (first Super Admin) | **REQUIRED FROM OWNER** | Public business email stays `renzconstruuction@gmail.com` as supplied (OWNER CONFIRMATION REQUIRED for the spelling). Optional after domain activation: Cloudflare Email Routing → the existing RENZ Gmail. |
+| 7 | Email / password-reset strategy | **DECIDED: owner/operator-assisted** | Temporary passwords issued by the owner from Staff & Access; operator resets the owner via the Supabase dashboard. No SMTP, no "check your email" flow (the sign-in screen and Security help say so). |
+| 8 | Backup location | **DECIDED: private Cloudflare R2 Standard bucket** | Written by GitHub Actions (`.github/workflows/backup.yml`): encrypted `pg_dump` (age), SHA-256 checksum, rolling retention. Bucket + API token + age key pair: REQUIRED FROM OWNER/operator to create. |
+| 9 | Backup retention | **DECIDED: rolling — 30 daily, 12 monthly** | Enforced by the workflow's prune step. Restore rehearsal mandatory (`RENZ_BACKUP_RESTORE.md`). |
+| 10 | Scheduler mechanism | **DECIDED: Cloudflare Workers Free cron** | `infra/cloudflare/notification-sweep/` (hourly POST with the bearer token). Worker deploy: REQUIRED FROM OWNER/operator (Cloudflare account). |
+| 11 | Turnstile / anti-abuse | **DECIDED: Cloudflare Turnstile Free** | Already supported (`NEXT_PUBLIC_TURNSTILE_SITE_KEY` + `TURNSTILE_SECRET_KEY`); server-side controls remain authoritative; a visitor whose JS fails is never blocked solely for that. Keys: REQUIRED FROM OWNER/operator. |
+| 12 | Analytics provider | **DECIDED: Cloudflare Web Analytics** | Cookieless beacon adapter added (`provider = cloudflare`, migration `20260923110000`); CSP allows `static.cloudflareinsights.com`; **no cookie banner** for it. Site token: REQUIRED FROM OWNER/operator. |
+| 13 | Error monitoring provider | **DECIDED: none** | Netlify function logs + Supabase logs + `/api/health` + System Health. |
+| 14 | Environments | **DECIDED** | LOCAL / STAGING (Supabase project 1 + Netlify deploy preview or branch deploy) / PRODUCTION (Supabase project 2 + Netlify production). Destructive restore rehearsals only on STAGING/scratch. |
+| 15 | Site mode at handover | **DECIDED** | Preview (noindex) until R1 and R2 gates pass; only the owner switches to Live. |
 | 16 | Data-protection contact / incident roles | **REQUIRED FROM OWNER** | Named in the privacy notice and the incident runbook. |
-| 17 | Malware scanning for intake attachments | **DECIDED (default: manual review)** | Attachments stay `pending_review` until staff mark them safe; a scanner vendor is optional post-launch. |
-| 18 | Notification / audit retention | **NOT APPLICABLE for R1** | Nothing is deleted; revisit when volume justifies (backlog items 10–11). |
+| 17 | Malware scanning for intake attachments | **DECIDED (default: manual review)** | Attachments stay `pending_review` until staff mark them safe. |
+| 18 | Notification / audit retention | **NOT APPLICABLE for R1** | Nothing is deleted; revisit with volume. |
+| 19 | Official slogan | **DECIDED: "Brick by Brick."** | Owner-editable (Settings → Business → Slogan), seeded once by migration `20260923100000`, read by the opener and footer from the published identity. "From land to landmark." remains the homepage/campaign headline (owner-editable page copy). |
 
-## The single blocking decision
+## What still blocks execution
 
-Everything in R1 §9–§48 (provisioning, deployment, cloud rehearsals) needs
-**#1 hosting + a Supabase organisation with access credentials** to exist.
-Until the owner (or their delegate) creates the accounts — or supplies a
-`SUPABASE_ACCESS_TOKEN` and a hosting token to the operator — no cloud
-step can be executed, and per `AGENTS.md` no provider account may be
-created on the owner's behalf without explicit approval.
+Accounts and access, not decisions: a Netlify site, two Supabase projects
+(organisation access), a Cloudflare account (domain, Turnstile, Web
+Analytics, Workers, R2), a GitHub repository for the backup workflow (the
+code has never been pushed), and the owner's production email. Every cloud
+step of the R1 brief unblocks together once these exist; per `AGENTS.md`
+none may be created without explicit approval.

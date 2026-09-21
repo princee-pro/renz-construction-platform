@@ -6,7 +6,7 @@ import { useSyncExternalStore } from "react";
 import { analyticsConsentStorageKey } from "@/features/website-analytics/analytics-policy";
 
 export type ThirdPartyAnalytics = Readonly<{
-  provider: "plausible" | "umami" | "ga4" | "other";
+  provider: "plausible" | "umami" | "ga4" | "cloudflare" | "other";
   siteId: string;
   consentRequired: boolean;
 }>;
@@ -78,6 +78,19 @@ function ProviderScript({ provider, siteId }: Readonly<{ provider: string; siteI
         data-testid="analytics-provider"
         data-website-id={websiteId}
         src={`https://${host}/script.js`}
+        strategy="afterInteractive"
+      />
+    );
+  }
+  if (provider === "cloudflare") {
+    // Cloudflare Web Analytics (R1 owner decision): cookieless beacon, no
+    // identifiers; the site token is the owner-entered site id.
+    return (
+      <Script
+        data-cf-beacon={JSON.stringify({ token: siteId })}
+        data-testid="analytics-provider"
+        defer
+        src="https://static.cloudflareinsights.com/beacon.min.js"
         strategy="afterInteractive"
       />
     );
@@ -155,6 +168,7 @@ function providerName(provider: string): string {
   if (provider === "plausible") return "Plausible";
   if (provider === "umami") return "Umami";
   if (provider === "ga4") return "Google Analytics";
+  if (provider === "cloudflare") return "Cloudflare Web Analytics";
   return "an analytics provider";
 }
 

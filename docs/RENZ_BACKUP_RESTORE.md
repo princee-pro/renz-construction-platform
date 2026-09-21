@@ -18,7 +18,23 @@ assigned (Decision Register G5 is still SAFE-DEFERRED).
 Nothing else holds state. There is no cache that must be preserved: the
 Next.js public cache rebuilds from the database.
 
-## RPO / RTO (proposed — DECISION REQUIRED)
+## Owner-approved backup architecture (R1, 2026-09-21)
+
+- Execution: **GitHub Actions** (`.github/workflows/backup.yml`, daily
+  02:17 UTC + manual dispatch).
+- Format: `supabase db dump --data-only --use-copy` → encrypted with
+  **age** to the operator's public key (private key offline) → SHA-256
+  checksum.
+- Storage: a **private Cloudflare R2 Standard bucket** (S3 API), prefixes
+  `daily/` and `monthly/`.
+- Retention: rolling **30 daily, 12 monthly**, pruned by the workflow.
+- Restore rehearsal: **mandatory** on the STAGING Supabase project before
+  any production restore; sequences must be reset (below).
+- Media buckets: the workflow does not copy Storage objects yet — the
+  bucket copy is documented below and is the next backup item to automate
+  (R2 is the natural target).
+
+## RPO / RTO (numbers still to be confirmed by the owner)
 
 - RPO 24 h (daily automated database backup, plus point-in-time recovery if
   the Supabase plan includes it). Media buckets change only when staff upload

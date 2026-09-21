@@ -1061,6 +1061,11 @@ li[data-focused="true"] .mobile-route-row > a strong {
   align-content: start;
   padding-inline-end: clamp(0rem, 4vw, 3rem);
 }
+/* R1: the owner-published slogan under the wordmark (ochre on ink, AA). */
+.site-footer-slogan {
+  margin: 0.35rem 0 0;
+  color: var(--ochre, var(--public-on-ink-soft));
+}
 .site-footer-headline {
   margin: 0.4rem 0 0;
   font-size: var(--step-3);
