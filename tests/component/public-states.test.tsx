@@ -47,7 +47,7 @@ afterEach(cleanup);
 const homeSnapshot = snapshot([
   section("hero", {
     kicker: "Architecture-led construction",
-    headline_lines: ["From land", "to landmark"],
+    headline_lines: ["Brick", "by Brick"],
     summary: "RENZ designs, builds and supervises buildings.",
     primary_cta: null,
     secondary_cta: null,
@@ -83,9 +83,7 @@ describe("Public experience states", () => {
     render(<WebsitePage context={renderContext()} snapshot={homeSnapshot} />);
 
     const main = screen.getByRole("main");
-    expect(
-      within(main).getByRole("heading", { level: 1, name: "From land to landmark" }),
-    ).toBeTruthy();
+    expect(within(main).getByRole("heading", { level: 1, name: "Brick by Brick" })).toBeTruthy();
     expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
   });
 

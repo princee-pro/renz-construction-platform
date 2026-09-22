@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Reveal, Stagger, StaggerItem } from "@/components/motion/primitives";
 import { ArrowMark } from "@/components/site/arrow-mark";
 import { Field } from "@/components/site/fields";
+import { FieldNote, fieldNoteFor } from "@/components/site/field-note";
 import { IntentionalEmptyState } from "@/components/site/intentional-empty-state";
 import { ProcessNavigator } from "@/components/site/process-navigator";
 import { ProcessStory } from "@/components/site/process-story";
@@ -18,7 +19,6 @@ import {
 } from "@/components/site/sections/shared";
 import type { RenderContext, SectionRenderProps } from "@/components/site/sections/types";
 import { ServicesIndex, type RelatedProjectFigure } from "@/components/site/services-index";
-import { StudyDrawing } from "@/components/site/study-drawing";
 import { placeProjects, selectShowcase } from "@/features/website/project-layout";
 import { stripInline } from "@/lib/content/rich-text";
 import type { ContentBlocks } from "@/lib/content/schemas";
@@ -499,7 +499,6 @@ export function InsightsIndexSection({ section, context }: SectionRenderProps) {
   const featuredService = featured?.relatedServiceId
     ? serviceById.get(featured.relatedServiceId)
     : null;
-  const projectSlugs = context.projects.map((project) => project.slug);
   return (
     <>
       {featured ? (
@@ -540,11 +539,9 @@ export function InsightsIndexSection({ section, context }: SectionRenderProps) {
             </Reveal>
             <Reveal as="figure" className="insights-featured-figure" variant="resolve">
               <Field tone="light" variant="plan" />
-              <StudyDrawing
-                slug={
-                  projectSlugs[posts.indexOf(featured) % Math.max(projectSlugs.length, 1)] ??
-                  "ridge-residence"
-                }
+              <FieldNote
+                className="insights-featured-note"
+                variant={fieldNoteFor(`${featured.topic ?? ""} ${featured.slug}`)}
               />
               <figcaption className="datum-label">
                 {text(config, "figure_caption") ?? "Drawing before building"}
@@ -571,6 +568,10 @@ export function InsightsIndexSection({ section, context }: SectionRenderProps) {
               {rest.map((post, index) => (
                 <StaggerItem as="li" className="insight-card" key={post.id}>
                   <Link href={`/insights/${post.slug}`}>
+                    <FieldNote
+                      className="insight-card-note"
+                      variant={fieldNoteFor(`${post.topic ?? ""} ${post.slug}`, index + 1)}
+                    />
                     <span className="insight-card-head">
                       <span className="index-mark">{indexMark(index + 1)}</span>
                       <span className="datum-label">

@@ -207,7 +207,9 @@ export function Landing({
         ) : null}
         {!spec.overlay && layout === "editorial" ? (
           <div aria-hidden="true" className="landing-plane landing-plane-editorial">
-            <LandingScene concept={concept} />
+            {/* D1.8 §11: an editorial opener may supply its own mark (per-article
+                field notes) instead of the shared concept scene. */}
+            {aside ?? <LandingScene concept={concept} />}
           </div>
         ) : null}
 

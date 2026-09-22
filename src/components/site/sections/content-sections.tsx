@@ -1,4 +1,5 @@
 import { LineDraw, Parallax, Reveal, Stagger, StaggerItem } from "@/components/motion/primitives";
+import { FieldNote, fieldNoteVariants, type FieldNoteVariant } from "@/components/site/field-note";
 import type { FieldVariant } from "@/components/site/fields";
 import type { FilmFrame } from "@/components/site/landing/film-strip";
 import { Landing } from "@/components/site/landing/landing";
@@ -167,9 +168,10 @@ export function HeroSection({ section, context }: SectionRenderProps) {
   const lines = list<string>(config, "headline_lines").filter(
     (line) => typeof line === "string" && line.trim(),
   );
-  // "From land to landmark" is the homepage campaign headline (owner-editable
-  // page copy); the company slogan lives in the identity and is never used here.
-  const headline = lines.length > 0 ? lines : ["From land", "to landmark"];
+  // D1.8 §1: the official slogan is the safe default when the owner has not
+  // written hero lines. It stays owner-editable (Admin → Website → Home →
+  // Hero → Headline lines); nothing else in the app hard-codes it.
+  const headline = lines.length > 0 ? lines : ["Brick", "by Brick"];
   const primary = resolveCta(cta(config, "primary_cta"), context) ?? siteCta(context);
   const secondary = resolveCta(cta(config, "secondary_cta"), context) ?? {
     label: "See our services",
@@ -231,8 +233,16 @@ export function MastheadSection({ section, context }: SectionRenderProps) {
   const { poster, provenance } = landingPoster(config, context, previewOffset);
   const primary = resolveCta(cta(config, "primary_cta"), context);
   const secondary = resolveCta(cta(config, "secondary_cta"), context);
+  // D1.8 §11: an owner-chosen drawn mark replaces the generic concept scene
+  // when this masthead has no hero image of its own.
+  const noteVariant = text(config, "note_variant");
+  const note =
+    !poster && noteVariant && (fieldNoteVariants as readonly string[]).includes(noteVariant)
+      ? (noteVariant as FieldNoteVariant)
+      : null;
   return (
     <Landing
+      aside={note ? <FieldNote className="masthead-note" variant={note} /> : undefined}
       concept={concept}
       eyebrow={text(config, "eyebrow") ?? section.label ?? undefined}
       facts={facts.length > 0 ? facts : undefined}
@@ -651,7 +661,7 @@ export function CtaSection({ section, context }: SectionRenderProps) {
       type={section.type}
       className="home-cta"
     >
-      <div className="container home-cta-grid">
+      <div className="container home-cta-grid" data-steps={steps.length > 0 ? "true" : "false"}>
         <Reveal variant="rise">
           {text(config, "kicker") ? <p className="kicker">{text(config, "kicker")}</p> : null}
           <h2 id={id}>

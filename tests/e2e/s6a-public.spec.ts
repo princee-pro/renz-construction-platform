@@ -2,11 +2,11 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 
 const publicRoutes = [
-  ["/", "From land to landmark"],
+  ["/", "Brick by Brick"],
   ["/services", "Services for every stage of your project."],
   ["/projects", "Explore 12 project studies."],
   ["/about", "One team from planning to handover."],
-  ["/insights", "Simple guides for planning and building."],
+  ["/insights", "Guides for planning and building."],
   ["/contact", "Tell us about your project."],
   ["/start-a-project", "Tell us what you want to build."],
   ["/privacy", "Privacy notice"],

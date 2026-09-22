@@ -1349,3 +1349,204 @@
     animation: none;
   }
 }
+
+/* ---------- D1.8: Insights field notes ---------- */
+
+/* Each guide carries its own drawn mark (src/components/site/field-note.tsx)
+   so no two Insights surfaces repeat the same illustration. */
+.field-note {
+  display: block;
+  position: relative;
+  inline-size: 100%;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border: 1px solid var(--public-rule);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--limestone) 60%, transparent), transparent 70%),
+    var(--paper);
+}
+.field-note-svg {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+}
+.field-note-svg g,
+.field-note-svg path,
+.field-note-svg rect,
+.field-note-svg circle {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.1;
+  vector-effect: non-scaling-stroke;
+}
+.field-note-ground path {
+  stroke: color-mix(in srgb, var(--ink) 28%, transparent);
+}
+.field-note-sheet,
+.field-note-layer rect,
+.field-note-buildup rect {
+  fill: color-mix(in srgb, var(--paper) 88%, var(--limestone));
+}
+.field-note-svg .field-note-rows path,
+.field-note-svg .field-note-annotation path,
+.field-note-svg .field-note-levels path {
+  stroke: color-mix(in srgb, var(--ink) 55%, transparent);
+}
+.field-note-svg .field-note-annotation rect,
+.field-note-svg .field-note-annotation circle {
+  stroke: color-mix(in srgb, var(--ink) 45%, transparent);
+  fill: none;
+}
+.field-note-svg .field-note-accent,
+.field-note-svg rect.field-note-accent {
+  stroke: var(--ochre);
+  stroke-width: 1.8;
+}
+.field-note-svg .field-note-terrain {
+  stroke: color-mix(in srgb, var(--ink) 65%, transparent);
+  stroke-width: 1.4;
+}
+.field-note-svg .field-note-terrain-soft {
+  stroke: color-mix(in srgb, var(--ink) 30%, transparent);
+  stroke-dasharray: 5 6;
+}
+.field-note-layer-b rect {
+  fill: color-mix(in srgb, var(--limestone) 70%, transparent);
+}
+.field-note-layer-c rect {
+  fill: none;
+}
+.field-note-bars rect {
+  fill: color-mix(in srgb, var(--limestone) 80%, transparent);
+}
+.field-note-bars rect.field-note-accent {
+  fill: color-mix(in srgb, var(--ochre) 16%, transparent);
+}
+
+/* DRAW: the mark assembles once when it enters, then stays. */
+@media (prefers-reduced-motion: no-preference) {
+  .field-note-mark > * {
+    animation: field-note-draw 700ms var(--ease-out, cubic-bezier(0.2, 0.7, 0.3, 1)) both;
+  }
+  .field-note-mark > *:nth-child(2) {
+    animation-delay: 110ms;
+  }
+  .field-note-mark > *:nth-child(3) {
+    animation-delay: 220ms;
+  }
+  .field-note-mark > *:nth-child(4) {
+    animation-delay: 330ms;
+  }
+}
+@keyframes field-note-draw {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* The card mark sits above the written content, cropped to a measured band. */
+.insight-card-note {
+  aspect-ratio: 21 / 9;
+  margin-block-end: 0.25rem;
+}
+
+/* Two guides must fill the row rather than leave an empty third column. */
+.insight-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(22rem, 100%), 1fr));
+}
+
+/* The article opener mark fills its plane; the index featured mark is wider. */
+.insights-featured-note {
+  border: 0;
+  background: transparent;
+  aspect-ratio: auto;
+  block-size: 100%;
+  inline-size: 100%;
+}
+.insights-featured-note .field-note-svg {
+  block-size: 100%;
+}
+.insights-featured-note .field-note-sheet {
+  fill: color-mix(in srgb, var(--paper) 10%, transparent);
+}
+/* On the dark opener the strokes must read against ink. Specificity matches
+   the base rules so the accent is not overridden by them. */
+.landing-plane-editorial .field-note-svg g,
+.landing-plane-editorial .field-note-svg path,
+.landing-plane-editorial .field-note-svg rect,
+.landing-plane-editorial .field-note-svg circle {
+  stroke: color-mix(in srgb, #fff 72%, transparent);
+  stroke-width: 1.4;
+}
+.landing-plane-editorial .field-note-svg .field-note-accent,
+.landing-plane-editorial .field-note-svg rect.field-note-accent {
+  stroke: var(--ochre);
+  stroke-width: 2;
+}
+.landing-plane-editorial .field-note-svg .field-note-ground path {
+  stroke: color-mix(in srgb, #fff 24%, transparent);
+}
+.landing-plane-editorial .field-note-svg .field-note-annotation path,
+.landing-plane-editorial .field-note-svg .field-note-annotation rect,
+.landing-plane-editorial .field-note-svg .field-note-annotation circle,
+.landing-plane-editorial .field-note-svg .field-note-rows path {
+  stroke: color-mix(in srgb, #fff 42%, transparent);
+}
+.landing-plane-editorial .field-note-svg .field-note-sheet,
+.landing-plane-editorial .field-note-svg .field-note-layer rect,
+.landing-plane-editorial .field-note-svg .field-note-buildup rect,
+.landing-plane-editorial .field-note-svg .field-note-bars rect {
+  fill: color-mix(in srgb, #fff 6%, transparent);
+}
+
+/* D1.8 §11: an owner-chosen drawn mark fills the masthead plane. */
+.masthead-note {
+  border: 0;
+  background: transparent;
+  aspect-ratio: auto;
+  block-size: 100%;
+  inline-size: 100%;
+}
+
+/* D1.8 §23: a CTA with no steps is one measured column, never a half-empty
+   grid. The copy then takes the reading measure rather than stretching. */
+.home-cta-grid[data-steps="false"] {
+  grid-template-columns: minmax(0, 1fr);
+}
+.home-cta-grid[data-steps="false"] .lede {
+  max-width: 58ch;
+}
+
+/* D1.8 §11: the article opener plate — a paper sheet on the dark field so a
+   guide opens like a drawing on a desk, not an empty outline. */
+.article-plate {
+  position: relative;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  gap: 0;
+  margin: 0;
+  block-size: 100%;
+  min-block-size: 15rem;
+  border: 1px solid color-mix(in srgb, #fff 16%, transparent);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, #fff 7%, transparent), transparent 65%),
+    color-mix(in srgb, #fff 4%, transparent);
+}
+.article-plate-note {
+  border: 0;
+  background: transparent;
+  aspect-ratio: auto;
+  block-size: 100%;
+  inline-size: 100%;
+  min-block-size: 0;
+}
+.article-plate figcaption {
+  border-block-start: 1px solid color-mix(in srgb, #fff 14%, transparent);
+  padding: 0.65rem 1rem;
+  color: color-mix(in srgb, #fff 62%, transparent);
+}

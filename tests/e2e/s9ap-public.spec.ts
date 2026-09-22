@@ -38,9 +38,7 @@ test.describe.serial("RENZ S9A-P signature preview contracts", () => {
     await page.goto("/", { waitUntil: "domcontentloaded" });
 
     await expect(page.locator(".brand-opener")).toBeVisible();
-    await expect(
-      page.getByRole("heading", { level: 1, name: "From land to landmark" }),
-    ).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Brick by Brick" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Start a Project" }).first()).toHaveAttribute(
       "href",
       "/start-a-project",

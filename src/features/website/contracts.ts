@@ -226,7 +226,7 @@ export const globalCopyDefaults = {
   staff_signin_label: "Staff Login",
   staff_signin_note: "RENZ team access",
   back_to_top_label: "Back to top",
-  menu_tagline: "From land to landmark",
+  menu_tagline: "Brick by Brick.",
   all_services_label: "See all services",
   prefer_to_talk_label: "Prefer to talk",
   what_happens_next_label: "What happens next",

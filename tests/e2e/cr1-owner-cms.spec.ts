@@ -78,7 +78,7 @@ test.describe("CR1 owner website control", () => {
     // Public unchanged; preview reflects the draft.
     const publicHome = await page.context().newPage();
     await publicHome.goto("/");
-    await expect(publicHome.getByRole("heading", { level: 1 })).toContainText("From land");
+    await expect(publicHome.getByRole("heading", { level: 1 })).toContainText("Brick by Brick");
     await expect(publicHome.getByRole("heading", { level: 1 })).not.toContainText("SYNTHETIC");
     await publicHome.goto(`/preview/website/${pageId}`);
     await expect(publicHome.getByRole("heading", { level: 1 })).toContainText(
@@ -115,6 +115,9 @@ test.describe("CR1 owner website control", () => {
     await expect(page.getByText(/Published as revision \d+\./u)).toBeVisible();
     const publicRestored = await page.context().newPage();
     await publicRestored.goto("/");
+    // Revision 1 is the original D1 wording, kept as history: restoring it must
+    // bring that wording back, not the current brand line. Preserved history is
+    // the point of the rollback control.
     await expect(publicRestored.getByRole("heading", { level: 1 })).toContainText("From land");
     await expect(publicRestored.getByRole("heading", { level: 1 })).not.toContainText("SYNTHETIC");
     await publicRestored.close();

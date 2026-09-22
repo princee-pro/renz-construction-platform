@@ -340,6 +340,38 @@ at ingestion (`upload-image.ts`, seed) served by
 `/api/media/project/[id]?size=thumb`; the full derivative loads only in the
 lightbox and hero planes.
 
+## 7e. D1.8 — brand lock + visual completion (frozen)
+
+Client-confirmed brand correction and the pre-deployment visual completion
+pass (2026-09-22). No architecture, database, authentication, permission or
+security change; content and presentation only.
+
+**Brand.** The official slogan is **"Brick by Brick."** It is stated once,
+from one owner-editable source: `business_profile.tagline` (Settings →
+Business → Slogan) for the identity, and the Home hero / Footer headline as
+owner-managed page content (migration `20260924100000`). "From land to
+landmark." is retired as an authoritative brand line; it survives only where
+the owner chooses to write it. The code default when the owner clears the
+hero is the slogan, not the old line.
+
+**Placement.** Home hero headline (first viewport), footer headline, mobile
+menu tagline, and a small signature on the staff auth brand panel.
+
+**Insights.** A "field note" mark family (`src/components/site/field-note.tsx`):
+six drawn marks — brief, survey, coordination, detail, cost, handover —
+chosen from the article's own topic/slug, so no two guides repeat one
+illustration. Used by the index featured figure, the index cards, the
+article opener plate, and any masthead through the new owner-editable
+**Drawn mark** field on the masthead section.
+
+**Layout corrections.** A CTA section with no steps is one measured column
+(`[data-steps="false"]`); the guide grid is `auto-fit` so two guides fill the
+row instead of leaving an empty third column.
+
+**Staff auth.** The form sits on an optical centre inside a measured field
+(a drawn datum in the white panel); the brand panel is signed with the
+slogan. Security semantics, MFA and the password gate are untouched.
+
 ## 8. What is explicitly NOT in the freeze
 
 - Real project imagery, testimonials, credentials, partner logos, team

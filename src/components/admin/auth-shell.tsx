@@ -42,6 +42,7 @@ export function AuthShell({
   return (
     <main className="auth-shell" data-step={step} id="main-content">
       <section aria-labelledby={headingId} className="auth-form-zone">
+        <span aria-hidden="true" className="auth-form-datum" />
         <header className="auth-form-head">
           <div className="auth-brand">
             <PreviewRenzIdentity decorative size={36} tone="light" />
@@ -95,6 +96,7 @@ export function AuthShell({
         <div className="auth-brand-copy">
           <PreviewRenzIdentity decorative size={72} tone="dark" />
           <p className="auth-brand-kicker">RENZ Control Room</p>
+          <p className="auth-brand-slogan">Brick by Brick.</p>
           <h2>Projects, clients, finance, delivery and site operations — one secure workspace.</h2>
           <p>
             Every record is measured against the same drawings: enquiries become clients, clients

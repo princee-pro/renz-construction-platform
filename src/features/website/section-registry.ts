@@ -413,6 +413,21 @@ export const sectionTypes: readonly SectionTypeDefinition[] = [
         optional: true,
       },
       { kind: "cta", key: "secondary_cta", label: "Secondary button", optional: true },
+      {
+        kind: "select",
+        key: "note_variant",
+        label: "Drawn mark",
+        help: "A measured drawing shown beside the words when this page has no hero image.",
+        options: [
+          { value: "auto", label: "None (use the landing concept)" },
+          { value: "brief", label: "Brief — a written sheet" },
+          { value: "survey", label: "Survey — a plot section" },
+          { value: "coordination", label: "Coordination — drawings registering" },
+          { value: "detail", label: "Detail — a wall build-up" },
+          { value: "cost", label: "Cost — a measured band" },
+          { value: "handover", label: "Handover — a checked list" },
+        ],
+      },
       { kind: "media", key: "media_id", label: "Hero image (also the video poster)" },
       {
         kind: "media",

@@ -568,3 +568,73 @@
     transform: none;
   }
 }
+
+/* ---------------------------------------------------------------- */
+/* D1.8 §12 — auth composition: the form sits on an optical centre    */
+/* inside a measured field, and the brand panel is signed.            */
+/* Security semantics are untouched; this is presentation only.       */
+/* ---------------------------------------------------------------- */
+
+.auth-form-zone {
+  position: relative;
+  /* Slightly above true centre reads as intentional rather than floating. */
+  align-content: center;
+  grid-template-rows: auto auto auto;
+  gap: clamp(1.75rem, 3.5vh, 2.75rem);
+}
+
+/* A drawn datum so the white field is composed, not accidentally empty. */
+.auth-form-datum {
+  position: absolute;
+  inset-block: clamp(1.5rem, 4vw, 3rem);
+  inset-inline-start: clamp(1.1rem, 2.6vw, 2.25rem);
+  width: 1px;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    var(--admin-rule) 12%,
+    var(--admin-rule) 88%,
+    transparent
+  );
+  pointer-events: none;
+}
+.auth-form-datum::before,
+.auth-form-datum::after {
+  content: "";
+  position: absolute;
+  inset-inline-start: -0.3rem;
+  width: 0.65rem;
+  height: 1px;
+  background: var(--admin-accent, #b4883b);
+}
+.auth-form-datum::before {
+  top: 18%;
+}
+.auth-form-datum::after {
+  top: 82%;
+}
+
+.auth-brand-slogan {
+  margin: 0.35rem 0 0;
+  color: var(--admin-accent, #b4883b);
+  font-family: var(--admin-mono, ui-monospace, monospace);
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 60rem) {
+  /* Mobile: the form comes first and the datum would only add noise. */
+  .auth-form-datum {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-drawing .auth-line,
+  .auth-drawing .auth-mark {
+    animation: none;
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}

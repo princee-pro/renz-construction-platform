@@ -38,6 +38,14 @@ function footerCtaHref(
   }
 }
 
+/** Compare owner-written lines ignoring case and trailing punctuation. */
+function normalise(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[.\s]+$/u, "");
+}
+
 /**
  * Classic RENZ footer (D1.7 §53–60): four columns — brand statement and the
  * Start-a-Project action, the published services, the company routes, the
@@ -75,7 +83,10 @@ export function PublicFooter({ services, identity, globals, copy }: PublicFooter
       <div className="container site-footer-inner">
         <div className="site-footer-brand">
           <PreviewRenzIdentity decorative size={40} tone="dark" wordmark />
-          {identity.tagline ? (
+          {/* D1.8 §16: the slogan is stated once. The owner's footer headline
+              is the authoritative line; the published slogan appears above it
+              only when the owner has written a different headline. */}
+          {identity.tagline && normalise(identity.tagline) !== normalise(options.headline) ? (
             <p className="datum-label site-footer-slogan">{identity.tagline}</p>
           ) : null}
           <h2 className="site-footer-headline" id="site-footer-heading">

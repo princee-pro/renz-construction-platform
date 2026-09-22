@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { Reveal } from "@/components/motion/primitives";
 import { ArrowMark } from "@/components/site/arrow-mark";
+import { FieldNote, fieldNoteFor } from "@/components/site/field-note";
 import { Landing } from "@/components/site/landing/landing";
 import { readingMinutes } from "@/components/site/sections/domain-sections";
 import { RichBlocksView } from "@/components/site/sections/shared";
@@ -40,6 +41,18 @@ export function InsightArticle({ view }: Readonly<{ view: InsightArticleView }>)
   return (
     <main id="main-content" className="public-main article-page">
       <Landing
+        aside={
+          // D1.8 §11: an editorial plate — a paper-toned sheet carrying this
+          // article's own drawn mark and its topic — instead of a bare
+          // outline repeated on every guide.
+          <figure className="article-plate">
+            <FieldNote
+              className="article-plate-note"
+              variant={fieldNoteFor(`${view.topic ?? ""} ${view.title}`)}
+            />
+            <figcaption className="datum-label">{view.topic ?? "Field note"}</figcaption>
+          </figure>
+        }
         breadcrumb={{ href: "/insights", label: "Insights" }}
         concept="drawing-board"
         eyebrow={view.topic ?? "Guide"}
