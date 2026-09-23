@@ -373,7 +373,9 @@ Modified: `src/components/site/sections/domain-sections.tsx`,
 
 ## 32. Commit hash
 
-Recorded after the regression gate closes.
+`9e9a21c` — "feat: d1.8 visual completion — brand lock, field notes,
+composed auth shell". Local commit on `main`, not pushed (R1 holds pushes
+until the owner accounts exist).
 
 ## 33. What is now ready for cloud staging
 
