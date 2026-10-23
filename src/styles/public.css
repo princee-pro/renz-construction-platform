@@ -584,44 +584,15 @@
 }
 
 .public-loading {
+  min-height: 100svh;
+  background: var(--color-white);
   align-content: center;
   gap: 1.5rem;
 }
 
-.public-loading-frame {
-  position: relative;
-  width: min(78vw, 26rem);
-  aspect-ratio: 16 / 9;
-  border: 1px solid var(--public-rule-dark);
-}
-
-.public-loading-frame span {
-  position: absolute;
-  background: var(--public-rule-dark);
-}
-
-.public-loading-frame span:nth-child(1) {
-  inset: 50% 0 auto;
-  height: 1px;
-}
-
-.public-loading-frame span:nth-child(2) {
-  inset: 0 auto 0 50%;
-  width: 1px;
-}
-
-.public-loading-frame span:nth-child(3) {
-  inset: calc(50% - 0.35rem) auto auto calc(50% - 0.35rem);
-  width: 0.7rem;
-  aspect-ratio: 1;
-  border: 1px solid var(--public-accent);
-  background: transparent;
-  animation: loading-node 900ms infinite alternate ease-in-out;
-}
-
 .public-loading > p {
   margin: 0;
-  color: var(--public-on-ink-muted);
+  color: var(--color-graphite);
   font-family: var(--public-mono);
   font-size: 0.65rem;
   letter-spacing: 0.1em;

@@ -3,8 +3,9 @@ import Link from "next/link";
 import { Reveal, Stagger, StaggerItem } from "@/components/motion/primitives";
 import { ArrowMark } from "@/components/site/arrow-mark";
 import { Field } from "@/components/site/fields";
-import { FieldNote, fieldNoteFor } from "@/components/site/field-note";
 import { IntentionalEmptyState } from "@/components/site/intentional-empty-state";
+import { InsightMedia } from "@/components/site/insight-media";
+import { CinematicMedia } from "@/components/site/landing/cinematic-media";
 import { ProcessNavigator } from "@/components/site/process-navigator";
 import { ProcessStory } from "@/components/site/process-story";
 import { ProjectStudyCard, ProjectsIndex } from "@/components/site/project-cards";
@@ -537,19 +538,43 @@ export function InsightsIndexSection({ section, context }: SectionRenderProps) {
                 <ArrowMark />
               </Link>
             </Reveal>
-            <Reveal as="figure" className="insights-featured-figure" variant="resolve">
-              <Field tone="light" variant="plan" />
-              <FieldNote
-                className="insights-featured-note"
-                variant={fieldNoteFor(`${featured.topic ?? ""} ${featured.slug}`)}
-              />
-              <figcaption className="datum-label">
+            <Reveal as="div" className="insights-featured-figure" variant="resolve">
+              <InsightMedia seed={`${featured.topic ?? ""} ${featured.slug}`} />
+              <span className="insights-featured-caption datum-label">
                 {text(config, "figure_caption") ?? "Drawing before building"}
-              </figcaption>
+              </span>
             </Reveal>
           </div>
         </section>
       ) : null}
+      <section aria-labelledby="insights-film-title" className="insights-film tone-ink">
+        <CinematicMedia
+          className="insights-film-media"
+          kenBurns
+          parallax
+          poster={{
+            src: "/media/renz/heroes/home-land-to-landmark.poster.webp",
+            alt: "",
+            focalX: 0.52,
+            focalY: 0.5,
+          }}
+          video={{
+            sources: [
+              {
+                src: "/media/renz/heroes/home-land-to-landmark.webm",
+                type: "video/webm",
+              },
+            ],
+          }}
+          wash="strong"
+        />
+        <div className="container insights-film-copy">
+          <p className="kicker">Field film / generated concept</p>
+          <h2 id="insights-film-title">Ideas become structure.</h2>
+          <p>Read the drawing, test the sequence, then make the next decision visible.</p>
+          <span className="concept-badge">Concept visual / not project evidence</span>
+        </div>
+      </section>
       {rest.length > 0 ? (
         <section aria-labelledby="insights-index-title" className="sec tone-concrete">
           <div className="container section-head">
@@ -568,9 +593,10 @@ export function InsightsIndexSection({ section, context }: SectionRenderProps) {
               {rest.map((post, index) => (
                 <StaggerItem as="li" className="insight-card" key={post.id}>
                   <Link href={`/insights/${post.slug}`}>
-                    <FieldNote
+                    <InsightMedia
                       className="insight-card-note"
-                      variant={fieldNoteFor(`${post.topic ?? ""} ${post.slug}`, index + 1)}
+                      offset={index + 1}
+                      seed={`${post.topic ?? ""} ${post.slug}`}
                     />
                     <span className="insight-card-head">
                       <span className="index-mark">{indexMark(index + 1)}</span>

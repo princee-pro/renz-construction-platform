@@ -18,7 +18,8 @@ if (
 
 export default defineConfig({
   testDir: "./tests/e2e",
-  testMatch: /(?:s6a-public|s9ap-public|s9bp-public|s9bp-visual)\.spec\.ts/u,
+  testMatch:
+    /(?:s6a-public|s9ap-public|s9bp-public|s9bp-visual|renz-brand|insights-auth-visual)\.spec\.ts/u,
   outputDir: ".playwright/frontend-results",
   // This harness never creates actors, resets data, seeds records, or signs into admin.
   fullyParallel: false,

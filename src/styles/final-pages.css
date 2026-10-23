@@ -1550,3 +1550,153 @@
   padding: 0.65rem 1rem;
   color: color-mix(in srgb, #fff 62%, transparent);
 }
+
+/* ---------- Media-rich Insights: concept studies remain explicitly labelled ---------- */
+.insight-media {
+  position: relative;
+  display: block;
+  width: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: var(--ink);
+  isolation: isolate;
+}
+.insight-media img {
+  object-fit: cover;
+  filter: saturate(0.78) contrast(1.06);
+  transition:
+    transform 800ms var(--ease-out),
+    filter 500ms var(--ease-out);
+}
+.insight-media::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    linear-gradient(180deg, transparent 35%, rgb(7 21 35 / 0.78) 100%),
+    linear-gradient(90deg, rgb(7 21 35 / 0.2), transparent 55%);
+  pointer-events: none;
+}
+.insight-media-grid {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, rgb(255 255 255 / 0.12) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(255 255 255 / 0.12) 1px, transparent 1px);
+  background-size: 25% 25%;
+  mask-image: linear-gradient(90deg, transparent, #000 55%, transparent);
+  pointer-events: none;
+}
+.insight-media figcaption {
+  position: absolute;
+  z-index: 3;
+  inset-inline: 1rem;
+  inset-block-end: 0.85rem;
+  color: rgb(255 255 255 / 0.78);
+  font-family: var(--public-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.14em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+.insights-featured-figure {
+  padding: 0;
+  border: 0;
+  background: var(--ink);
+}
+.insights-featured-figure > .insight-media {
+  position: absolute;
+  inset: 0;
+}
+.insights-featured-caption {
+  position: absolute;
+  z-index: 4;
+  inset-inline-end: 1rem;
+  inset-block-start: 1rem;
+  padding: 0.4rem 0.55rem;
+  background: rgb(7 21 35 / 0.78);
+  color: var(--paper);
+}
+.insight-card-note {
+  aspect-ratio: 16 / 9;
+  margin-block-end: 0.4rem;
+  border: 0;
+}
+.insight-card > a:hover .insight-media img,
+.insight-card > a:focus-visible .insight-media img {
+  transform: scale(1.045);
+  filter: saturate(1) contrast(1.02);
+}
+.article-plate {
+  display: block;
+  min-block-size: 19rem;
+  border-color: color-mix(in srgb, #fff 22%, transparent);
+}
+.article-plate img {
+  transform: scale(1.02);
+}
+.landing-plane-editorial:has(.article-plate) {
+  padding: 0;
+}
+
+.insights-film {
+  position: relative;
+  display: grid;
+  align-items: end;
+  min-height: min(68svh, 46rem);
+  overflow: hidden;
+  isolation: isolate;
+}
+.insights-film .cinematic {
+  inset: -6% 0;
+}
+.insights-film-copy {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  gap: 0.85rem;
+  justify-items: start;
+  padding-block: clamp(5rem, 12vw, 9rem) clamp(3rem, 7vw, 5rem);
+}
+.insights-film-copy h2 {
+  max-width: 10ch;
+  margin: 0;
+  color: var(--paper);
+  font-size: clamp(2.7rem, 7vw, 6.5rem);
+  line-height: 0.92;
+  letter-spacing: -0.055em;
+}
+.insights-film-copy > p:not(.kicker) {
+  max-width: 38ch;
+  margin: 0;
+  color: var(--public-on-ink-muted);
+  font-size: var(--step-1);
+  line-height: 1.55;
+}
+.insights-film-copy .concept-badge {
+  margin-block-start: 1rem;
+}
+
+@media (max-width: 63.99rem) {
+  .landing-plane-editorial:has(.article-plate) {
+    display: block;
+    min-block-size: clamp(15rem, 72vw, 20rem);
+  }
+}
+
+@media (max-width: 47.99rem) {
+  .article-plate {
+    min-block-size: 15rem;
+  }
+  .insights-film {
+    min-height: 34rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .insight-media img {
+    transition: none;
+  }
+}

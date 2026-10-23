@@ -37,7 +37,7 @@ export async function generateMetadata(): Promise<Metadata> {
       `${identity.displayName} — construction services.`,
     applicationName: identity.seo.siteName,
     robots: robotsFor(identity),
-    ...(identity.brand["favicon"] ? { icons: { icon: "/api/media/brand/favicon" } } : {}),
+    // The approved symbol's derived app/favicon.ico is discovered by Next.js.
   };
 }
 

@@ -41,14 +41,19 @@ export function ProvisionalBrandStudy() {
         <p className="section-kicker">Code-native monogram study / preview only</p>
         <h2 id="brand-system-study-title">Three directions. Five measured sizes.</h2>
         <p>
-          Each option is a provisional construction-geometry interpretation. Option B is selected
-          for this client preview after comparative small-size and silhouette review; it is not an
-          approved RENZ identity master.
+          Archived exploration: all R directions, including the terracotta symbol adopted on 25
+          September, were superseded on 28 September 2026 by the approved silver twin-tower RENZ
+          Construction logo. These options are design history only.
+        </p>
+        <p>
+          Later clarification on 28 September 2026: the user selected the supplied orange curved R
+          with the two-line Renz Construction wordmark as the current website identity, superseding
+          the silver logo. The studies below remain archived.
         </p>
       </header>
 
       <div className="brand-system-verdict" role="note">
-        <span>Selected for client preview</span>
+        <span>Historical preview selection</span>
         <PreviewRenzIdentity option={selectedPreviewMonogram} size={64} wordmark decorative />
         <p>Datum R / strongest reading at 24px and strongest relationship to the site datum.</p>
       </div>

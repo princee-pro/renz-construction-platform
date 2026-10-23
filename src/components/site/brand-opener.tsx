@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
-import { PreviewRenzIdentity } from "@/components/site/preview-renz-identity";
+import { RenzIdentity } from "@/components/site/renz-identity";
 
 const sessionKey = "renz-s9ap-opener-seen";
 
@@ -36,7 +36,7 @@ function recordOpenerSeen(): void {
   }
 }
 
-export function BrandOpener({ slogan }: Readonly<{ slogan: string | null }>) {
+export function BrandOpener() {
   const pathname = usePathname();
   const [state, setState] = useState<OpenerState>("playing");
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -46,7 +46,7 @@ export function BrandOpener({ slogan }: Readonly<{ slogan: string | null }>) {
       timerRef.current = setTimeout(() => setState("complete"), 0);
     } else {
       recordOpenerSeen();
-      // 1.05 s of MEASURE → ASSEMBLE → LOCK, then a 0.3 s RESOLVE lift-off.
+      // Hold the complete identity, then dissolve within the existing 1.4 s budget.
       timerRef.current = setTimeout(() => {
         setState("leaving");
         timerRef.current = setTimeout(() => setState("complete"), 320);
@@ -68,19 +68,10 @@ export function BrandOpener({ slogan }: Readonly<{ slogan: string | null }>) {
 
   return (
     <div className="brand-opener" data-state={state}>
-      <span aria-hidden="true" className="brand-opener-grid" />
       <div className="brand-opener-stage" aria-hidden="true">
-        <span className="brand-opener-datum" />
         <div className="brand-opener-lockup">
-          <span className="brand-opener-mark">
-            <PreviewRenzIdentity size={96} tone="dark" decorative />
-          </span>
-          <span className="brand-opener-word">
-            <span>RENZ</span>
-            <small>Construction Services Ltd</small>
-          </span>
+          <RenzIdentity size={920} tone="light" stacked decorative />
         </div>
-        {slogan ? <span className="brand-opener-caption">{slogan}</span> : null}
       </div>
       <button className="brand-opener-skip" type="button" onClick={skip}>
         Skip intro

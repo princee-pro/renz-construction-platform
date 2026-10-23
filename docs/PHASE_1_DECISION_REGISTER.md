@@ -177,3 +177,17 @@ G1–G5 need not be guessed to create that narrow local foundation; their affect
 The project lead explicitly removed Git history, HEAD, staged state, and commit creation as S1 implementation/completion gates. Git remains useful local information only; it must not determine G6 implementation readiness. That override authorized the exact-pinned S1 application and quality foundation recorded in `PHASE_1_S1_TOOLCHAIN.md` and `PHASE_1_S1_REPORT.md`.
 
 The override does not authorize S2 or resolve G1–G5. Database, Supabase, authentication, authorization, admin, intake, uploads, analytics, email, cloud resources, deployment, production identity, production claims, and the final public experience remain absent until their named slices and gates are approved.
+
+## Approved logo integration — 25 September 2026
+
+The user explicitly approved the Figma terracotta/graphite R as the website brand source of truth and authorized replacing operational website logo uses and the favicon. This bounded authority supersedes the historical provisional-symbol restrictions for this asset only. The source is the hash-verified Figma master exported in the preceding task, not a newly generated concept. Implementation/provenance: [RENZ_LOGO_INTEGRATION.md](./RENZ_LOGO_INTEGRATION.md). The change does not approve a deployment, modify business facts, change CMS rights policy, or assert general G1/S9 completion. Existing client originals and dated audit statements are preserved.
+
+
+## Approved silver architectural identity — 28 September 2026
+
+The user explicitly revoked the terracotta/brick R direction and approved the attached black-and-silver RENZ CONSTRUCTION twin-tower logo as the new website source of truth. This decision supersedes the 25 September identity decision for all operational logo uses. The original is byte-preserved at `references/client/originals/03-renz-construction-silver-reference.png`; faithful vector derivatives, allowed use, hashes and checks are recorded in [RENZ_SILVER_BRAND.md](./RENZ_SILVER_BRAND.md). The opening and loading screens use the large stacked lockup on black; the responsive header uses a compact silver lockup linked to `/`. The approved opener now applies to the public homepage independently of preview mode, retaining its session, skip, reduced-motion, forced-colors and Save-Data bypasses. Existing business facts, historical audit records and unrelated UI colors remain under their existing contracts. This is source implementation authority, not deployment or general release approval.
+
+
+## Orange identity clarification — 28 September 2026 (superseding update)
+
+The user resolved the conflicting brief by explicitly selecting the orange curved R with the two-line Renz Construction wordmark. This later instruction supersedes the silver tower identity above for operational website branding. The supplied composition and traced lettering are retained in transparent SVGs; the full opening/loading logo appears on white, the responsive header logo links to the homepage, and existing shared identity placements and app icons use the same source. Provenance, preparation and current verification are recorded in [RENZ_ORANGE_BRAND.md](./RENZ_ORANGE_BRAND.md). Earlier dated decisions and checks remain historical; this bounded correction does not authorize deployment or change business facts.

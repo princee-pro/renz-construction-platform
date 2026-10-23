@@ -16,7 +16,7 @@ export function WebsiteRoute({
 }>) {
   if (!render) {
     return (
-      <main className="public-main" id="main-content">
+      <main className="public-main public-main--unpublished" id="main-content">
         <section className="sec tone-paper">
           <div className="container">
             <IntentionalEmptyState

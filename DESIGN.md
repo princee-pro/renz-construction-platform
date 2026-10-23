@@ -3,6 +3,8 @@ version: alpha
 name: "RENZ Construction Services Ltd"
 description: "A hybrid brand and business-product system built from architectural datum lines, structural mass, and evidence-led content."
 colors:
+  brand-black: "#000000"
+  brand-silver: "#BDBDBD"
   primary: "#071523"
   navy-raised: "#0D2134"
   gold: "#C69A3A"
@@ -47,6 +49,12 @@ spacing:
   section: "6rem"
   page-max: "108rem"
 components:
+  brand-surface:
+    backgroundColor: "{colors.white}"
+    textColor: "{colors.graphite}"
+  navigation-surface:
+    backgroundColor: "{colors.brand-black}"
+    textColor: "{colors.brand-silver}"
   datum-line:
     backgroundColor: "{colors.gold}"
     height: "1px"
@@ -223,3 +231,21 @@ Do not:
 - claim design completion from static boards or lint alone.
 
 The detailed component register, responsive rules, evidence policy, and design acceptance gate live in `docs/DESIGN_SYSTEM.md`; behavioral ownership lives in `UX-CONTRACT.md`.
+
+## Public media enrichment and navigation — 28 September 2026
+
+The public header begins transparent on every public route so the opening composition remains continuous, then resolves to the canonical black surface after scroll for legibility. Insights index and article templates may use approved generated concept studies and the existing poster-first concept film to replace empty diagrams, provided every use carries the visible label `Concept visual / not project evidence`. Media remains decorative to the editorial claim, reserves its dimensions, and obeys reduced-motion and constrained-network fallbacks. The shared admin authentication shell may use the same labeled concept film as a presentation layer; sign-in and MFA structure, field behavior, authentication actions, and security copy remain unchanged.
+
+## Approved logo integration — 25 September 2026
+
+The user approved the terracotta/graphite R in [Figma](https://www.figma.com/design/W1epFP3XY4oxdQ9JiW4kfF?node-id=2-6) as the website brand source and explicitly authorized its integration. This dated decision supersedes provisional symbol selection for website branding without changing the existing UI palette, typography, wordmark text or layout. Logo-specific colors remain in the single approved SVG rather than becoming a second UI token system. `RenzIdentity` owns operational rendering; light surfaces use full color, dark surfaces the approved white silhouette, and forced colors a system-color mask of the same geometry. Provenance, derivatives and verification are in [RENZ_LOGO_INTEGRATION.md](docs/RENZ_LOGO_INTEGRATION.md). Earlier audit statements remain historical evidence; no general release or unrelated brand-rights gate is declared passed.
+
+
+## Approved silver architectural identity — 28 September 2026
+
+The user explicitly revoked the terracotta/brick R direction and approved the attached black-and-silver RENZ CONSTRUCTION twin-tower logo as the new website source of truth. This decision supersedes the 25 September identity decision for all operational logo uses. The original is byte-preserved at `references/client/originals/03-renz-construction-silver-reference.png`; faithful vector derivatives, allowed use, hashes and checks are recorded in [RENZ_SILVER_BRAND.md](docs/RENZ_SILVER_BRAND.md). The opening and loading screens use the large stacked lockup on black; the responsive header uses a compact silver lockup linked to `/`. The approved opener now applies to the public homepage independently of preview mode, retaining its session, skip, reduced-motion, forced-colors and Save-Data bypasses. Existing business facts, historical audit records and unrelated UI colors remain under their existing contracts. This is source implementation authority, not deployment or general release approval.
+
+
+## Orange identity clarification — 28 September 2026 (superseding update)
+
+The user resolved the conflicting brief by explicitly selecting the orange curved R with the two-line Renz Construction wordmark. This later instruction supersedes the silver tower identity above for operational website branding. The supplied composition and traced lettering are retained in transparent SVGs; the full opening/loading logo appears on white, the responsive header logo links to the homepage, and existing shared identity placements and app icons use the same source. Provenance, preparation and current verification are recorded in [RENZ_ORANGE_BRAND.md](docs/RENZ_ORANGE_BRAND.md). Earlier dated decisions and checks remain historical; this bounded correction does not authorize deployment or change business facts.

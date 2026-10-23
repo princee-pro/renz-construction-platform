@@ -248,7 +248,7 @@ html[data-admin-rail] {
   font-size: 0.9rem;
 }
 
-.admin-topbar-brand .preview-renz-identity {
+.admin-topbar-brand .renz-identity {
   --mark-cut: var(--admin-canvas);
   color: var(--admin-ink);
 }
@@ -666,7 +666,7 @@ html[data-admin-rail] {
   .admin-topbar-brand {
     display: inline-flex;
   }
-  .admin-topbar-brand .preview-renz-identity {
+  .admin-topbar-brand .renz-identity {
     --mark-cut: var(--admin-nav);
     color: #fff;
   }

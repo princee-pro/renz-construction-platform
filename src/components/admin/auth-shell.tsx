@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
-import { PreviewRenzIdentity } from "@/components/site/preview-renz-identity";
+import { RenzIdentity } from "@/components/site/renz-identity";
+import { CinematicMedia } from "@/components/site/landing/cinematic-media";
 
 type AuthStep = "01" | "02";
 
@@ -27,7 +28,7 @@ const modules = [
 /**
  * D1.5 auth shell (§7–§13): a two-zone architectural composition. Left, the
  * form zone — mark, step, title, form, support. Right, the brand panel —
- * ink ground, structural field, Datum R, the Control Room statement and the
+ * ink ground, structural field, approved R, the Control Room statement and the
  * system modules. Security semantics live in the forms; this is presentation.
  */
 export function AuthShell({
@@ -45,7 +46,7 @@ export function AuthShell({
         <span aria-hidden="true" className="auth-form-datum" />
         <header className="auth-form-head">
           <div className="auth-brand">
-            <PreviewRenzIdentity decorative size={36} tone="light" />
+            <RenzIdentity decorative size={36} tone="light" />
             <span>
               <strong>RENZ</strong>
               <small>Control Room</small>
@@ -78,6 +79,26 @@ export function AuthShell({
       </section>
 
       <aside aria-label="About the RENZ Control Room" className="auth-brand-zone">
+        <CinematicMedia
+          className="auth-cinematic"
+          kenBurns
+          parallax={false}
+          poster={{
+            src: "/media/renz/heroes/home-land-to-landmark.poster.webp",
+            alt: "",
+            focalX: 0.58,
+            focalY: 0.5,
+          }}
+          video={{
+            sources: [
+              {
+                src: "/media/renz/heroes/home-land-to-landmark.webm",
+                type: "video/webm",
+              },
+            ],
+          }}
+          wash="strong"
+        />
         <span aria-hidden="true" className="auth-grid" />
         <svg aria-hidden="true" className="auth-drawing" viewBox="0 0 640 400">
           <g fill="none" stroke="currentColor" strokeWidth="1">
@@ -94,7 +115,7 @@ export function AuthShell({
           </g>
         </svg>
         <div className="auth-brand-copy">
-          <PreviewRenzIdentity decorative size={72} tone="dark" />
+          <RenzIdentity decorative size={72} tone="dark" />
           <p className="auth-brand-kicker">RENZ Control Room</p>
           <p className="auth-brand-slogan">Brick by Brick.</p>
           <h2>Projects, clients, finance, delivery and site operations — one secure workspace.</h2>
@@ -114,6 +135,7 @@ export function AuthShell({
           <p className="auth-coordinates">
             <span>Datum</span> KGL · 01°57′S 30°04′E · secure session · two-step access
           </p>
+          <p className="auth-provenance">Concept visual / not project evidence</p>
         </div>
       </aside>
     </main>

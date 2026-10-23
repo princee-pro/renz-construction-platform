@@ -17,7 +17,7 @@ image until footage is produced; the CMS fields already exist.
 | `/projects` | film-archive | featured study thumbnails (film strip, ≤ 6) + tile index of all twelve | queued: montage | Concept / Rwanda context studies | thumbs ≤ 960 px | strip below copy, stacked tiles |
 | `/projects/[slug]` | study hero / project | the study's own hero; gallery of 7 pieces (see below); real projects: `hero` / `video_poster` + `video` roles | per project (poster-first, optional) | per project | hero ≤ 2400 px, gallery thumbs 960 px | image, stacked gallery |
 | `/about` | how-we-work | — (split plane) | queued | — | — | scene |
-| `/insights` | drawing-board | — (editorial plane) | — | — | — | copy only |
+| `/insights` | editorial field film | `home-land-to-landmark.poster.webp` plus generated concept study cards | `home-land-to-landmark.webm`, 1280×720, VP8 | Generated concept visual, visibly labeled as not project evidence | 1.20 MB · 7 s · 24 fps | poster + stacked concept cards |
 | `/contact` | direct-line | Industrial Campus concept image | queued: dusk | Concept study | — | poster |
 | `/start-a-project` | first-brief | — (split plane) | — | — | — | scene |
 | `/enquire/service` | service-cue | study image | — | Concept study | — | poster |
@@ -30,6 +30,11 @@ JSON manifest per loop. The CMS copy of the loop is media asset
 the change on publish. Posters and crops for the concept studies remain in
 `public/media/renz-preview/` (seeded into the Media library by
 `scripts/website-seed-content.mjs`).
+
+The shared `/admin/sign-in` and `/admin/mfa` presentation panel also uses the
+same poster-first generated concept loop with a visible provenance label. It
+is presentation only; authentication behavior and security flows do not
+depend on the media.
 
 Production queue for C10 / media production (in priority order): Home
 footage, Executions construction sequence, Supervision detail, Projects

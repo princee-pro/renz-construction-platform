@@ -2,8 +2,9 @@
    RENZ — D1 · NAVIGATION, HEADER, MOBILE MENU, FOOTER, BRAND MARK
    ================================================================== */
 
-/* ---------- Brand mark (Datum R) ---------- */
+/* ---------- Approved identity + archived study typography ---------- */
 
+.renz-identity,
 .preview-renz-identity {
   --mark-cut: var(--paper);
   display: inline-flex;
@@ -13,10 +14,12 @@
   color: var(--ink);
   line-height: 1;
 }
+.renz-identity--dark,
 .preview-renz-identity--dark {
   --mark-cut: var(--ink);
   color: var(--paper);
 }
+.renz-identity--mono,
 .preview-renz-identity--mono {
   --mark-cut: transparent;
   color: currentColor;
@@ -66,6 +69,72 @@
   text-transform: uppercase;
 }
 
+.renz-symbol {
+  position: relative;
+  display: block;
+  flex: 0 0 auto;
+  width: var(--renz-symbol-size);
+  height: var(--renz-symbol-size);
+}
+.renz-symbol-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.renz-identity--light {
+  background: transparent;
+}
+.renz-wordmark {
+  position: relative;
+  display: block;
+  flex: 0 0 auto;
+  width: calc(var(--renz-symbol-size) * 2.8);
+}
+.renz-wordmark img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.renz-identity--stacked {
+  width: min(var(--renz-symbol-size), 88vw, 220svh);
+}
+.renz-identity--stacked .renz-symbol {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1183 / 306;
+}
+.renz-symbol::before,
+.renz-wordmark::before {
+  position: absolute;
+  inset: 0;
+  background-color: currentColor;
+  mask: var(--renz-symbol-url) center / contain no-repeat;
+}
+.renz-wordmark::before {
+  mask-image: var(--renz-wordmark-url);
+}
+.renz-identity--mono .renz-symbol::before,
+.renz-identity--mono .renz-wordmark::before {
+  content: "";
+}
+.renz-identity--mono .renz-symbol-image,
+.renz-identity--mono .renz-wordmark img {
+  opacity: 0;
+}
+@media (forced-colors: active) {
+  .renz-symbol::before,
+  .renz-wordmark::before {
+    content: "";
+    background-color: CanvasText;
+    forced-color-adjust: none;
+  }
+  .renz-symbol-image,
+  .renz-wordmark img {
+    opacity: 0;
+  }
+}
+
 /* ---------- Header: RENZ Measured Track (D1.6) ---------- */
 
 .public-header {
@@ -74,13 +143,14 @@
   inset-inline: 0;
   top: 0;
   color: var(--paper);
-  background: linear-gradient(180deg, rgb(7 21 35 / 0.62), rgb(7 21 35 / 0));
+  background: transparent;
   transition:
     background-color var(--t-content) var(--ease-out),
     box-shadow var(--t-content) var(--ease-out);
 }
-.public-header[data-scrolled="true"] {
-  background: color-mix(in srgb, var(--ink) 96%, transparent);
+.public-header[data-scrolled="true"],
+body:has(.public-main--unpublished) .public-header {
+  background: var(--color-brand-black);
   box-shadow: 0 1px 0 color-mix(in srgb, var(--paper) 8%, transparent);
 }
 .public-header-datum {
@@ -88,7 +158,7 @@
   inset-inline: 0;
   bottom: 0;
   height: 1px;
-  background: var(--gold);
+  background: var(--color-brand-silver);
   transform: scaleX(0);
   transform-origin: left center;
   transition: transform var(--t-section) var(--ease-in-out);
@@ -105,7 +175,7 @@
   transition: min-height var(--t-content) var(--ease-out);
 }
 .public-header[data-scrolled="true"] .public-header-inner {
-  min-height: 4.25rem;
+  min-height: 5rem;
 }
 .public-header-brand {
   display: flex;
@@ -115,13 +185,16 @@
 }
 .public-wordmark {
   display: inline-flex;
+  align-items: center;
+  min-width: 3.25rem;
+  min-height: 3.25rem;
   text-decoration: none;
   color: inherit;
   transition: transform var(--t-content) var(--ease-out);
   transform-origin: left center;
 }
 .public-header[data-scrolled="true"] .public-wordmark {
-  transform: scale(0.86);
+  transform: none;
 }
 .client-preview-label {
   font-family: var(--public-mono);
@@ -995,15 +1068,18 @@ li[data-focused="true"] .mobile-route-row > a strong {
   .public-header-cta {
     display: none;
   }
-  .public-header .preview-renz-symbol {
-    width: 2.1rem;
-    height: 2.1rem;
-  }
-  .public-header .preview-renz-wordmark small {
-    display: none;
+  .public-header .renz-identity {
+    --renz-symbol-size: 48px !important;
+    gap: 0.6rem;
   }
 }
 @media (max-width: 47.99rem) {
+  .public-header-brand {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.15rem;
+    padding-block: 0.5rem;
+  }
   .public-header-inner {
     gap: 0.75rem;
   }
@@ -1017,14 +1093,20 @@ li[data-focused="true"] .mobile-route-row > a strong {
   }
 }
 @media (max-width: 22rem) {
+  .public-header .renz-wordmark {
+    width: calc(var(--renz-symbol-size) * 2.5);
+  }
   .public-header-inner {
     gap: 0.5rem;
   }
-  .public-header .preview-renz-wordmark {
-    display: none;
-  }
   .mobile-route-row > a strong {
     font-size: 1.6rem;
+  }
+}
+@media (max-width: 25rem) {
+  /* The same WhatsApp action remains in the floating control and mobile menu. */
+  .public-header-actions > .header-icon-whatsapp {
+    display: none;
   }
 }
 @media (min-width: 64rem) and (max-width: 79.99rem) {
@@ -1232,147 +1314,65 @@ li[data-focused="true"] .mobile-route-row > a strong {
   }
 }
 
-/* ---------- Brand opener (D1 §56): ≤1.5 s, skippable, once per session ---------- */
+/* Approved orange opener: faithful full lockup, short dissolve, once per session. */
 .brand-opener {
   position: fixed;
   inset: 0;
   z-index: 120;
   display: grid;
   place-items: center;
-  background: var(--ink);
-  color: var(--paper);
+  background: var(--color-white);
+  color: var(--color-graphite);
   overflow: hidden;
-  animation: opener-plane 320ms var(--ease-in-out) both;
-  animation-play-state: paused;
+  /* CSS also clears the overlay if hydration is delayed or JavaScript is unavailable. */
+  animation: opener-plane 320ms var(--ease-out) 1050ms both;
 }
 .brand-opener[data-state="leaving"] {
-  animation-play-state: running;
+  animation-delay: 0ms;
 }
 @keyframes opener-plane {
   to {
-    clip-path: inset(0 0 100% 0);
+    opacity: 0;
+    visibility: hidden;
   }
 }
 .brand-opener-stage {
-  position: relative;
   display: grid;
-  gap: 1.5rem;
-  justify-items: start;
-  width: min(36rem, 84vw);
-}
-.brand-opener-grid {
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(
-      to right,
-      color-mix(in srgb, var(--paper) 7%, transparent) 1px,
-      transparent 1px
-    ),
-    linear-gradient(
-      to bottom,
-      color-mix(in srgb, var(--paper) 7%, transparent) 1px,
-      transparent 1px
-    );
-  background-size: 6rem 6rem;
-  opacity: 0;
-  animation: opener-fade 500ms var(--ease-out) 60ms both;
-}
-.brand-opener-datum {
-  display: block;
-  width: 100%;
-  height: 2px;
-  background: var(--gold);
-  transform-origin: left center;
-  animation: opener-draw 520ms var(--ease-in-out) 80ms both;
+  place-items: center;
 }
 .brand-opener-lockup {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-  overflow: hidden;
-  padding-block-end: 0.15rem;
-}
-.brand-opener-mark {
-  display: block;
-  animation: opener-rise 520ms var(--ease-out) 360ms both;
-}
-.brand-opener-word {
-  display: grid;
-  gap: 0.35rem;
-  animation: opener-rise 520ms var(--ease-out) 460ms both;
-}
-.brand-opener-word span {
-  font-family: var(--public-display);
-  font-size: clamp(2.6rem, 8vw, 4.75rem);
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  line-height: 0.9;
-}
-.brand-opener-word small {
-  font-family: var(--public-mono);
-  font-size: 0.72rem;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--gold);
-}
-.brand-opener-caption {
-  font-family: var(--public-mono);
-  font-size: 0.7rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--public-on-ink-muted);
-  animation: opener-fade 400ms var(--ease-out) 700ms both;
+  animation: opener-fade 240ms var(--ease-out) both;
 }
 .brand-opener-skip {
   position: absolute;
   inset-block-end: max(1.5rem, env(safe-area-inset-bottom));
   inset-inline-end: max(1.5rem, env(safe-area-inset-right));
+  min-height: 44px;
   padding: 0.65rem 1.1rem;
-  border: 1px solid color-mix(in srgb, var(--paper) 30%, transparent);
+  border: 1px solid var(--color-graphite);
   background: transparent;
-  color: var(--paper);
+  color: var(--color-graphite);
   font: inherit;
   font-size: 0.82rem;
-  font-weight: 600;
   cursor: pointer;
 }
 .brand-opener-skip:hover {
-  border-color: var(--gold);
+  background: var(--color-concrete);
 }
 .brand-opener-skip:focus-visible {
-  outline: 2px solid var(--gold);
+  outline: 2px solid var(--color-graphite);
   outline-offset: 3px;
-}
-@keyframes opener-draw {
-  from {
-    transform: scaleX(0);
-  }
-  to {
-    transform: scaleX(1);
-  }
-}
-@keyframes opener-rise {
-  from {
-    transform: translateY(110%);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
 }
 @keyframes opener-fade {
   from {
-    opacity: 0;
+    opacity: 0.65;
   }
   to {
     opacity: 1;
   }
 }
-@media (prefers-reduced-motion: reduce) {
-  .brand-opener,
-  .brand-opener * {
-    animation: none;
+@media (prefers-reduced-motion: reduce), (forced-colors: active) {
+  .brand-opener {
+    display: none;
   }
 }

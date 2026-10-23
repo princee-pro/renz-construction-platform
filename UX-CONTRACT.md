@@ -138,6 +138,12 @@ These are Phase 1 owners. S5A implements the bounded admin Form, Select/Listbox,
 
 ## Verification
 
+### Media-rich public and authentication surfaces — 28 September 2026
+
+- The public header is visually transparent at the top of every public route and changes to the canonical black surface after scrolling; link semantics, focus order, mobile menu behavior, and the home-linked identity remain unchanged.
+- Insights cards and article heroes use generated concept imagery with a visible `Concept visual / not project evidence` caption. The index film is poster-first and follows the shared reduced-motion, Save-Data, slow-network, and offscreen-pause behavior.
+- The shared sign-in and MFA shell may display the same labeled concept film behind its explanatory side panel. Authentication forms, field names, submissions, MFA sequencing, errors, and destinations retain their existing behavior.
+
 - Required static checks after implementation: format, lint, strict typecheck, unit/component tests, production build, Supabase reset/migration/RLS tests, design-token drift, and premium UI audit.
 - Browser matrix: current Chromium/Firefox/WebKit; 360, 390, 430, 768, 1024, 1280, 1440, 1728, 1920 widths; short landscape; touch/no-hover; slow network; reduced motion.
 - Accessibility: keyboard-only, 200% zoom/reflow, contrast, focus visibility, open composite controls, NVDA/VoiceOver, axe, and manual screen-reader review.
@@ -145,3 +151,17 @@ These are Phase 1 owners. S5A implements the bounded admin Form, Select/Listbox,
 - Required failure evidence includes invalid forms, expired Turnstile, upload rejection, empty/no-results, 401, 403, stale conflict, server error, and retry.
 - Phase 0 has no runnable application, canonical sibling flow, or CRUD implementation to verify. Those checks are explicitly deferred to Phase 1.
 - S5A dated evidence (6 September 2026): native bounded selects and dialogs, Services CRUD, validation/failure/conflict behavior, responsive composition, and representative axe checks pass in the production Chromium workflow. This does not pre-approve a native control when a later capability requires owned search, virtualization, locale, or composite interaction.
+
+## Logo source update — 25 September 2026
+
+The user approved the Figma R symbol and requested website integration. `RenzIdentity` and the source URL in `src/lib/site/brand.ts` now own operational identity rendering; provenance is in [the logo integration record](docs/RENZ_LOGO_INTEGRATION.md). Decorative marks are silent, named home links retain their names and keyboard focus, and standalone informative marks use the accessible name RENZ. The symbol reserves its dimensions, maintains aspect ratio, and adapts to forced colors. The existing typography and responsive wordmark visibility remain unchanged. The archived brand-study route is explicitly historical.
+
+
+## Approved silver architectural identity — 28 September 2026
+
+The user explicitly revoked the terracotta/brick R direction and approved the attached black-and-silver RENZ CONSTRUCTION twin-tower logo as the new website source of truth. This decision supersedes the 25 September identity decision for all operational logo uses. The original is byte-preserved at `references/client/originals/03-renz-construction-silver-reference.png`; faithful vector derivatives, allowed use, hashes and checks are recorded in [RENZ_SILVER_BRAND.md](docs/RENZ_SILVER_BRAND.md). The opening and loading screens use the large stacked lockup on black; the responsive header uses a compact silver lockup linked to `/`. The approved opener now applies to the public homepage independently of preview mode, retaining its session, skip, reduced-motion, forced-colors and Save-Data bypasses. Existing business facts, historical audit records and unrelated UI colors remain under their existing contracts. This is source implementation authority, not deployment or general release approval.
+
+
+## Orange identity clarification — 28 September 2026 (superseding update)
+
+The user resolved the conflicting brief by explicitly selecting the orange curved R with the two-line Renz Construction wordmark. This later instruction supersedes the silver tower identity above for operational website branding. The supplied composition and traced lettering are retained in transparent SVGs; the full opening/loading logo appears on white, the responsive header logo links to the homepage, and existing shared identity placements and app icons use the same source. Provenance, preparation and current verification are recorded in [RENZ_ORANGE_BRAND.md](docs/RENZ_ORANGE_BRAND.md). Earlier dated decisions and checks remain historical; this bounded correction does not authorize deployment or change business facts.

@@ -3,6 +3,10 @@
 Single source of truth for where the RENZ Construction Services Ltd build is.
 Update this file at the end of every phase; do not let it drift.
 
+## Bounded logo approval and integration — 25 September 2026
+
+The user reopened the visual freeze only to integrate the approved Figma R symbol into the website. The shared symbol, operational public/admin uses, loading state, favicon and organization-schema logo are covered by [RENZ_LOGO_INTEGRATION.md](./RENZ_LOGO_INTEGRATION.md). The existing website design, typography, business content and release state remain unchanged. The dated phase records below are preserved.
+
 Last updated: 2026-09-22 (D1.8 — brand lock "Brick by Brick." + pre-deployment visual completion; R1 cloud execution still needs the accounts/access; R2 owner acceptance after R1 cloud).
 
 ## DONE
@@ -179,3 +183,13 @@ with their C10 disposition.
   is green on its own, which is how the phases are verified (`pnpm
   test:e2e:c4` … `test:e2e:c9`, public suites). Making the suites
   order-independent is a C10 item.
+
+
+## Approved silver architectural identity — 28 September 2026
+
+The user explicitly revoked the terracotta/brick R direction and approved the attached black-and-silver RENZ CONSTRUCTION twin-tower logo as the new website source of truth. This decision supersedes the 25 September identity decision for all operational logo uses. The original is byte-preserved at `references/client/originals/03-renz-construction-silver-reference.png`; faithful vector derivatives, allowed use, hashes and checks are recorded in [RENZ_SILVER_BRAND.md](./RENZ_SILVER_BRAND.md). The opening and loading screens use the large stacked lockup on black; the responsive header uses a compact silver lockup linked to `/`. The approved opener now applies to the public homepage independently of preview mode, retaining its session, skip, reduced-motion, forced-colors and Save-Data bypasses. Existing business facts, historical audit records and unrelated UI colors remain under their existing contracts. This is source implementation authority, not deployment or general release approval.
+
+
+## Orange identity clarification — 28 September 2026 (superseding update)
+
+The user resolved the conflicting brief by explicitly selecting the orange curved R with the two-line Renz Construction wordmark. This later instruction supersedes the silver tower identity above for operational website branding. The supplied composition and traced lettering are retained in transparent SVGs; the full opening/loading logo appears on white, the responsive header logo links to the homepage, and existing shared identity placements and app icons use the same source. Provenance, preparation and current verification are recorded in [RENZ_ORANGE_BRAND.md](./RENZ_ORANGE_BRAND.md). Earlier dated decisions and checks remain historical; this bounded correction does not authorize deployment or change business facts.

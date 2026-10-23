@@ -44,7 +44,7 @@
   color: var(--admin-ink);
 }
 
-.auth-brand span {
+.auth-brand > span:not(.renz-identity) {
   display: grid;
   line-height: 1.1;
 }
@@ -315,10 +315,34 @@
   isolation: isolate;
 }
 
+.auth-brand-zone::before {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  inset: clamp(1.5rem, 4vw, 3.5rem);
+  border: 1px solid rgb(244 241 233 / 0.18);
+  border-inline-start-color: var(--color-gold, #c69a3a);
+  pointer-events: none;
+}
+
+.auth-cinematic {
+  inset: 0;
+  z-index: 0;
+}
+.auth-cinematic .cinematic-poster,
+.auth-cinematic .cinematic-video {
+  filter: saturate(0.55) contrast(1.08);
+}
+.auth-cinematic .cinematic-wash-strong {
+  background:
+    linear-gradient(180deg, rgb(7 21 35 / 0.38), rgb(7 21 35 / 0.9) 76%),
+    linear-gradient(90deg, rgb(7 21 35 / 0.82), rgb(7 21 35 / 0.26));
+}
+
 .auth-grid {
   position: absolute;
   inset: 0;
-  z-index: 0;
+  z-index: 1;
   background-image:
     linear-gradient(to right, rgb(244 241 233 / 0.06) 1px, transparent 1px),
     linear-gradient(to bottom, rgb(244 241 233 / 0.06) 1px, transparent 1px);
@@ -330,7 +354,7 @@
   position: absolute;
   inset-inline-end: 0;
   inset-block-start: 0;
-  z-index: 0;
+  z-index: 2;
   width: 78%;
   max-height: 44%;
   height: auto;
@@ -376,10 +400,13 @@
 
 .auth-brand-copy {
   position: relative;
-  z-index: 1;
+  z-index: 3;
   display: grid;
   gap: 1rem;
-  max-width: 34rem;
+  max-width: 36rem;
+  padding: clamp(1.25rem, 2vw, 2rem);
+  border-inline-start: 1px solid var(--color-gold, #c69a3a);
+  background: linear-gradient(90deg, rgb(7 21 35 / 0.84), rgb(7 21 35 / 0.45) 70%, transparent);
   animation: auth-rise 600ms cubic-bezier(0.16, 1, 0.3, 1) 200ms both;
 }
 
@@ -402,7 +429,7 @@
   color: #fff;
 }
 
-.auth-brand-copy > p:not(.auth-brand-kicker):not(.auth-coordinates) {
+.auth-brand-copy > p:not(.auth-brand-kicker):not(.auth-coordinates):not(.auth-provenance) {
   margin: 0;
   max-width: 30rem;
   color: rgb(244 241 233 / 0.72);
@@ -424,7 +451,7 @@
   display: grid;
   gap: 0.2rem;
   padding: 0.9rem 1rem;
-  background: #071523;
+  background: rgb(7 21 35 / 0.84);
 }
 
 .auth-modules span {
@@ -458,6 +485,15 @@
 .auth-coordinates span {
   margin-inline-end: 0.6rem;
   color: var(--color-gold, #c69a3a);
+}
+
+.auth-provenance {
+  margin: 0.25rem 0 0;
+  color: rgb(244 241 233 / 0.62);
+  font-family: var(--admin-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
 }
 
 @keyframes auth-draw {
@@ -515,16 +551,22 @@
     min-height: 0;
     padding: 1.5rem clamp(1.25rem, 5vw, 2rem) 2rem;
   }
+  .auth-brand-zone::before {
+    inset: 1rem;
+  }
+  .auth-brand-copy {
+    padding: 1rem;
+  }
   .auth-drawing {
     display: none;
   }
-  .auth-brand-copy .preview-renz-identity {
+  .auth-brand-copy .renz-identity {
     display: none;
   }
   .auth-brand-copy h2 {
     font-size: 1.2rem;
   }
-  .auth-brand-copy > p:not(.auth-brand-kicker):not(.auth-coordinates) {
+  .auth-brand-copy > p:not(.auth-brand-kicker):not(.auth-coordinates):not(.auth-provenance) {
     display: none;
   }
   .auth-modules {

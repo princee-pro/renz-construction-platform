@@ -164,7 +164,8 @@ describe("Public experience states", () => {
     render(<PublicLoading />);
 
     expect(screen.getByRole("main").getAttribute("aria-busy")).toBe("true");
-    expect(screen.getByText("Assembling published content")).toBeTruthy();
+    expect(screen.getByText("Loading")).toBeTruthy();
+    expect(screen.getByRole("img", { name: "RENZ Construction" })).toBeTruthy();
   });
 
   it("provides an accessible route-recovery control", () => {

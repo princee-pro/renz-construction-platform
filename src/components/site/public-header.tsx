@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { MeasuredTrackNav } from "@/components/site/nav/measured-track";
 import type { NavService } from "@/components/site/nav/nav-types";
-import { PreviewRenzIdentity } from "@/components/site/preview-renz-identity";
+import { RenzIdentity } from "@/components/site/renz-identity";
 import { serviceField } from "@/components/site/service-fields";
 import type { ServiceCategory } from "@/features/services/content";
 import type { ProjectCardData } from "@/features/public-content/data";
@@ -79,12 +79,12 @@ export function PublicHeader({
   copy,
 }: PublicHeaderProps) {
   const brand = (
-    <Link aria-label={`${identity.shortName} home`} className="public-wordmark" href="/">
-      <PreviewRenzIdentity decorative size={40} tone="dark" wordmark />
+    <Link aria-label="RENZ Construction home" className="public-wordmark" href="/">
+      <RenzIdentity decorative size={64} tone="dark" wordmark />
     </Link>
   );
   // Inside the navigator the mark is decorative: "Home" is the first route.
-  const menuBrand = <PreviewRenzIdentity decorative size={40} tone="dark" wordmark />;
+  const menuBrand = <RenzIdentity size={56} tone="dark" wordmark />;
   return (
     <MeasuredTrackNav
       brand={brand}

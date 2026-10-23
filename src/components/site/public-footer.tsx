@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { ArrowMark } from "@/components/site/arrow-mark";
-import { PreviewRenzIdentity } from "@/components/site/preview-renz-identity";
+import { RenzIdentity } from "@/components/site/renz-identity";
 import { WhatsAppGlyph } from "@/components/site/whatsapp-glyph";
 import type { ServiceCategory } from "@/features/services/content";
 import type { WebsiteGlobals } from "@/features/website/contracts";
@@ -82,7 +82,7 @@ export function PublicFooter({ services, identity, globals, copy }: PublicFooter
     <footer className="site-footer tone-ink" aria-labelledby="site-footer-heading">
       <div className="container site-footer-inner">
         <div className="site-footer-brand">
-          <PreviewRenzIdentity decorative size={40} tone="dark" wordmark />
+          <RenzIdentity decorative size={40} tone="dark" wordmark />
           {/* D1.8 §16: the slogan is stated once. The owner's footer headline
               is the authoritative line; the published slogan appears above it
               only when the owner has written a different headline. */}

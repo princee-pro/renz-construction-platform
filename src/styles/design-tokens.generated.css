@@ -1,4 +1,6 @@
 @theme {
+  --color-brand-black: #000000;
+  --color-brand-silver: #bdbdbd;
   --color-primary: #071523;
   --color-navy-raised: #0d2134;
   --color-gold: #c69a3a;

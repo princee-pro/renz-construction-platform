@@ -1,3 +1,4 @@
+import { RENZ_LOGO } from "@/lib/site/brand";
 import type { SiteIdentity } from "@/lib/site/public-configuration";
 
 /**
@@ -24,8 +25,8 @@ export function OrganizationStructuredData({ identity }: Readonly<{ identity: Si
     ],
   };
   if (identity.seo.organizationUrl) schema["url"] = identity.seo.organizationUrl;
-  if (identity.brand["primary_logo"] && identity.canonicalBaseUrl) {
-    schema["logo"] = `${identity.canonicalBaseUrl}/api/media/brand/primary_logo`;
+  if (identity.canonicalBaseUrl) {
+    schema["logo"] = new URL(RENZ_LOGO.src, identity.canonicalBaseUrl).href;
   }
   if (identity.social.length > 0) schema["sameAs"] = identity.social.map((link) => link.url);
   if (identity.location) {

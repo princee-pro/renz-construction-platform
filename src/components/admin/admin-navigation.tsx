@@ -7,7 +7,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { signOutAction } from "@/app/admin/actions";
 import { HelpDrawer } from "@/components/admin/help-drawer";
 import { QuickFind } from "@/components/admin/quick-find";
-import { PreviewRenzIdentity } from "@/components/site/preview-renz-identity";
+import { RenzIdentity } from "@/components/site/renz-identity";
 import { NotificationBell } from "@/features/notifications/components/notification-bell";
 import type { NotificationSummary } from "@/features/notifications/notification-contract";
 import { groupedAdminNavigation, type AdminNavigationItem } from "@/lib/admin/navigation";
@@ -216,7 +216,7 @@ export function AdminNavigation({
         <div className="admin-navigation-content">
           <div className="admin-identity-row">
             <Link aria-label="RENZ Control Room" className="admin-identity-mark" href="/admin">
-              <PreviewRenzIdentity decorative size={32} tone="dark" />
+              <RenzIdentity decorative size={32} tone="dark" />
               <span className="admin-identity-text">
                 <strong>RENZ</strong>
                 <small>Control Room</small>
@@ -261,7 +261,7 @@ export function AdminNavigation({
         </button>
         <div className="admin-topbar-context">
           <span className="admin-topbar-brand">
-            <PreviewRenzIdentity decorative size={22} tone="dark" />
+            <RenzIdentity decorative size={22} tone="dark" />
             <strong>RENZ</strong>
           </span>
           <span className="admin-topbar-section">
@@ -291,7 +291,7 @@ export function AdminNavigation({
         <div className="admin-drawer-panel">
           <div className="admin-drawer-head">
             <span className="admin-identity-mark">
-              <PreviewRenzIdentity decorative size={28} tone="dark" />
+              <RenzIdentity decorative size={28} tone="dark" />
               <span className="admin-identity-text">
                 <strong>RENZ</strong>
                 <small>Control Room</small>

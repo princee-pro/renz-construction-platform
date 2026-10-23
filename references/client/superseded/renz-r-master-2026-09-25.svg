@@ -1,0 +1,22 @@
+<svg preserveAspectRatio="xMidYMid meet" overflow="visible" style="display: block;" width="131.279" height="140" viewBox="0 0 131.279 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="renz-r-master" clip-path="url(#clip0_0_4)">
+<path id="Graphite / upper-left architectural block" d="M0 19.5082L30.7541 0V45.6721L0 62.4262V19.5082Z" fill="#343636"/>
+<path id="Graphite / upper inner plane" d="M30.7541 0H32.5902L50.4918 26.623V37.1803L30.7541 45.6721V0Z" fill="#262929"/>
+<path id="Masonry / upper course &#226;&#128;&#148; left brick" d="M0 64.7213L17.4426 56V72.0656L0 80.5574V64.7213Z" fill="#D56D3F"/>
+<path id="Masonry / upper course &#226;&#128;&#148; right brick" d="M19.7377 54.8525L50.4918 39.7049V57.377L19.7377 71.1475V54.8525Z" fill="#D56D3F"/>
+<path id="Masonry / middle course &#226;&#128;&#148; left brick" d="M0 83.3115L30.0656 69.7705V87.9016L0 101.213V83.3115Z" fill="#C76035"/>
+<path id="Masonry / middle course &#226;&#128;&#148; right brick" d="M31.2131 69.3115L50.4918 60.3607V79.4098L31.2131 87.4426V69.3115Z" fill="#C76035"/>
+<path id="Masonry / lower course &#226;&#128;&#148; single brick" d="M0 103.967L28.918 91.3443V109.475L0 120.951V103.967Z" fill="#D56D3F"/>
+<path id="Graphite / lower-left foundation" d="M0 123.475L30.7541 109.934V140H0V123.475Z" fill="#343636"/>
+<path id="Graphite / lower inner stem" d="M30.7541 90.4262L50.4918 82.6229V140H30.7541V90.4262Z" fill="#292C2C"/>
+<path id="Terracotta / folded return" d="M32.8197 0L84.918 54.3934H125.082L99.3771 80.3279H69.7705L75.9672 73.6721C81.4754 68.1639 84.918 62.4262 78.0328 55.082L38.7869 13.3115L32.8197 0Z" fill="#A64726"/>
+<path id="Terracotta / upper folded beam" d="M32.8197 0H74.1311L125.082 54.3934H84.918L32.8197 0Z" fill="#E47B45"/>
+<path id="Graphite / diagonal leg &#226;&#128;&#148; side" d="M50.4918 82.6229H51.6393L95.7049 140H88.1311L50.4918 90.4262V82.6229Z" fill="#232626"/>
+<path id="Graphite / diagonal leg &#226;&#128;&#148; face" d="M51.6393 82.6229H86.5246L131.279 140H95.7049L51.6393 82.6229Z" fill="#343636"/>
+</g>
+<defs>
+<clipPath id="clip0_0_4">
+<rect width="131.279" height="140" fill="white"/>
+</clipPath>
+</defs>
+</svg>
