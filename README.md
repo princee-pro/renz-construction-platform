@@ -29,7 +29,7 @@ Start with [HANDOFF_START_HERE.md](docs/HANDOFF_START_HERE.md).
 | Data              | PostgreSQL 17 through Supabase; 50 ordered SQL migrations, generated types and pgTAP contracts                                                                          |
 | Identity          | Invitation/owner-created staff, password plus mandatory TOTP MFA, fresh capability checks and database enforcement                                                      |
 | Security          | RLS, narrow security-definer facades, version checks, immutable publication snapshots and audit history                                                                 |
-| Storage           | Private editorial-originals, editorial-derivatives and conditional lead-intake buckets; external objects require separate restoration                             |
+| Storage           | Private editorial-originals, editorial-derivatives and conditional lead-intake buckets; external objects require separate restoration                                   |
 | Live updates      | Permission-filtered Realtime invalidation followed by authorized refetch                                                                                                |
 | Finance           | Currency-separated exact amounts, append-only payment/reversal history, PDF invoices and revocable tokenized sharing                                                    |
 | Release direction | Owner-selected Netlify application hosting, Supabase data/Auth/Storage, Cloudflare DNS and conditional R2 backup; compatibility and cloud operations require validation |
