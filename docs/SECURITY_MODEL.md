@@ -4,6 +4,8 @@ Status: Phase 0 recommendation with dated S3 implementation addendum
 Prepared: 27 August 2026
 Scope: Public website, Start a Project and contact intake, administration application, Supabase Auth/Data API/Storage, and supporting deployment operations.
 
+**Current reviewer entry point:** [Section 26](#26-current-implementation-review--23-october-2026) records the source-reviewed C10/Owner CMS/R1 boundary on 23 October 2026. The older dated recommendations and slice statements below remain historical; they must not be read as a current feature inventory or evidence of cloud verification.
+
 ## Dated S3 implementation addendum — 5 September 2026
 
 S3 is now implemented and verified for the local invitation-only staff boundary described in `PHASE_1_S3_IDENTITY_ARCHITECTURE.md`: Supabase Auth email/password, mandatory TOTP AAL2, fresh database-backed permissions, protected admin routes, narrow server-only Auth Admin invitation, explicit grants/RLS, redacted audit, and last-active-Super-Admin safeguards. This addendum does not convert the remaining Phase 0 recommendations into production policy. Public/customer authentication, content/lead/media policies, SMTP ownership, rate limiting, privacy/retention, cloud resources, and deployment remain deferred to their named slices and gates.
@@ -729,3 +731,165 @@ The development MIME set is JPEG, PNG, WebP, AVIF, MP4, and WebM. Server-side ma
 The public contract is a named explicit-column projection set. S4 views are owner-evaluated (`security_invoker=false`) and `security_barrier=true`; anonymous access is projection-only and all editorial, evidence, claim, registry, settings, and media base-table `SELECT` grants are revoked. Internal evidence, rights, reviewer, consent, and audit fields are not projected.
 
 The application cache boundary is split intentionally between `src/lib/content/cache-tags.ts` (the bounded tag vocabulary) and `src/lib/content/invalidation.ts` (server-only invalidation). It uses Next.js 16 `revalidateTag(tag, "max")` and `revalidatePath` in supported server contexts; `updateTag` is confined to the server-action-only read-your-own-write helper. No public route or cacheable S6 query is introduced by S4.
+
+## 26. Current implementation review — 23 October 2026
+
+This section was checked against the current application, migrations and test source for the private GitHub handoff. It preserves the historical Phase 0/S3/S4 material above. It is **not a new penetration-test certification**, a claim that every suite has just run, or production approval. Fresh verification results belong in the handoff's current test record. The dated [C10 hardening report](./RENZ_C10_PRODUCTION_HARDENING_REPORT.md) describes its own local runs; those results do not automatically cover later branding, provider configuration or a new environment.
+
+### 26.1 Trust and data boundaries now implemented
+
+- Public website rendering uses published projections/read facades; private CRM, operational projects, finance, procurement, leads, staff and audit records remain outside ordinary anonymous reads.
+- The browser receives the Supabase URL and publishable key. Normal staff data access uses a per-request, cookie-backed caller client and the staff JWT. PostgreSQL grants, RLS, facade predicates and constraints remain the authority.
+- `src/lib/supabase/admin.ts` is server-only and encapsulates Auth user creation, password reset and account bans. `src/lib/supabase/service.ts` is a server-only privileged-client factory used for intake, short-lived Storage signing, notification tasks and health/tooling. This factory is broader than the original Phase 0 recommendation of individually encapsulated adapters: every new caller must be reviewed because its key bypasses RLS.
+- Database `SECURITY DEFINER` facades are intentional authorization boundaries. Their checked patterns include an empty `search_path`, schema-qualified objects, explicit execute grants/revokes and caller identity from `auth.uid()`. A definer function can bypass underlying table RLS, so its permission, relationship and input checks must be reviewed independently; RLS alone does not secure the function.
+- Client inputs, CMS rich text/URLs, original filenames, request headers and uploaded bytes remain untrusted. No company credential, certification, project evidence or legal compliance is established by passing engineering checks.
+
+The actual application permission catalog is `src/lib/auth/permissions.ts`. It includes separate read/write/issue/payment/publish/staff capabilities across domains, beyond the small historical role matrix above. The exact grants are in migrations; do not reproduce a second independent permission policy in a component or environment variable.
+
+### 26.2 Authentication, MFA and session lifecycle
+
+`src/proxy.ts` refreshes Supabase cookies and sends an anonymous staff-route request to sign-in with a 307 response. It marks staff responses private/no-store and noindex. It is an initial routing boundary; workspace layouts, actions, route handlers and database checks still enforce access.
+
+`getAdminAuthSnapshot()` checks both `auth.getUser()` and `auth.getClaims()`, fetches the caller's profile and reads AAL/TOTP state. `requireAal2User()` gates workspace pages; `authorizeServerAction()` independently rejects signed-out, inactive, AAL1, pending-password or unauthorized callers. Normal authorization never trusts React state, `user_metadata`, a hard-coded email, or a user object from client `getSession()`.
+
+TOTP enrollment and verification are implemented. The privileged data boundary requires AAL2, not merely visiting the MFA page. Session audit is recorded through `record_session_event` for admitted events. Sign-out, disabled profile checks, Auth bans and current database permissions limit stale-session access. The disabled account's existing access token may remain cryptographically valid until expiry; the application relies on fresh profile/facade checks and the ban prevents refresh. Operator incident containment should still revoke sessions explicitly.
+
+The local `supabase/config.toml` disables global public signup, while enabling the email provider for existing/created staff. No public customer registration flow is implemented. Check hosted Auth settings separately: committing local configuration does not configure a cloud project.
+
+### 26.3 Owner-controlled staff administration replaces email invitation assumptions
+
+The implemented C10 workflow is **owner-created staff with a one-time temporary password**, rather than an email invitation dependency:
+
+1. An active AAL2 `super_admin` with `staff.manage` uses Settings → Staff & Access.
+2. A server action creates an Auth user with confirmed email via the server-only Auth Admin adapter.
+3. `admin_prepare_staff_profile` sets the initial role, pending-MFA state and password-change flag, and records a redacted audit entry.
+4. The temporary password is shown once to the owner for delivery over an approved private channel. It must never enter a Git file, issue, log, screenshot, audit value or browser storage.
+5. The staff member signs in, enrolls/verifies TOTP and follows the forced password-change UI before opening the workspace.
+
+Current role templates are `super_admin`, `admin`, `project_manager`, `finance`, `content_editor` and `viewer`. Role names are templates, not business employment claims. `private.c10_can_manage_staff()` requires both `staff.manage` and current Super Admin status; ordinary `admin` is not an owner-account administrator. Staff may not change their own role/status. Existing last-active-Super-Admin triggers prevent lockout through ordinary disable/demotion paths.
+
+Password reset is owner-mediated and repeats the one-time temporary-password handling. The voluntary password form uses Supabase Auth followed by `complete_password_change()`. Public self-service “forgot password,” production SMTP, lost-factor identity verification, recovery codes and a cloud-tested break-glass process must not be described as available without separate evidence.
+
+**Known first-login gate limitation:** `public.complete_password_change()` in `20260922100000_c10_staff_access.sql` is executable by an authenticated AAL2 caller and clears `must_change_password` for that caller. The RPC itself does not prove that `auth.updateUser({ password })` completed; an AAL2 caller could invoke it directly. The supported UI changes the Auth password first, but the database flag is not an independent proof of a credential change. Preserve this as an explicit staging/security-review item rather than claiming an unbypassable forced-reset guarantee. MFA, active-profile and domain permissions still apply.
+
+### 26.4 RLS, facades and publication isolation
+
+The S4 owner-evaluated, security-barrier public projections expose explicit public columns while base editorial/evidence tables stay private. C4+ operational domains use narrow permission-checked facades and default-deny direct table access. Staff own-profile/role readers expose only the admitted current-user data. Test suites under `supabase/tests/database/` cover schema/grants, AAL1 and anonymous negatives, BOLA, roles, financial invariants, publication and CMS contracts.
+
+The current `private.has_permission()` requires `auth.uid()`, AAL2, an active profile, `must_change_password = false` and a live role-to-permission relationship. Publicly executable read/intake/share functions are explicit exceptions and must validate their own inputs; “every function requires staff AAL2” would be inaccurate.
+
+CMS page drafts and published revisions are separate. Saves use expected versions and stale edits are refused. Publication validates the canonical section vocabulary, media readiness, URLs, current rights and other content-specific evidence. Public cache invalidation follows successful publication; the public site is not the staff draft preview. Revoking rights removes eligibility when database-backed media is resolved.
+
+Concept studies remain distinguished from real RENZ projects. Generated-reference media may illustrate labelled studies/pages where the current website predicates permit it; real-project media promotion refuses generated/concept/synthetic provenance. A database rights flag records the reviewer assertion, and does not establish third-party ownership independently. See [the asset register](./ASSET_AND_LICENSE_REGISTER.md).
+
+### 26.5 Editorial media and confidential supporting files
+
+Editorial buckets `editorial-originals` and `editorial-derivatives` are private. The server uses magic-byte checks and safe immutable UUID paths, records checksums/source lineage, and generates bounded image derivatives with Sharp. Image uploads are limited to 20 MiB; accepted videos have a separate 12 MiB bound. Image derivatives are capped at 2400 pixels and thumbnail children at 960 pixels. The accepted current signatures include image JPEG/PNG/WebP/AVIF and admitted MP4/WebM video; no SVG/HTML upload pipeline is admitted.
+
+The owner library and real-project route share `src/lib/media/upload-image.ts`. Registration/finalization, rights confirmation, project-use eligibility and publication remain separate operations. Uploaded originals are not made public automatically. Archive retains records/objects and rejects in-use assets. Media/object reconciliation reports inconsistencies rather than deleting arbitrary objects.
+
+Website delivery resolves `resolve_website_media_path` for either a published reference or an authorized staff preview, then signs the resulting Storage path for five minutes. The website redirect currently uses `Cache-Control: private, max-age=240`. Project/brand delivery uses its corresponding bounded resolver. A signed URL already issued is a bearer capability until expiry; eligibility revocation prevents later minting and is not guaranteed to revoke a previously issued URL immediately.
+
+Public supporting files use a separate `lead-intake` bucket with no anonymous/authenticated direct object policy. `/api/intake/uploads` checks Origin/Sec-Fetch-Site, a signed form token, an HMAC-derived visitor rate key, a session token and the configured upload policy. Current limits are 5 files, 10 MiB per file, a two-hour upload session and 30 uploads/hour per identity key. JPEG/PNG/WebP are allowed by images-only policy; PDF is conditional on the owner setting. PDF signature/active-content checks are heuristics, not malware scanning.
+
+Every supporting file begins as `pending_review`. `NoScanner` is the only installed scanner adapter. Staff with `leads.attachments.read` can resolve a non-rejected, lead-bound file; the server mints a 120-second signed URL. PDFs are forced to download. A pending file is **not independently proven safe** merely because the preview/download is available. The existing quarantine/review wording must not be interpreted as antivirus certification. Keep uploads disabled or images-only until the approved file policy and operational review permit more.
+
+### 26.6 Intake validation, abuse and trust in the hosting proxy
+
+`src/features/intake/intake-actions.ts`, `intake-server.ts` and `intake-contract.ts` validate supported public form fields, signed issue-time/nonces, timing, honeypot, bot verification and idempotent database intake. Anonymous callers have no direct lead-table insertion grant. The server credential is used only after the application screen; service-only intake facades perform the transactional write.
+
+The canonical rates are 5 contact/service submissions/hour, 3 project/material submissions/hour and 30 uploads/hour per identity key, with an independent analytics budget. PostgreSQL records limiter state through `intake_rate_limit_hit`; failure denies intake. Visitor identity is an HMAC of the requesting address under `INTAKE_RATE_LIMIT_SECRET`; plaintext addresses do not become the database limiter key.
+
+The address comes from forwarded headers. Staging must prove the chosen hosting proxy replaces/normalizes those headers and that outside callers cannot choose a new identity key on each request. The upload Origin comparison also trusts the effective host/forwarded-host contract. Host/firewall body limits must bound multipart parsing before the handler buffers a file; a per-file size check alone is not a perimeter request-size limit.
+
+Turnstile verification uses a five-second server-side request and currently checks the provider's `success` field. It does **not** compare returned hostname/action values in the current source. Configure the provider's permitted hostnames, then review/test hostname/action binding before production. The old recommendation above is a target, not evidence that those comparisons exist.
+
+`RENZ_INTAKE_ALLOW_DEV_BYPASS=true` deliberately permits the local production-build browser harness to operate without live bot credentials. A production health check reports blocked/503 if this or `RENZ_CLIENT_PREVIEW` remains enabled. This is a release gate signal; it is not an HTTP request firewall and does not by itself stop the running app. Both switches must be absent in staging/production.
+
+### 26.7 Financial integrity and bearer document links
+
+Invoice issuance freezes the financial document snapshot; financial state uses database precision, currency separation and transaction/locking rules. Payments and reversals are append-only. Procurement applies corresponding purchase-order/receipt invariants. See the authoritative [finance contract](./CLAUDE_C5_FINANCE_ARCHITECTURE.md) and [contractor finance contract](./CLAUDE_C6_CONTRACTOR_FINANCE.md).
+
+`create_invoice_share_link` and `create_purchase_order_share_link` generate random tokens; tables store SHA-256 hashes rather than raw tokens. Raw values are returned once to the authorized action and remain in component memory for explicit copying/sharing. Public pages `/i/[token]` and `/po/[token]`, and their PDF routes, resolve only the corresponding document via `public_invoice_by_share_token` / `public_purchase_order_by_share_token`. Invalid, malformed, revoked and ineligible values have a uniform unavailable/404 result.
+
+The tokens are **bearer access to confidential document content**: anyone holding a link can read that document. There is no built-in share expiry column in the current share-link tables; access ends on revocation/replacement or an ineligible document state. Do not promise automatic expiry. Keep links out of source, analytics, access-log retention and screenshots, and configure host/proxy log redaction for token paths. Shared pages/PDFs are noindex/private/no-store where the corresponding page/runtime headers apply; test the effective host response during staging. No customer account/password is required.
+
+### 26.8 Realtime, audit and scheduled tasks
+
+Operational changes write minimal `public.realtime_events` pointers: entity type, ID, action and metadata needed for ordering. They contain no business record body. The `realtime_events_staff_select` policy calls `private.is_active_aal2_staff()`. This current helper checks active profile and AAL2; it does not filter each pointer by domain permission or by the pending-password flag. Thus eligible staff can observe identifiers/timing in the shared stream. Each subsequent record fetch still requires the domain read permission; a pointer never grants access to the record. Treat identifier/timing visibility as an explicit residual boundary for the security reviewer.
+
+`useAdminRealtimeInvalidation` / `useRealtimePointers` prompt a fresh authorized read rather than applying untrusted event values as record state. Losing realtime leaves the page's explicit refresh/navigation paths; browser connectivity is not an authorization guarantee.
+
+Audit records material domain/security events through trusted database routines and redacts secrets. Audit access requires its own capability; ordinary UI workflows do not delete payments or audit history. Host, Auth and provider logs remain separate operational systems and need their own retention, access and redaction decisions.
+
+`POST /api/tasks/notifications-sweep` is disabled with 404 until `RENZ_TASK_TOKEN` is configured and requires the exact bearer token; GET is 404. It invokes the idempotent service-role notification sweep. Scheduler credentials belong in the approved hosting secret store, never the URL, source or handoff example. The presence of the route/configuration is not proof that a hosted scheduler or its alerts are operating.
+
+### 26.9 Browser headers and remaining hardening
+
+`next.config.ts` supplies CSP, nosniff, DENY framing, strict-origin referrer policy and a restrictive Permissions-Policy. HSTS and upgrade-insecure-requests are conditional on a production build using HTTPS Supabase configuration; inspect actual hosting headers before enabling production.
+
+The actual CSP currently contains **`script-src 'self' 'unsafe-inline'`** and **`style-src 'self' 'unsafe-inline'`**, plus fixed Cloudflare and configured Supabase/Turnstile origins. It has no nonce/hash-based script policy. Historical statements of “script-src self” are an incomplete shorthand. Fixed external allow-list entries do not mean analytics/bot providers are activated; settings and environment decide whether requests are sent. Nonce/hash CSP hardening and deployed-policy testing remain review items.
+
+The canonical rich-text and section schemas reject unsupported markup and unsafe URL forms; arbitrary uploaded SVG/HTML is not rendered. Keep testing stored-XSS payloads and rendered database content rather than relying on CSP to repair invalid input.
+
+### 26.10 Review evidence, repository boundaries and open production work
+
+Relevant existing checks include:
+
+| Boundary                                   | Authoritative evidence / command                                                                      |
+| ------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
+| Staff, AAL, roles and grants               | `supabase/tests/database/007_s3_authorization.sql`, `019_c10_staff_access.sql`; `pnpm auth:verify`    |
+| Operational/financial negative access      | `012_c4_security_negative.sql`, `013_c5_finance.sql`, `014_c6_delivery.sql`                           |
+| Public/evidence/media and CMS              | `008_s4_publication_media.sql`, `010_s5c_projects_admin.sql`, `018_cr1_owner_cms.sql`                 |
+| Intake/notifications/infrastructure        | `016_c8_leads.sql`, `017_c9_intelligence.sql`, `021_r1_infrastructure.sql`                            |
+| Direct anonymous/AAL1/authenticated probes | `node scripts/verify-c10-security.mjs` against the prepared local stack                               |
+| Headers/CSP                                | `node scripts/c10-headers.mjs`, `node scripts/c10-csp-check.mjs` against the configured test server   |
+| Committable text scan                      | `node scripts/scan-secrets.mjs`; excludes binary media and ignored local artifacts                    |
+| Dependency audit                           | `pnpm audit:production`                                                                               |
+| Aggregate current release checks           | `pnpm c10:verify`; see [testing guide](./TESTING_AND_QA_GUIDE.md) for prerequisites and fresh results |
+
+The text scanner does not inspect Git history, deleted blobs, image pixels, binary archives or all possible client-data formats. Before a first remote push, separately scan exactly the refs/history to publish, review staged paths, inspect sensitive-name matches and confirm ignored artifacts are not tracked. A private repository is not a safe destination for real credentials or client exports.
+
+The 23 October candidate-file inspection reviewed 856 text-capable paths and checked credential-URL, private-key, GitHub/Supabase token and JWT shapes without printing candidate values. The one URL hit was the intentionally invalid `example.invalid` negative test; it was not a live credential. This narrow scan is supporting evidence, not the root migration's final history/staged-file clearance. Local `.env.local`, `.local/owner-totp.txt`, `.playwright/s5a-fixtures.json`, `.playwright/backup-rehearsal/data.sql`, browser output and generated graph data must remain excluded.
+
+Production requires an approved isolated backend, operator account MFA, real owner bootstrap/recovery authority, verified hosted Auth settings, validated proxy/rate/body limits, review of the known items above, safe SMTP/password-recovery decisions, upload policy, legal/privacy/retention approval, database **and** Storage backup/restore, alert ownership, scheduler configuration, no test bypasses, cloud smoke/security tests, and explicit go-live approval. No production credentials, data, hosting deployment or cloud security verification were introduced by this documentation handoff.
+
+### 26.11 Reporting a vulnerability
+
+No approved public security email or responsible-disclosure contact was supplied. Do not invent one. Use the private reporting procedure in [SECURITY.md](../SECURITY.md), or an existing owner-approved private channel. Avoid including real credentials, raw tokens, MFA secrets, client attachments or unredacted personal records in a report.
+
+### 26.12 Dependency advisory review — 23 October 2026 pre-remediation snapshot
+
+`corepack pnpm audit --prod --json` ran against the initial handoff lockfile and exited 1: **13 advisory findings, comprising 3 critical, 4 high, 5 moderate and 1 low**. The affected installed versions were Next.js 16.3.4, its Sharp 0.35.4 image dependency and source-map-js 1.2.1 through PostCSS. The direct Sharp development pin was also 0.35.4 and application/server scripts import it, so its `devDependency` label does not establish lack of runtime relevance. Historical September “no known vulnerabilities” results remain true only for their recorded run dates.
+
+The table records why the baseline needed a security update; it is **not a claim that every advisory is exploitable in this application**. Applicability statements below are source-review inferences, not exploit demonstrations. Final shipped versions and fresh post-remediation audit/build/test results must be checked in `package.json`, `pnpm-lock.yaml` and the current handoff verification record. Do not treat this preserved baseline as an unresolved current count after a verified fix.
+
+| Advisory / baseline severity | Source-reviewed applicability | Smallest relevant fixed version reported by the audit |
+| --- | --- | --- |
+| [GHSA-p3m5-59mp-jv5r](https://github.com/vercel/next.js/security/advisories/GHSA-p3m5-59mp-jv5r), high | Directly relevant: RENZ uses App Router and many Server Actions. The vendor identifies a request-driven CPU-exhaustion condition and recommends upgrading. UI authorization is not a substitute for the framework fix. | Next.js 16.4.1 |
+| [GHSA-2464-fhr4-w9xw](https://github.com/vercel/next.js/security/advisories/GHSA-2464-fhr4-w9xw), critical | Image Optimization is used. Vendor impact depends on SVG decoding and a glibc-based Linux runtime. Local Windows checks cannot establish safety for the intended Linux hosting environment. | Next.js 16.4.1 with Sharp at least 0.35.5 |
+| [GHSA-673q-mjm6-r5xr](https://github.com/vercel/next.js/security/advisories/GHSA-673q-mjm6-r5xr), critical | Vendor prerequisite is a Cache Components `use cache` function returning multiple typed arrays. No `use cache` directive or Cache Components enablement was found in RENZ source; this specific path was not established. Vendor still recommends upgrading. | Next.js 16.4.1 |
+| [GHSA-vcvr-r3jv-pc5j](https://github.com/vercel/next.js/security/advisories/GHSA-vcvr-r3jv-pc5j), critical | No `next/og` / `ImageResponse` implementation was found in application source, so attacker-controlled SVG generation through that API was not established. | Next.js 16.3.6 |
+| [GHSA-wq5f-xc86-pv6w](https://github.com/lovell/sharp/security/advisories/GHSA-wq5f-xc86-pv6w), high | Same vulnerable upstream librsvg family as the image-optimizer advisory. Editorial upload signatures refuse SVG, reducing that direct ingestion path, but this does not clear framework image processing or Linux-native binaries. | Sharp 0.35.5 |
+| [GHSA-68fv-2mgg-jv7q](https://github.com/7rulnik/source-map-js/issues/76), high | Untrusted indexed source-map parsing is the prerequisite. No public source-map ingestion API was found; the installed package is used through PostCSS/build processing. Patch the transitive lock entry rather than assuming it is harmless. | source-map-js 1.2.2 |
+| GHSA-cjq9-62q9-8jv4, high | Image Optimization SSRF. The current image configuration defines no remote patterns and Storage-backed images use the unoptimized delivery path; exploitation was not established by this review. | Next.js 16.3.8 |
+| GHSA-3w37-wq28-93x7, moderate | Draft Mode / pending `use cache` fill leakage. Neither Draft Mode nor `use cache` was found in application source. | Next.js 16.3.8 |
+| GHSA-4jqv-mc3x-m676, moderate | Self-hosted SSG/ISR cache poisoning. Principal public/admin layouts use dynamic rendering; other host/framework cache paths were not exhaustively proven unreachable. | Next.js 16.3.8 |
+| GHSA-mcj8-r9mp-w47p, moderate | SSG/ISR response substitution / denial of service. Same cache-topology qualification as the preceding row. | Next.js 16.3.8 |
+| GHSA-h694-7cp9-m8p3, moderate | Nested `use cache` / root-param cache leakage. No application `use cache` functions were found. | Next.js 16.3.8 |
+| GHSA-f87g-xv8r-7p7x, moderate | App Router dynamic metadata-image disclosure. This checkout has static application icons; no dynamic metadata image handler was found. | Next.js 16.3.8 |
+| GHSA-39w2-rjm5-chcv, low | Development-server MCP endpoint disclosure. Development servers should remain local/private; this is separate from production runtime exposure. | Next.js 16.3.8 |
+
+The recommended bounded remediation is to pin **Next.js and its matching ESLint plugin at 16.4.1**, pin the direct **Sharp at 0.35.5**, and refresh only the vulnerable transitive **source-map-js to at least 1.2.2**, then regenerate the lockfile and rerun the audit, strict static checks, component/unit suites and production build. This is the smallest same-major framework target covering all observed Next advisories; it crosses a minor version and requires compatibility verification. Do not use a blanket `audit fix --force`, broad dependency upgrades or framework replacement. The root migration process owns that remediation and its final evidence; this source review did not modify dependencies.
+
+**Verified remediation outcome, later in the 23 October 2026 migration:** the package manifest now pins Next.js and its ESLint plugin at **16.4.1** and Sharp at **0.35.5**; `pnpm-workspace.yaml` constrains transitive **source-map-js to 1.2.2**, with the lockfile regenerated and dependencies installed. The migration's fresh `pnpm audit:production` completed successfully with **no known vulnerabilities**. This closes the dependency-audit failure for that installed lockfile and audit database; it does not close the application/operational review items in §26.3–§26.9 or promise that future advisory checks will stay clear. Preserve the original 13-finding snapshot above as dated evidence. Final command/test details belong in [the publication verification record](./GITHUB_PUBLICATION_VERIFICATION.md).
+
+The migration also ran **Gitleaks 8.30.1** independently over the selected **8 historical commits / 8.22 MB** and a copied candidate set of **979 files / 21.53 MB**, reporting no leaks in either scan. Candidate scan copies were kept outside the source checkout. These results complement the narrower committable-text inspection above; they do not establish that ignored local credentials, real client data or every screenshot/binary has been inspected or approved for upload. Only the reviewed source/assets belong in the private repository.
+
+### 26.13 Repository automation review — 23 October 2026
+
+Static review of `.github/workflows/ci.yml` and `backup.yml` found read-only GitHub token permissions, pinned action revisions and checkout credentials disabled. Ordinary push/PR CI runs the Linux quality gate; the extra Windows, database, Auth, Storage and browser jobs require an explicit manual run with the integration input enabled. The backup workflow has no active schedule and also requires `RENZ_BACKUP_ENABLED=true`; publication does not activate a database dump, R2 upload, hosting deployment or production release.
+
+The backup label crosses into the shell through an environment variable, is constrained to 1–40 letters/digits/underscore/hyphen characters, and is quoted in filenames. Provider values are passed as quoted data. Retention uses object modification dates and is documented as 30 daily-prefix / 12 monthly-prefix **objects**, not a calendar retention guarantee. This static review did not execute a cloud dump, decryption, object prune or restore. The template must stay disabled until its operational owner has rehearsed the complete recovery workflow. CI still consumes the account's Actions allowance; manual gates do not independently establish a billing limit or proof of free remaining minutes.
+
+`node scripts/verify-handoff.mjs` performs read-only checks of the 14 required handoff documents, local Markdown targets, migration inclusion, candidate file paths and a 50 MiB size gate. `--inventory` adds the exact candidate path/byte inventory. It never reads ignored artifacts or scans credentials; a pass does not replace secret/history scanning, runtime tests or remote verification.

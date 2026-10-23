@@ -8,6 +8,11 @@ export default tseslint.config(
   {
     ignores: [
       ".next/**",
+      ".local/**",
+      ".playwright/**",
+      "graphify-out/**",
+      "playwright-report/**",
+      "test-results/**",
       "coverage/**",
       "node_modules/**",
       "design/**",

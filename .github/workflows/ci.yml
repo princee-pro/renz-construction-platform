@@ -3,6 +3,13 @@ name: CI
 on:
   push:
   pull_request:
+  workflow_dispatch:
+    inputs:
+      integration:
+        description: Run isolated database/Auth/Storage/browser and Windows jobs (uses extra free minutes)
+        type: boolean
+        required: false
+        default: false
 
 permissions:
   contents: read
@@ -72,6 +79,7 @@ jobs:
 
   windows-compatibility:
     name: Windows compatibility
+    if: github.event_name == 'workflow_dispatch' && inputs.integration
     runs-on: windows-2025
     timeout-minutes: 20
 
@@ -115,6 +123,7 @@ jobs:
 
   database-integration:
     name: Linux database integration
+    if: github.event_name == 'workflow_dispatch' && inputs.integration
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     permissions:
@@ -152,6 +161,7 @@ jobs:
 
   auth-integration:
     name: Linux Auth/MFA integration
+    if: github.event_name == 'workflow_dispatch' && inputs.integration
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     needs: linux-quality
@@ -221,6 +231,7 @@ jobs:
 
   s4-integration:
     name: Linux S4 content/media integration
+    if: github.event_name == 'workflow_dispatch' && inputs.integration
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     needs: linux-quality
@@ -274,6 +285,7 @@ jobs:
 
   s6a-browser-integration:
     name: Linux S9A-P signature, public, and S5A browser integration
+    if: github.event_name == 'workflow_dispatch' && inputs.integration
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     needs:

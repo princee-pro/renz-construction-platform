@@ -3,6 +3,10 @@
 All faces are licensed under the SIL Open Font License 1.1 and subset to Latin
 (`scripts` not included; regenerate from the Google Fonts sources).
 
+The upstream copyright and full licence notices are preserved in
+[manrope-OFL.txt](manrope-OFL.txt) and [ibmplexmono-OFL.txt](ibmplexmono-OFL.txt).
+Keep these notices with redistributed font copies.
+
 | File                    | Family        | Axes / weight         | Source                                            |
 | ----------------------- | ------------- | --------------------- | ------------------------------------------------- |
 | `manrope.woff2`         | Manrope       | variable wght 200–800 | github.com/google/fonts/tree/main/ofl/manrope     |

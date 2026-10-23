@@ -1,11 +1,13 @@
 # RENZ — database backup (owner decision, R1 2026-09-21).
 #
-# Daily: `supabase db dump --data-only` from the production project, encrypted
+# Opt-in manual template: `supabase db dump --data-only` from the approved project, encrypted
 # with age (public-key encryption; the private key stays offline with the
 # owner/operator), SHA-256 checksum, uploaded to a private Cloudflare R2
 # bucket (S3 API), rolling retention (daily × 30, monthly × 12). Nothing is
 # ever committed; nothing is printed to the log except sizes and checksums.
 #
+# No schedule is active. The operator must review/test this template and set
+# repository variable RENZ_BACKUP_ENABLED=true before an approved manual run.
 # Required repository secrets (GitHub → Settings → Secrets):
 #   SUPABASE_DB_URL        production database connection string (read access is enough)
 #   BACKUP_AGE_PUBLIC_KEY  age recipient (age1…) — the matching private key is NOT stored anywhere online
@@ -17,8 +19,6 @@
 name: backup
 
 on:
-  schedule:
-    - cron: "17 2 * * *" # 02:17 UTC daily
   workflow_dispatch:
     inputs:
       label:
@@ -31,28 +31,43 @@ permissions:
 
 jobs:
   dump:
-    runs-on: ubuntu-latest
+    if: vars.RENZ_BACKUP_ENABLED == 'true'
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up pinned Node.js and pnpm
+        uses: pnpm/setup@703c52620218391530e48b9e8870d5c0082e1b9b # v2.1.0
+        with:
+          version: 11.25.0
+          runtime: node@24.20.0
+          install: false
+
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Install tools
         run: |
           set -euo pipefail
           sudo apt-get update -qq
           sudo apt-get install -y -qq age awscli >/dev/null
-          npm install -g supabase@2 >/dev/null
 
       - name: Dump (data only, COPY format)
         env:
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          BACKUP_LABEL: ${{ inputs.label || 'manual' }}
         run: |
           set -euo pipefail
           stamp="$(date -u +%Y%m%dT%H%M%SZ)"
-          label="${{ github.event.inputs.label || 'daily' }}"
-          name="renz-${label}-${stamp}"
+          test -n "$SUPABASE_DB_URL" || { echo "Backup connection is not configured"; exit 1; }
+          label="$BACKUP_LABEL"
+          [[ "$label" =~ ^[A-Za-z0-9_-]{1,40}$ ]] || { echo "Invalid backup label"; exit 1; }
+          name="renz-${stamp}-${label}"
           echo "name=${name}" >> "$GITHUB_ENV"
-          supabase db dump --db-url "$SUPABASE_DB_URL" --data-only --use-copy -f "${name}.sql"
+          pnpm exec supabase db dump --db-url "$SUPABASE_DB_URL" --data-only --use-copy -f "${name}.sql"
           echo "dump: $(wc -c < "${name}.sql") bytes"
 
       - name: Encrypt and checksum
@@ -78,7 +93,9 @@ jobs:
           aws --endpoint-url "$R2_ENDPOINT" s3 cp "${name}.sql.age" "s3://${R2_BUCKET}/${prefix}/${name}.sql.age" --no-progress
           aws --endpoint-url "$R2_ENDPOINT" s3 cp "${name}.sha256" "s3://${R2_BUCKET}/${prefix}/${name}.sha256" --no-progress
 
-      - name: Rolling retention (daily 30, monthly 12)
+      # Counts of backup objects, not a calendar retention guarantee. For
+      # preexisting differently named objects use S3 LastModified order.
+      - name: Rolling retention (daily 30 objects, monthly 12 objects)
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
@@ -90,7 +107,7 @@ jobs:
           prune() {
             local prefix="$1" keep="$2"
             aws --endpoint-url "$R2_ENDPOINT" s3 ls "s3://${R2_BUCKET}/${prefix}/" \
-              | awk '{print $4}' | grep '\.sql\.age$' | sort \
+              | sort -k1,2 | awk '$4 ~ /\.sql\.age$/ {print $4}' \
               | head -n -"$keep" \
               | while read -r old; do
                   [ -n "$old" ] || continue

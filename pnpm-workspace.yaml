@@ -1,6 +1,8 @@
 minimumReleaseAgeExclude:
   - "@supabase/ssr@0.12.6"
   - eslint@10.10.0
+overrides:
+  source-map-js: 1.2.2
 saveExact: true
 strictDepBuilds: true
 strictPeerDependencies: true
