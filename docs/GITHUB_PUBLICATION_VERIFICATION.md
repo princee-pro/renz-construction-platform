@@ -253,3 +253,78 @@ existing CI calls these package scripts and inherits the correction. The
 installed Next.js 16.4.1 CLI guide and current Context7 documentation confirm
 that `next typegen` creates both route helpers and `next-env.d.ts` without a
 build. The final clone run below starts with those generated files absent.
+
+### Final clean-clone evidence — 24 October 2026
+
+The final checkout was cloned from the authenticated private GitHub repository
+into `C:\Users\princ\AppData\Local\Temp\renz-clean-clone-20261024-final` at
+`48f3e1ad4db72ca1bb61d8321bcad94a5994e3a8`. It began without `node_modules`,
+`next-env.d.ts`, `.next/types` or `.env.local`. Inherited Supabase, publisher and
+test-secret environment variables were cleared from the verification process.
+The dependency installation used the committed lockfile and pnpm's normal
+package store; it did not copy the original workspace's installed dependencies.
+
+| Check in the GitHub clone                   | Observed result                                                                                                                                                                   |
+| ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm install --frozen-lockfile`            | PASS, exit 0                                                                                                                                                                      |
+| `pnpm lint` as the first type-aware command | PASS, exit 0; Next.js generated the missing declarations before typed ESLint                                                                                                      |
+| `pnpm verify`                               | PASS, exit 0; 159 unit tests and 24 component tests, formatting, lint, strict types, design/token checks, candidate secret scan, production build and production dependency audit |
+| `pnpm audit:public-bundles`                 | PASS; five CMS chunks were referenced by no public route                                                                                                                          |
+| `node scripts/verify-handoff.mjs`           | PASS; 14 required documents, 154 local documentation links, 50 migrations and 981 Git candidate files                                                                             |
+| Asset register manifest                     | PASS; all 115 recorded file sizes and SHA-256 hashes matched                                                                                                                      |
+| Git tracked working tree                    | Clean after verification                                                                                                                                                          |
+
+The publication-record commit following this tested commit changes this report
+only. Application source, dependencies, schema and verification commands remain
+the versions tested above. The final publication SHA is available in Git history
+and the accompanying migration report.
+
+### Browser result and its configuration boundary
+
+The existing RENZ brand suite ran against a temporary loopback preview of the
+clean clone with one Chromium worker: **13 passed, 1 failed in 34.3 seconds**.
+Passing checks covered public branding, navigation, footer, intro controls,
+favicons, widths from 320 to 1440 pixels, reduced motion, forced colors and
+200%-equivalent reflow. Its scoped automated accessibility checks found no
+serious or critical violations. Visual inspection of the 320-pixel screenshot
+confirmed the orange mark and readable Menu control on the unpublished-page
+fallback. This is evidence for that configuration, not approval of all populated
+website pages or a complete WCAG audit.
+
+The Admin sign-in branding test failed because the credential-free preview
+returned an internal server error: `src/proxy.ts` requires the public Supabase
+URL/key through `getPublicSupabaseEnvironment()`. The expected sign-in brand
+element therefore never rendered. No authentication pass is claimed from this
+run. The separately recorded two focused sign-in/media checks on 23 October
+used the original configured workspace and remain a distinct dated observation.
+The temporary preview was stopped; port 3113 had zero listening connections
+afterward.
+
+### Remote verification and remaining release gates
+
+Authenticated API checks confirmed the private owner/repository, default branch,
+pushed commit, rendered README, source, documentation, migrations, tests and
+assets. The remote recursive tree matched every local Git blob. Pinned workflow
+action revisions were checked against their official upstream repositories.
+Actions remained disabled with zero hosted workflow runs, so local success is
+not represented as a hosted CI pass.
+
+The latest observed GitHub Dependabot dashboard still showed **24 open alerts**
+(8 high, 12 medium and 4 low), while the fresh post-update registry audit showed
+the single development-only finding described above and no production findings.
+The remote package manifest independently contained the patched versions. These
+are separate observations; the incoming developer must reconcile the GitHub
+dependency graph/dashboard after its update. No alerts were manually dismissed
+and no claim is made that the GitHub dashboard is clear.
+
+Docker's Linux daemon remained unavailable on 24 October. The database, full C10,
+Auth/MFA, RLS/permissions, finance, concurrency, realtime, populated CMS and cloud
+restore workflows were therefore not freshly verified. Their executable tests,
+historical evidence and reproduction prerequisites remain in the handoff.
+Provider accounts/configuration, real-owner bootstrap, email/reset decisions,
+Turnstile, asset rights/approval, production security findings, backup/restore,
+domain/DNS and staged acceptance still require the documented release gates.
+
+Private GitHub publication and the reproducible developer handoff are complete.
+No hosting deployment, production activation, cloud provisioning, collaborator
+invitation or paid service was performed in this mission.
