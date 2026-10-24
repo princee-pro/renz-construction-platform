@@ -16,7 +16,7 @@
     "start": "next start",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
-    "lint": "eslint . --max-warnings 0",
+    "lint": "next typegen && eslint . --max-warnings 0",
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
     "test:unit": "vitest run --project unit",
@@ -97,7 +97,7 @@
     "r1:public-audit": "node scripts/r1-public-audit.mjs",
     "r1:browser-smoke": "node scripts/r1-browser-smoke.mjs",
     "r1:log-audit": "node scripts/r1-log-audit.mjs",
-    "verify": "prettier . --check && eslint . --max-warnings 0 && next typegen && tsc --noEmit && vitest run --project unit && vitest run --project component && designmd lint DESIGN.md && node scripts/design-tokens.mjs check && node scripts/scan-secrets.mjs && next build && node scripts/audit-production.mjs"
+    "verify": "prettier . --check && next typegen && eslint . --max-warnings 0 && tsc --noEmit && vitest run --project unit && vitest run --project component && designmd lint DESIGN.md && node scripts/design-tokens.mjs check && node scripts/scan-secrets.mjs && next build && node scripts/audit-production.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.6",

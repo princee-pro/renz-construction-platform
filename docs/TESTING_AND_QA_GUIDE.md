@@ -1,5 +1,12 @@
 # Testing and quality assurance
 
+**24 October 2026 reproducibility correction:** `pnpm lint` and `pnpm verify`
+generate Next.js route/environment declarations before typed ESLint. C10's
+standalone lint step does the same. A fresh clone needs neither committed
+`next-env.d.ts` nor a prior development-server/build run; the package commands
+prepare those ignored files themselves. See the dated publication record for
+the original failure and the corrected clean-checkout evidence.
+
 Source inspection: **23 October 2026**. These commands are taken from the current `package.json`, harnesses and scripts. This guide records how to reproduce checks; it does **not** turn historical reports into fresh passing results. Record the exact release SHA, command, date, exit code, counts and limitations for each new run.
 
 ## Pick the right verification boundary

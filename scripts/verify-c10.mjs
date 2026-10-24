@@ -65,9 +65,10 @@ const steps = [
   step("format", "Prettier check", () =>
     command(process.execPath, [bin("prettier", "bin", "prettier.cjs"), ".", "--check"]),
   ),
-  step("lint", "ESLint (no warnings)", () =>
-    command(process.execPath, [bin("eslint", "bin", "eslint.js"), ".", "--max-warnings", "0"]),
-  ),
+  step("lint", "route type generation + ESLint (no warnings)", () => {
+    command(process.execPath, [next, "typegen"]);
+    command(process.execPath, [bin("eslint", "bin", "eslint.js"), ".", "--max-warnings", "0"]);
+  }),
   step("typecheck", "next typegen + tsc --noEmit (strict)", () => {
     rmSync(join(root, ".next", "dev", "types"), { recursive: true, force: true });
     command(process.execPath, [next, "typegen"]);

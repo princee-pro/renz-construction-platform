@@ -236,3 +236,20 @@ Actions, run the quality workflow, then require its real check name. The API
 confirmed **zero workflow runs, zero repository secrets and zero variables**.
 The manual backup opt-in is unset; no cloud backup, scheduler or deployment was
 activated.
+
+### Fresh-checkout command ordering correction
+
+The authenticated clone's first `pnpm verify` attempt failed with 303 typed
+ESLint errors. Neither ignored `next-env.d.ts` nor `.next/types` existed; the
+old verification command ran typed ESLint before `next typegen`, leaving
+`PageProps` and other route types unresolved. This was a reproducibility defect
+hidden by the original workspace's generated files, not a reason to weaken
+the lint rules or commit generated declarations.
+
+The `lint` command now generates Next.js types before ESLint. The combined
+`verify` command does the same before its lint/typecheck steps, and C10's
+individually selectable lint step also generates the declarations first. The
+existing CI calls these package scripts and inherits the correction. The
+installed Next.js 16.4.1 CLI guide and current Context7 documentation confirm
+that `next typegen` creates both route helpers and `next-env.d.ts` without a
+build. The final clone run below starts with those generated files absent.
