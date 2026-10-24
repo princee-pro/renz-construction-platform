@@ -100,7 +100,12 @@ required services. At minimum, reproduce these on disposable synthetic data:
    poor-network behavior. Chromium automation does not replace manual review.
 
 Default E2E setup and C10/R1 gates reset and reseed the local database. They
-can remove manual synthetic accounts; recreate the local owner afterwards.
+can remove manual synthetic accounts. After reset-only cleanup, create a manual
+local owner before CMS seeding. R1 restores synthetic actors and published CMS
+content, including existing owner assignments: inspect and use those synthetic
+actors rather than blindly rerunning the one-shot owner bootstrap. If a new
+manual owner is needed, deliberately reset the disposable local database first,
+then follow the owner-before-seed order in [environment setup](ENVIRONMENT_SETUP.md).
 Do not point these harnesses at staging or production.
 
 ## Report and reproduce problems

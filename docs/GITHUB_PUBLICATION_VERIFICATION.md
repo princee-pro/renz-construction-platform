@@ -274,8 +274,10 @@ package store; it did not copy the original workspace's installed dependencies.
 | Asset register manifest                     | PASS; all 115 recorded file sizes and SHA-256 hashes matched                                                                                                                      |
 | Git tracked working tree                    | Clean after verification                                                                                                                                                          |
 
-The publication-record commit following this tested commit changes this report
-only. Application source, dependencies, schema and verification commands remain
+The publication-record and final onboarding-correction commits following this
+tested commit change documentation only. The onboarding correction distinguishes
+reset-only cleanup from R1's retained synthetic owner assignments; see
+[the handoff](HANDOFF_START_HERE.md). Application source, dependencies, schema and verification commands remain
 the versions tested above. The final publication SHA is available in Git history
 and the accompanying migration report.
 
