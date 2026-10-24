@@ -2,7 +2,10 @@ minimumReleaseAgeExclude:
   - "@supabase/ssr@0.12.6"
   - eslint@10.10.0
 overrides:
+  brace-expansion: 5.0.12
   source-map-js: 1.2.2
+  undici: 8.12.2
+  vite: 8.2.4
 saveExact: true
 strictDepBuilds: true
 strictPeerDependencies: true

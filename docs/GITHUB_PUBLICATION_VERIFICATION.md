@@ -155,3 +155,84 @@ review the security/visual/CMS limitations, obtain missing owner decisions and
 staging authority, then follow [DEPLOYMENT_HANDOFF.md](DEPLOYMENT_HANDOFF.md).
 **No hosting deployment, paid service, production database mutation, public
 release or indexing activation was performed.**
+
+## Publication revalidation — 24 October 2026
+
+The repository was independently inspected through the authenticated GitHub
+connector and REST API after the initial push. Owner `princee-pro`, **private**
+visibility and default branch `main` were confirmed. The complete recursive
+remote tree contained **981 files**; every blob matched the local committed
+tree, including **50 migrations, 50 files under tests/ and 144 documentation
+files**. No prohibited environment/local-artifact path appeared. The README's
+GitHub-rendered HTML returned HTTP 200 and included the company title, slogan,
+handoff link and three tables. Repository secrets and variables both numbered
+zero; no production account material was added.
+
+Authenticated GitHub cloning succeeded after intermittent TLS resets. The
+successful command used `--no-checkout` in the ignored migration directory;
+the resulting independent Git repository was moved to
+`C:/Users/princ/AppData/Local/Temp/renz-clean-clone-20261023`, then checked out
+normally. Its origin is the private GitHub URL, not a local filesystem source.
+It contained the preserved history and no `.env.local` or local owner secret.
+`pnpm install --frozen-lockfile` succeeded there. A separate earlier local Git
+clone caught a one-line README table-formatting drift; commit
+`6d8705a444ad0a6e54b3f9d769e31eafd6e1e16d` corrects it and was pushed and
+fast-forwarded into the GitHub clone. Final updated-clone checks follow below.
+
+### Fresh dependency graph and verification
+
+The resumed run checked GitHub's new alerts instead of treating the previous
+day's clean production audit as current. GitHub reported 24 alerts covering
+23 unique advisory IDs. The fresh full registry audit reported **26 advisories:
+8 high, 14 moderate and 4 low**, including three newer Undici findings; the
+production-only graph contained one high runtime Zod finding.
+
+The following compatible targeted changes were applied and locked:
+
+| Dependency                                 | Final pin / override |
+| ------------------------------------------ | -------------------- |
+| Application Zod                            | 4.6.6                |
+| Vitest and matching internal test packages | 4.1.12               |
+| Vite                                       | 8.2.4                |
+| brace-expansion                            | 5.0.12               |
+| Undici                                     | 8.12.2               |
+
+These supplement the previous Next.js 16.4.1, Sharp 0.35.5 and source-map-js
+1.2.2 fixes. Strict peers, exact direct pins and the reviewed lockfile remain
+enabled; no application architecture or database behavior was rewritten.
+
+Measured post-change results on 24 October:
+
+- `pnpm verify`: **PASS, exit 0**, including format, ESLint, strict route/types,
+  **159 unit and 24 component tests**, design lint/token consistency, candidate
+  secret scan, Next.js 16.4.1 production build and production dependency audit.
+- `pnpm audit:production`: **PASS, no known vulnerabilities**.
+- `pnpm audit --json`: **exit 1**, with exactly **one high development-only
+  advisory**, `.>@google/design.md>zod`; zero critical, moderate or low findings.
+- `pnpm c10:verify` was attempted against this host but stopped at initial
+  Supabase-health discovery. No database or browser phase ran and no reset was
+  performed. Docker-dependent and cloud workflow verification remain open.
+
+The remaining [Zod advisory](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5)
+is retained in `@google/design.md` 0.4.0, the latest observed upstream tool.
+The CLI embeds Zod 3 in its bundle; forcing an external Zod 4 override would
+not replace that implementation. The tool processes reviewed repository design
+input rather than public requests. This is a documented development-tool limit,
+not a claim of a clean full audit. See [Security Model §27](SECURITY_MODEL.md)
+and [current open items](CURRENT_STATUS_AND_OPEN_ITEMS.md). No alert was
+dismissed merely to obtain a green status.
+
+### Repository controls
+
+Vulnerability alerts are enabled. Main-branch protection requires one PR review
+and resolved conversations, blocks force pushes and branch deletion, and retains
+the owner's normal administrator exception. Publication commits use that
+authorized owner exception; this is not a review of those commits by another
+person. Automatic branch deletion is disabled to preserve branches.
+
+Required CI status checks are not imposed while Actions is disabled. The owner
+must first establish included usage and a zero-dollar spending control, enable
+Actions, run the quality workflow, then require its real check name. The API
+confirmed **zero workflow runs, zero repository secrets and zero variables**.
+The manual backup opt-in is unset; no cloud backup, scheduler or deployment was
+activated.
