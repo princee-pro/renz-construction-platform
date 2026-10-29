@@ -4,6 +4,13 @@ Revalidated 23 October 2026. RENZ Construction Services Ltd — **BRICK BY
 BRICK.** This handoff covers the existing application, its private GitHub
 publication and the route to independent testing. It does not authorize go-live.
 
+**29 October 2026 source-sharing update:** the owner explicitly authorized public
+GitHub inspection and source downloads. This supersedes the private-only access
+policy above; website go-live and repository/copyright ownership transfer remain
+separate. Client steps are in the
+[download guide](RENZ_CLIENT_DOWNLOAD_AND_OWNERSHIP_GUIDE.md), with dependency,
+font and generated-media information in [third-party notices](../THIRD_PARTY_NOTICES.md).
+
 ## What you are receiving
 
 A connected public website, structured Owner CMS and private Admin Control
@@ -138,11 +145,12 @@ reversal, public content publication, backup retention deletion and deployment.
 Review each command's endpoint and authority. This mission enables no cloud
 backup or notification schedule and performs no hosting deployment.
 
-## Private collaboration
+## Collaboration and source access
 
-Owner: Settings → Collaborators → Add people → verify username → invite.
-Keep the repository private. Personal-repository invitations grant write
-access; finer read/triage roles are not available there. The developer clones,
-branches, runs checks and submits PRs; ownership transfer and unrelated admin
-access are unnecessary. Repository protections/settings and any plan
-limitations are recorded in the publication verification record.
+Public viewing and source downloads need no invitation or GitHub account.
+For write access: owner → Settings → Collaborators → Add people → verify the
+exact username → invite. Personal-repository invitations grant write access;
+finer read/triage roles are not available there. The developer clones, branches,
+runs checks and submits PRs. Ownership transfer requires a separate explicit
+instruction. Repository protections/settings and any plan limitations are
+recorded in the publication verification record.

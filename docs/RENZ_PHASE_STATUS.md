@@ -193,3 +193,19 @@ The user explicitly revoked the terracotta/brick R direction and approved the at
 ## Orange identity clarification — 28 September 2026 (superseding update)
 
 The user resolved the conflicting brief by explicitly selecting the orange curved R with the two-line Renz Construction wordmark. This later instruction supersedes the silver tower identity above for operational website branding. The supplied composition and traced lettering are retained in transparent SVGs; the full opening/loading logo appears on white, the responsive header logo links to the homepage, and existing shared identity placements and app icons use the same source. Provenance, preparation and current verification are recorded in [RENZ_ORANGE_BRAND.md](./RENZ_ORANGE_BRAND.md). Earlier dated decisions and checks remain historical; this bounded correction does not authorize deployment or change business facts.
+
+## Public source-sharing handover — 29 October 2026
+
+The owner authorized public GitHub access for client inspection and source
+downloads, superseding the earlier private-only repository instruction.
+[README](../README.md), [client download instructions](RENZ_CLIENT_DOWNLOAD_AND_OWNERSHIP_GUIDE.md)
+and [third-party notices](../THIRD_PARTY_NOTICES.md) cover the handover. Actual
+visibility, anonymous download verification and focused disclosure checks are
+recorded in [publication verification](GITHUB_PUBLICATION_VERIFICATION.md).
+
+Fresh unit/component verification passed 183 tests; the separate production build
+passed. Production dependencies have zero known advisories; one high
+development-tool Zod finding remains. The Docker-dependent gates were NOT RUN.
+Application source, all 50 migrations, Admin/CMS behavior, tests and deployment
+runbooks are preserved. No open-source licence, copyright assignment, repository
+transfer, hosting deployment or production-infrastructure change was performed.

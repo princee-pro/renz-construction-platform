@@ -20,6 +20,20 @@ states; fresh migration evidence is in
 
 Start with [HANDOFF_START_HERE.md](docs/HANDOFF_START_HERE.md).
 
+## Download the source code
+
+Open [the RENZ repository](https://github.com/princee-pro/renz-construction-platform),
+select the green **Code** button, then **Download ZIP**. On Windows, right-click
+the downloaded ZIP and choose **Extract All**. A public repository can be viewed
+and downloaded without a GitHub account. The ZIP is a source-code snapshot;
+follow the setup instructions below to run it.
+
+The owner authorized public source sharing on **29 October 2026**. This
+supersedes the earlier private-only handoff policy; it does not launch the
+website, grant an open-source licence or transfer repository ownership. See the
+[client download guide](docs/RENZ_CLIENT_DOWNLOAD_AND_OWNERSHIP_GUIDE.md) and
+[third-party notices](THIRD_PARTY_NOTICES.md).
+
 ## System at a glance
 
 | Layer             | Implementation                                                                                                                                                          |
@@ -30,7 +44,7 @@ Start with [HANDOFF_START_HERE.md](docs/HANDOFF_START_HERE.md).
 | Identity          | Invitation/owner-created staff, password plus mandatory TOTP MFA, fresh capability checks and database enforcement                                                      |
 | Security          | RLS, narrow security-definer facades, version checks, immutable publication snapshots and audit history                                                                 |
 | Storage           | Private editorial-originals, editorial-derivatives and conditional lead-intake buckets; external objects require separate restoration                                   |
-| Live updates      | Permission-filtered Realtime invalidation followed by authorized refetch                                                                                                |
+| Live updates      | Eligible staff receive Realtime invalidation pointers; record refetches enforce domain permissions. Identifier/timing limits are documented in the security model       |
 | Finance           | Currency-separated exact amounts, append-only payment/reversal history, PDF invoices and revocable tokenized sharing                                                    |
 | Release direction | Owner-selected Netlify application hosting, Supabase data/Auth/Storage, Cloudflare DNS and conditional R2 backup; compatibility and cloud operations require validation |
 
@@ -39,6 +53,12 @@ The public portfolio (`projects`) and private operational jobs
 CMS publishes snapshots; the public application does not read draft content.
 See [architecture](docs/ARCHITECTURE_OVERVIEW.md) and
 [data relationships](docs/DATA_MODEL_AND_RELATIONSHIPS.md).
+
+The main directories are `src/app/` for routes, `src/components/` for shared
+interfaces, `src/features/` for domain behavior, `src/lib/` for shared boundaries,
+`supabase/migrations/` for ordered schema changes, `supabase/tests/` and `tests/`
+for verification, `scripts/` for maintenance and test harnesses, `public/` for
+static media, and `docs/` for contracts, reports and operating guides.
 
 ## Get running locally
 
@@ -106,7 +126,7 @@ that otherwise consumes the one-shot owner-bootstrap condition.
 | `pnpm exec playwright install chromium`                 | Install pinned browser runtime                                                         |
 | `pnpm test:e2e`                                         | Browser suites; default setup resets/reseeds the local database                        |
 | `pnpm c10:verify`                                       | Broad release gate including resets, Auth/RLS, finance, CMS, network and browser flows |
-| `pnpm r1:local`                                         | Additional local provisioning rehearsal, including reset/backup checks                 |
+| `pnpm r1:local`                                         | C10 plus network, bundle, local content provisioning and public/browser/log checks     |
 
 Run the destructive gates only against an isolated disposable local stack.
 Clear inherited cloud overrides before any local maintenance/test command.
@@ -120,6 +140,7 @@ checks, accessibility and acceptance scenarios:
 | Read for                                      | Entry point                                                                                                                           |
 | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | First three onboarding milestones             | [Developer handoff](docs/HANDOFF_START_HERE.md)                                                                                       |
+| Client download and ownership distinctions    | [Client download guide](docs/RENZ_CLIENT_DOWNLOAD_AND_OWNERSHIP_GUIDE.md)                                                             |
 | Code and request/data flow                    | [Architecture overview](docs/ARCHITECTURE_OVERVIEW.md)                                                                                |
 | Actual schema and domain boundaries           | [Data model](docs/DATA_MODEL_AND_RELATIONSHIPS.md)                                                                                    |
 | Business operator instructions                | [Admin user guide](docs/ADMIN_USER_GUIDE.md)                                                                                          |
@@ -131,6 +152,7 @@ checks, accessibility and acceptance scenarios:
 | Recovery and incidents                        | [Backup/restore](docs/RENZ_BACKUP_RESTORE.md), [rollback](docs/RENZ_ROLLBACK.md), [incident response](docs/RENZ_INCIDENT_RESPONSE.md) |
 | Current completion and open gates             | [Current status](docs/CURRENT_STATUS_AND_OPEN_ITEMS.md), [phase tracker](docs/RENZ_PHASE_STATUS.md)                                   |
 | Asset evidence, hashes and rights             | [Asset/license register](docs/ASSET_AND_LICENSE_REGISTER.md)                                                                          |
+| Third-party dependencies, fonts and media     | [Third-party notices](THIRD_PARTY_NOTICES.md)                                                                                         |
 | Contribution and review                       | [CONTRIBUTING.md](CONTRIBUTING.md), [AGENTS.md](AGENTS.md)                                                                            |
 
 Preserve dated historical reports. The current handoff points out superseding
@@ -139,20 +161,23 @@ source evidence without rewriting earlier audit claims. Read `DESIGN.md`,
 
 ## Repository and access policy
 
-This is a private client-project repository; `package.json` is `UNLICENSED`.
-No open-source licence or general redistribution permission is granted by this
-handoff. Third-party font notices remain under `src/fonts/`; asset-specific
-rights and production approval remain in the asset register.
+This client-project source is shared for inspection and download;
+`package.json` remains `UNLICENSED`. No open-source licence, signed copyright
+assignment or ownership transfer is created by changing GitHub visibility.
+Third-party packages and fonts retain their respective licences and notices;
+see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Concept images remain
+generated studies, never evidence of completed RENZ projects.
 
 Never commit `.env.local`, `.local/`, `.playwright/`, database dumps, session
 fixtures, `node_modules`, `.next`, generated graphs or build output. Originals
 under `references/client/originals/` are immutable. Include source, migrations,
 lockfile, tests, scripts, templates and the approved/local runtime assets.
 
-The owner grants access through **Settings → Collaborators → Add people**,
-verifies the developer's GitHub username and sends the invitation. Personal
-repository collaborators receive write access; finer read/triage roles require
-an appropriate organization arrangement. Do not grant admin/ownership or make
-the repository public. Work on `codex/<short-description>` or a descriptive
-feature branch and submit a pull request. No hosting deployment is performed
-by repository publication.
+Viewing and downloading a public repository require no invitation. To grant
+write access, the owner uses **Settings → Collaborators → Add people**, verifies
+the developer's exact GitHub username and sends the invitation. Personal
+repository collaborators receive write access; finer roles require an
+appropriate organization arrangement. Do not grant administration or transfer
+ownership without a separate explicit instruction. Work on
+`codex/<short-description>` or a descriptive feature branch and submit a pull
+request. No hosting deployment is performed by repository publication.

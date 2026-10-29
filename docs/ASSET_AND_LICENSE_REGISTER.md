@@ -10,6 +10,30 @@ Every architectural image supplied with this checkout is concept material. None 
 
 No permissive open-source licence has been granted to this proprietary client project. The user has authorized a private repository and developer handoff. That authorization does not create rights in third-party materials. Public release and wider redistribution require their own approved rights basis.
 
+### Public source-sharing instruction — 29 October 2026
+
+The owner now explicitly authorizes public GitHub sharing of this existing client
+project for inspection and download. This supersedes the private-only access
+scope in the dated audit above; it does not establish a copyright assignment,
+trademark clearance or an open-source licence. Client-supplied identity and
+project-created concept references remain attributed to their recorded sources.
+
+The review distinguishes generated project work from third-party stock content.
+The Phase 0 manifest records OpenAI Image Gen; its published terms allocate
+output rights to the user as between the user and OpenAI. Recorded Higgsfield
+outputs are covered by its published section 4.4, which allows commercial/client
+use and transfer of output rights without a separate paid-plan requirement.
+Those terms do not guarantee originality or create rights in unrelated inputs.
+No independently licensed stock photograph or stock film was identified in the
+included set. Generated images and the derived loop must retain their concept
+labels and must never become claimed RENZ project evidence.
+
+The current dependency/font notices, primary-source links and any specific
+qualification from this review are in [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
+Existing asset bytes, provenance records and font licence notices are preserved;
+the inventory below remains the dated checksum snapshot. Actual public access
+and archive contents are checked in [publication verification](GITHUB_PUBLICATION_VERIFICATION.md).
+
 ## Inventory and allowed-use classes
 
 The snapshot below contains **115 files / 30,165,427 bytes**, including creative references, runtime media, two media manifests, three font binaries, font documentation and OFL notices. Sizes are uncompressed disk bytes. Nothing in this inventory approaches GitHub's per-file large-object limits; no Git LFS or paid storage arrangement is necessary for this set.

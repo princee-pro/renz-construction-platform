@@ -1,10 +1,10 @@
 # Security reporting and change policy
 
-RENZ is a proprietary client platform prepared for a private developer handoff. The current branch is the review baseline; no production deployment or public vulnerability-response service is claimed. Read [the current security model](docs/SECURITY_MODEL.md#26-current-implementation-review--23-october-2026) for implemented controls, historical context and known limitations.
+RENZ is a client platform shared as source code for review and handoff. The current branch is the review baseline; no production deployment or staffed public vulnerability-response service is claimed. Read [the current security model](docs/SECURITY_MODEL.md#26-current-implementation-review--23-october-2026) for implemented controls, historical context and known limitations.
 
 ## Report privately
 
-No approved public security email or disclosure contact has been supplied. Do not invent or use an unverified contact. If the private repository's GitHub Security tab offers **Report a vulnerability**, use that private reporting flow. Otherwise contact the repository owner through an existing, owner-approved private channel and request a secure report location. Feature availability must be checked on the actual repository; this file does not imply that private vulnerability reporting is enabled.
+No approved public security email or disclosure contact has been supplied. Do not invent or use an unverified contact. If the repository's GitHub Security tab offers **Report a vulnerability**, use that private reporting flow. Otherwise contact the repository owner through an existing, owner-approved private channel and request a secure report location. Feature availability must be checked on the actual repository; this file does not imply that private vulnerability reporting is enabled.
 
 Do not create a public issue or public proof of concept containing an exploitable vulnerability, credential, bearer document link, MFA secret, staff account detail, private client record or attachment. Ordinary non-sensitive regressions may use the normal repository issue/PR process.
 

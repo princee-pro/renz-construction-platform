@@ -330,3 +330,79 @@ domain/DNS and staged acceptance still require the documented release gates.
 Private GitHub publication and the reproducible developer handoff are complete.
 No hosting deployment, production activation, cloud provisioning, collaborator
 invitation or paid service was performed in this mission.
+
+## Public source-sharing preflight — 29 October 2026
+
+The owner explicitly authorized making this exact repository public so the client
+can inspect and download the complete project without a GitHub account. This
+supersedes the private-only source-sharing instructions in the dated records
+above. It does not authorize hosting deployment, production data/configuration,
+ownership transfer, an open-source licence or a fabricated copyright assignment.
+
+### Repository and disclosure review
+
+The authenticated account was `princee-pro`, with administration permission on
+repository `princee-pro/renz-construction-platform` (GitHub ID `1431432278`).
+At preflight, local and remote `main` both pointed to
+`6f8bfdd3cec27c71d913b0fe9fa7d53cf30cdda7`: 15 commits, 981 tracked files,
+no local changes before this task, and no tags/releases. An authenticated recursive
+tree comparison found zero local/remote blob differences.
+
+Gitleaks 8.30.1 scanned all 15 commits through all reachable local refs and
+reported no leaks. The repository secret scanner also passed. An independent
+focused review classified 1,153 reachable text blobs, commit messages, contact
+references and synthetic account fixtures. No actual private customer record,
+production credential, session, committed TOTP factor, private dump or backup
+was identified. The client-source service screenshot contains service phrases
+and message times, without a visible sender name or phone number.
+
+Fixed fixture passwords are clearly synthetic test inputs; their runtime factors,
+privileged keys and sessions are generated into ignored local files. These values
+are not certified unusable on every hypothetical external system: no live-account
+credential test was performed. Scripts can prefer inherited environment values,
+and not every helper has a strict loopback guard. Follow the environment guide's
+cloud-variable clearing and disposable-local-only instructions.
+
+Git author metadata, developer profile paths, architecture and documented source
+limitations are intentionally part of the authorized project history. No history
+rewrite, force push, secret rotation or customer-data removal was required by
+the focused findings. A clean scan is evidence from these checks, not a claim of
+production security certification.
+
+### Fresh technical checks
+
+| Command / check                                              | 29 October result                                                                                                                              |
+| ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm verify`, through its pre-build stages                  | Formatting, route generation, ESLint, strict TypeScript, 159 unit tests, 24 component tests, design/token checks and source secret scan passed |
+| Initial combined verification build                          | Stopped after prolonged no-progress in the earlier sandbox session; the combined command is not claimed as a completed pass                    |
+| `pnpm build`, separate retry                                 | PASS, exit 0; compiled in 16.7 seconds, TypeScript completed, all routes built                                                                 |
+| `pnpm audit --prod --json`                                   | PASS, exit 0; zero known production advisories                                                                                                 |
+| `pnpm audit --json`                                          | Exit 1; one high development-only Zod advisory in `@google/design.md`, as documented in Security Model §27                                     |
+| `pnpm audit:public-bundles`                                  | PASS; five CMS chunks referenced by no public route                                                                                            |
+| Database/Auth/MFA/RLS/full C10/R1/browser/cloud verification | NOT RUN in this task; Docker Linux daemon unavailable, no database reset or provider mutation attempted                                        |
+
+The design linter retained six existing orphan-token warnings and zero errors.
+No dependency, application source, migration, test or deployment architecture
+was changed for this public-sharing task. Earlier clean-clone/browser results
+remain their separately dated evidence.
+
+### GitHub settings before visibility change
+
+Authenticated checks confirmed: Actions disabled with zero runs/logs, zero
+repository secrets/variables, owner-only collaborator access, no rulesets, no
+tags/releases and no issues. Branch protection requires one review and resolved
+conversations, denies force pushes/deletion and retains the owner administrator
+exception. Required CI checks remain unset while Actions is disabled.
+
+Dependabot alerts are enabled and now show **one high Zod alert only**, matching
+the retained development-tool issue. The previous 24-alert observation is
+historical; it has been reconciled with the updated GitHub dependency graph.
+The private-repository secret-scanning and private-reporting endpoints returned
+404, so neither feature was represented as active on that basis. Public settings
+and anonymous page/archive checks are recorded after the visibility operation.
+
+The client instructions are in
+[RENZ_CLIENT_DOWNLOAD_AND_OWNERSHIP_GUIDE.md](RENZ_CLIENT_DOWNLOAD_AND_OWNERSHIP_GUIDE.md).
+Third-party dependency/font notices and the generated-media assessment are in
+[THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md). Public source sharing is not
+an assignment of RENZ or third-party rights.

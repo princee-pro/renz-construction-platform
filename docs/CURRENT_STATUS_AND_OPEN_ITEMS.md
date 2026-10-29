@@ -104,3 +104,22 @@ verification is recorded in [the publication checks](GITHUB_PUBLICATION_VERIFICA
 The fresh pre-remediation audit found **one high runtime Zod advisory** and **26 full-audit advisories (8 high, 14 moderate, 4 low)**; the GitHub banner's 24 alerts covered 23 unique advisories and had not yet reflected three newer Undici advisories. The 23 October clean production audit is preserved as historical evidence. Targeted follow-up pins are **Zod 4.6.6**, **Vitest 4.1.12**, and workspace overrides **Vite 8.2.4**, **brace-expansion 5.0.12** and **Undici 8.12.2**, retaining Next.js 16.4.1, Sharp 0.35.5 and source-map-js 1.2.2. The migration's actual post-change **`pnpm audit:production` passed with no known vulnerabilities**; its full **`pnpm audit --json` reported one high advisory only**, the development design-linter item below. All other baseline high/moderate/low findings were cleared. Compatibility and clean-clone verification are reported separately in [the publication verification](GITHUB_PUBLICATION_VERIFICATION.md).
 
 One **development-only high Zod advisory** remains for `@google/design.md` 0.4.0, which declares Zod 3 and bundles Zod 3.25.76 inside its CLI. No newer package release was available in the 24 October query. Forcing its dependency to Zod 4 would not replace the embedded implementation. The tool processes reviewed repository design files, is not imported by the application, and must not be exposed as a service for arbitrary uploaded documents. Keep this upstream tooling limitation visible; see [Security Model §27](SECURITY_MODEL.md#27-dependency-revalidation--24-october-2026). No complete full-audit clearance or production approval is inferred.
+
+## Source-sharing authorization and revalidation — 29 October 2026
+
+The owner explicitly authorized public GitHub inspection and downloads of the
+existing project. That source-sharing instruction supersedes the earlier
+private-only policy; production hosting, data, credentials, indexing and go-live
+remain separate and were not activated. The actual visibility and anonymous ZIP
+results are recorded in [publication verification](GITHUB_PUBLICATION_VERIFICATION.md).
+Client steps are in [the download guide](RENZ_CLIENT_DOWNLOAD_AND_OWNERSHIP_GUIDE.md).
+No open-source licence or copyright assignment was added.
+
+Fresh focused history/source review identified no actual credential or private
+customer-data disclosure. All 183 unit/component tests and the separate production
+build passed. The first combined verification run was stopped during a stalled
+build and is not reported as an overall pass. Database/full integration checks
+were NOT RUN because the Docker Linux daemon was unavailable. Fresh production
+dependency audit found zero advisories; the full audit and GitHub Dependabot
+each retained the one development-tool Zod finding. The earlier dashboard's 24
+alerts are now a historical observation, not the current count.
