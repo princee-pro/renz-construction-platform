@@ -209,3 +209,8 @@ development-tool Zod finding remains. The Docker-dependent gates were NOT RUN.
 Application source, all 50 migrations, Admin/CMS behavior, tests and deployment
 runbooks are preserved. No open-source licence, copyright assignment, repository
 transfer, hosting deployment or production-infrastructure change was performed.
+
+**Publication result:** GitHub visibility is PUBLIC; anonymous repository, README
+and ZIP requests passed. The downloaded archive contained all 983 committed files
+with zero Git blob mismatches, including all 50 migrations. See the dated
+publication verification record for the inspected commit and checksum.

@@ -2,11 +2,11 @@
 
 **29 October 2026 — RENZ Construction Services Ltd. BRICK BY BRICK.**
 
-The project owner has authorized **public source sharing** for the client handover. The [publication verification record](GITHUB_PUBLICATION_VERIFICATION.md) records the actual visibility and download checks; this guide does not itself certify that the public change or anonymous ZIP verification has finished.
+The repository is **public** for the client source handover. Public page access and the ZIP download were verified without authentication on 29 October 2026. The [publication verification record](GITHUB_PUBLICATION_VERIFICATION.md) records the checks and inspected version.
 
 ## Download and extract on Windows
 
-Once public publication is confirmed, **no GitHub account is needed**:
+**No GitHub account is needed**:
 
 1. Open [princee-pro/renz-construction-platform](https://github.com/princee-pro/renz-construction-platform).
 2. Select **main**, unless the developer supplies another handover version.
@@ -15,7 +15,7 @@ Once public publication is confirmed, **no GitHub account is needed**:
 5. Choose a folder such as `Documents\RENZ-source`, then select **Extract**.
 6. Open the extracted folder and find **README.md**, followed by **docs → HANDOFF_START_HERE.md**. There may be an extra folder inside the first one.
 
-These are [GitHub's source-download steps](https://docs.github.com/en/repositories/working-with-files/using-files/downloading-source-code-archives). If the page still requests access while publication is pending, use your approved GitHub account and invitation, or ask the administrator to confirm the status. Do not share passwords or verification codes.
+These are [GitHub's source-download steps](https://docs.github.com/en/repositories/working-with-files/using-files/downloading-source-code-archives). You can also use the [direct ZIP download](https://github.com/princee-pro/renz-construction-platform/archive/refs/heads/main.zip). If access changes later, ask the repository administrator to confirm its status. Do not share passwords or verification codes.
 
 ## What you receive
 

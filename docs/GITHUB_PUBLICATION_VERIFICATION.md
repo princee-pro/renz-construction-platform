@@ -406,3 +406,42 @@ The client instructions are in
 Third-party dependency/font notices and the generated-media assessment are in
 [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md). Public source sharing is not
 an assignment of RENZ or third-party rights.
+
+### Public visibility and anonymous archive verification — PASS
+
+The authenticated GitHub API accepted the explicitly authorized change from
+`private` to **`public`** for repository ID `1431432278`, owner `princee-pro`,
+default branch `main`. No other setting was included in that mutation.
+The published handover commit was
+`04c78c2ad6e351aa147bbb773cfec6608802a940`; all previous commits were preserved.
+The final staged scan found no leaks, and the all-history scan covered 16 commits
+with no leaks. The source secret scan passed across 877 text-capable files.
+
+Independent requests with **no Authorization header, no Cookie header and no
+cookie jar** returned HTTP 200 for the public repository API, GitHub repository
+page, raw README and the source ZIP. The README's source-download instructions
+were present. GitHub's separate authenticated connector also reported public
+visibility after the operation.
+
+The actual **Code → Download ZIP** archive URL was downloaded and inspected:
+
+- [Public repository](https://github.com/princee-pro/renz-construction-platform).
+- [Download main as ZIP](https://github.com/princee-pro/renz-construction-platform/archive/refs/heads/main.zip).
+- Archive at the handover commit above: **31,632,731 bytes**, SHA-256
+  `1e891569ede1a2f0698ea10e2985de360cf0a8187dfef84a7eb60b9f4ddca93b`.
+- **983 files**, every file's Git blob hash matched the intended committed tree;
+  zero missing/extra/mismatching files, valid member CRCs, no forbidden local,
+  credential or generated-output paths.
+- Included **50 migrations, 50 test-directory files and 92 public files**, plus
+  the complete source, lockfile, technical handoff, client guide and notices.
+
+The URL follows `main`; a later documentation commit changes its archive bytes
+and checksum. The values above identify the inspected handover commit, rather
+than promising a permanent checksum for the moving branch URL. The final
+publication response records the latest pushed commit.
+
+No third-party stock image/film requiring omission was identified; all existing
+asset bytes and concept labels were preserved. No open-source licence, copyright
+assignment, repository transfer, collaborator invitation, tag/release, paid
+service or hosting deployment was created by this visibility change. Website
+go-live and the existing production-readiness items remain separate.
